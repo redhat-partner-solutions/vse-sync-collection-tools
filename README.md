@@ -37,7 +37,7 @@ git clone --recursive https://github.com/redhat-partner-solutions/synchronizatio
 The following example uses openshift-ptp:
 
 ```
-cd common/openshift/ptp-operator
+cd tests/common/openshift/ptp-operator
 git pull
 ```
 
@@ -62,7 +62,7 @@ Create a PR to te existing testing suite
 
 ### Current Synchronization Testing Suites
 
-Location: [/common](/common)
+Location: [/tests/common](/common)
 
 Common testing suites: 
 
@@ -71,10 +71,10 @@ Common testing suites:
 [cnf ptp tests](https://github.com/openshift-kni/cnf-features-deploy.git) - cnf ptp tests
 
 
-Location: [/tgm](/tgm) - "tests specific for T-GM role"
+Location: [/tests/tgm](/tgm) - "tests specific for T-GM role"
 
-Location: [/tbc](/tbc) - "tests specific for T-BC role"
+Location: [/tests/tbc](/tbc) - "tests specific for T-BC role"
 
-Location: [/tsc](/tsc) - "tests specific for T-SC role"
+Location: [/tests/tsc](/tsc) - "tests specific for T-SC role"
 
-Location: [/extra](/extra) - "extra sync tests suites"
+Location: [/tests/extra](/extra) - "extra sync tests suites"
