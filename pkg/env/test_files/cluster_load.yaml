@@ -1,0 +1,2 @@
+kubeconfig_path: ~/kubeconfig
+cluster_name: Albatross
