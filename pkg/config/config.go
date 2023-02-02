@@ -7,11 +7,12 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-
-type ConfigFile struct {
-	Value string `yaml:"value,omitempty"` // Framework config here e.g. reports, global timeouts, run descriptor, etc.
-	TestConfigs []customConfig `yaml:"test_configs,omitempty"`
+type configFile struct {
+	Value string `yaml:"value"` // Framework config here e.g. reports, global timeouts, run descriptor, etc.
+	TestConfigs []customConfig `yaml:"suite_configs"`
 }
+
+var Config = configFile{}
 
 // LoadConfigFromFile is the entrypoint for the config package; it will load a configuration
 // file, populate the top-level config, and any custom config sections that have
@@ -24,6 +25,5 @@ func LoadConfigFromFile(filePath string) error {
 		return err
 	}
 
-	var c ConfigFile
-	return yaml.Unmarshal(contents, &c)
+	return yaml.Unmarshal(contents, &Config)
 }

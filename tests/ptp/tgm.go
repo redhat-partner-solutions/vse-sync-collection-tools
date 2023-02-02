@@ -6,9 +6,10 @@ import (
 )
 
 var _ = Describe("TGM", func() {
-	When("The package is imported", func() {
-		It("Should cause the test to be run", func() {
-			Expect(true).To(BeTrue())
+	When("the specs are finally run", func() {
+		It("shoud have access to its custom configuration", func() {
+			Expect(ptpConfig.MaxOffset).To(Equal(30))
+			Expect(ptpConfig.OtherValue).To(Equal("foo"))
 		})
 	})
 })
