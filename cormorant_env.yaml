@@ -1,0 +1,8 @@
+kubeconfig_path: /home/cwheeler/kubeconfig
+cluster_name: cormorant
+nodes:
+  - hostname: cormorant
+    ip: "192.168.49.141"
+    roles:
+      - control-plane
+        worker

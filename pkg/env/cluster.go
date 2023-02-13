@@ -7,17 +7,20 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type ClusterNode struct {
+type Node struct {
 	Hostname string `yaml:"hostname"`
-	Ip string `yaml:"ip"`
+	Ip       string `yaml:"ip"`
 }
 
 type ClusterInfo struct {
 	KubeconfigPath string `yaml:"kubeconfig_path"`
-	ClusterName	string `yaml:"cluster_name"`
+	ClusterName    string `yaml:"cluster_name"`
+	Nodes          []Node `yaml:"nodes"`
 }
 
-func LoadClusterFromFile(filePath string) (*ClusterInfo, error) {
+var c ClusterInfo
+
+func LoadClusterDefFromFile(filePath string) (*ClusterInfo, error) {
 	log.Debugf("Loading cluster definition from file: %s", filePath)
 
 	contents, err := os.ReadFile(filePath)
@@ -25,7 +28,6 @@ func LoadClusterFromFile(filePath string) (*ClusterInfo, error) {
 		return nil, err
 	}
 
-	var c ClusterInfo
 	err = yaml.Unmarshal(contents, &c)
 	if err != nil {
 		return nil, err

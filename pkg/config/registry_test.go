@@ -8,20 +8,20 @@ import (
 )
 
 const (
-	simpleSectionKey = "tests.simple_config"
+	simpleSectionKey  = "tests.simple_config"
 	complexSectionKey = "tests.complex_config"
 )
 
 type SimpleCustomTestConfig struct {
-	TargetLatency int `yaml:"target_latency,omitempty"`
+	TargetLatency   int `yaml:"target_latency,omitempty"`
 	PermittedJitter int `yaml:"permitted_jitter,omitempty"`
 }
 
 // Check that a more complex struct will be handled correctly.
 type ComplexCustomTestConfig struct {
-	InterfaceName string `yaml:"interface_name,omitempty"`
-	TargetIpAddress string `yaml:"target_ip,omitempty"`
-	LatencyConfig SimpleCustomTestConfig `yaml:"latency,omitempty"`
+	InterfaceName   string                 `yaml:"interface_name,omitempty"`
+	TargetIpAddress string                 `yaml:"target_ip,omitempty"`
+	LatencyConfig   SimpleCustomTestConfig `yaml:"latency,omitempty"`
 }
 
 var _ = Describe("Registry", Ordered, func() {

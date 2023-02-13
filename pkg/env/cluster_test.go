@@ -12,14 +12,15 @@ import (
 var _ = Describe("Cluster", func() {
 	When("Loading  a cluster definition from file", func() {
 		It("should load without error", func() {
-			_, err := env.LoadClusterFromFile("test_files/cluster_load.yaml")
+			_, err := env.LoadClusterDefFromFile("test_files/cluster_load.yaml")
 			Expect(err).To(BeNil())
 		})
 		It("should load data from the file", func() {
-			clusterDef, _ := env.LoadClusterFromFile("test_files/cluster_load.yaml")
+			clusterDef, _ := env.LoadClusterDefFromFile("test_files/cluster_load.yaml")
 			Expect(clusterDef).ToNot(BeNil())
 			Expect(clusterDef.KubeconfigPath).To(Equal("~/kubeconfig"))
 			Expect(clusterDef.ClusterName).To(Equal("Albatross"))
+			Expect(clusterDef.Nodes[0].Hostname).To(Equal("albatross"))
 		})
 	})
 })

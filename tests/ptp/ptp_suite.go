@@ -1,18 +1,23 @@
 package ptp
 
 import (
+	"fmt"
+
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/config"
 )
 
 const ptpCustomConfigKey = "ptp_tests_config"
 
 type PtpConfig struct {
-	MaxOffset int `yaml:"max_sync_offset"`
-	OtherValue string `yaml:"other_val"`
+	Namespace  string `yaml:"namespace"`
+	PodName    string `yaml:"pod_name"`
+	Container  string `yaml:"container"`
+	InterfaceName string `yaml:"interface_name"`
 }
 
 var ptpConfig = PtpConfig{}
 
 func init() {
+	fmt.Println("ptp suite INit")
 	config.RegisterCustomConfig(ptpCustomConfigKey, &ptpConfig)
 }

@@ -11,19 +11,17 @@ import (
 // the target for that config section.
 var configSectionRegistry = make(map[string]*interface{})
 
-
 // customConfig exists to implement a custom UnmarshalYAML.
-// Th custom UnmarshalYAML allows dynamically selecting the struct instance into
-// which that config section is unmarshalled.
+// The custom UnmarshalYAML allows dynamically selecting the struct instance into which that config section is unmarshalled.
 // Register an instance to be used by calling `config.RegisterCustomConfigSection`.
-type customConfig struct {}
+type customConfig struct{}
 
 // This custom UnmarshalYAML will find the instance that has been registered
 // against the YAML key and populate it with the data from the corresponding
 // value.
 func (cc *customConfig) UnmarshalYAML(value *yaml.Node) error {
 	if value.Kind != yaml.MappingNode {
-		return fmt.Errorf("CustomConfig must contain YAML mapping, has %v", value.Kind)
+		return fmt.Errorf("CustomConfig must contain YAML Map, has %v", value.Kind)
 	}
 	for i := 0; i < len(value.Content); i += 2 {
 		var customConfigKey string
@@ -41,13 +39,12 @@ func (cc *customConfig) UnmarshalYAML(value *yaml.Node) error {
 		}
 		log.Debugf("Retrieved [%T]%+v", testConfigStruct, testConfigStruct)
 
-        if err := value.Content[i+1].Decode(testConfigStruct); err != nil {
-            return err
-        }
-    }
-    return nil
+		if err := value.Content[i+1].Decode(testConfigStruct); err != nil {
+			return err
+		}
+	}
+	return nil
 }
-
 
 // RegisterCustomConfig will register the `target` instance pointer to later be
 // populated with data from a section of the configuration file with key
@@ -66,8 +63,8 @@ func RegisterCustomConfig(sectionKey string, target interface{}) error {
 	return nil
 }
 
-// getRegisteredInstancePtr returns the previously registered pointer to the
-// `target` struct that was registered for the `sectionKey`
+// getRegisteredInstancePtr returns the pointer to the `target` struct that was
+// registered for the `sectionKey`
 func getRegisteredInstancePtr(sectionKey string) (interface{}, error) {
 	log.Debugf("Retrieving section '%s'", sectionKey)
 	if _, exists := configSectionRegistry[sectionKey]; !exists {

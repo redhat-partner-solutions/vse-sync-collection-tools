@@ -8,7 +8,7 @@ import (
 )
 
 type configFile struct {
-	Value string `yaml:"value"` // Framework config here e.g. reports, global timeouts, run descriptor, etc.
+	Value       string         `yaml:"value"` // Framework config here e.g. reports, global timeouts, run descriptor, etc.
 	TestConfigs []customConfig `yaml:"suite_configs"`
 }
 
