@@ -2,6 +2,7 @@ package devices
 
 import (
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/clients"
@@ -15,8 +16,8 @@ type PTPDeviceInfo struct {
 }
 
 func GetPTPDeviceInfo(interfaceName string, ctx clients.ContainerContext) (devInfo PTPDeviceInfo) {
-	// expecting a string like "../../../0000:86:00.0" here, just keep the last path section
-	busID := commandWithCleanup(ctx, filepath.Base, []string{
+	// expecting a string like "../../../0000:86:00.0" here, just keep the last path section with filepath.Base
+	busID := commandWithPostprocessFunc(ctx, filepath.Base, []string{
 		"readlink", "/sys/class/net/" + interfaceName + "/device",
 	})
 
@@ -25,13 +26,13 @@ func GetPTPDeviceInfo(interfaceName string, ctx clients.ContainerContext) (devIn
 	log.Debugf("got tty for %s:  %s", interfaceName, devInfo.TtyGNSS)
 
 	// expecting a string like 0x1593
-	devInfo.DeviceID = commandWithCleanup(ctx, strings.TrimSpace, []string{
+	devInfo.DeviceID = commandWithPostprocessFunc(ctx, strings.TrimSpace, []string{
 		"cat", "/sys/class/net/" + interfaceName + "/device/device",
 	})
 	log.Debugf("got deviceID for %s:  %s", interfaceName, devInfo.DeviceID)
 
 	// expecting a string like 0x8086
-	devInfo.VendorID = commandWithCleanup(ctx, strings.TrimSpace, []string{
+	devInfo.VendorID = commandWithPostprocessFunc(ctx, strings.TrimSpace, []string{
 		"cat", "/sys/class/net/" + interfaceName + "/device/vendor",
 	})
 	log.Debugf("got vendorID for %s:  %s", interfaceName, devInfo.VendorID)
@@ -46,21 +47,21 @@ func busToGNSS(busID string) (gnss string) {
 	return "ttyGNSS_" + ttyGNSS
 }
 
-func commandWithCleanup(ctx clients.ContainerContext, cleanupFunc func(string) string, command []string) (result string) {
+func commandWithPostprocessFunc(ctx clients.ContainerContext, cleanupFunc func(string) string, command []string) (result string) {
 	clientset := clients.GetClientset()
 	stdout, _, err := clientset.ExecCommandContainer(ctx, command)
 	if err != nil {
-		log.Error("command in container failed unexpectedly. context: %v", ctx)
-		log.Error("command in container failed unexpectedly. command: %v", command)
-		log.Error("command in container failed unexpectedly. error: %v", err)
+		log.Errorf("command in container failed unexpectedly. context: %v", ctx)
+		log.Errorf("command in container failed unexpectedly. command: %v", command)
+		log.Errorf("command in container failed unexpectedly. error: %v", err)
 		return ""
 	}
 	return cleanupFunc(stdout)
 }
 
-// Read from the ttyGNSS of the passed devInfo.
-func ReadTtyGNSS(ctx clients.ContainerContext, devInfo PTPDeviceInfo) string {
-	return commandWithCleanup(ctx, strings.TrimSpace, []string{
-		"/bin/sh", "-c", "timeout 20 cat " + devInfo.TtyGNSS,
+// Read lines from the ttyGNSS of the passed devInfo.
+func ReadTtyGNSS(ctx clients.ContainerContext, devInfo PTPDeviceInfo, lines, timeoutSeconds int) string {
+	return commandWithPostprocessFunc(ctx, strings.TrimSpace, []string{
+		"timeout", strconv.Itoa(timeoutSeconds),  "head", "-n", strconv.Itoa(lines), devInfo.TtyGNSS,
 	})
 }
