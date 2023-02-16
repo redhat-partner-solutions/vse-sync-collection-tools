@@ -51,8 +51,6 @@ func TestRun(t *testing.T) {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	// TODO: Can we modify the ginkgo Spec tree at this point to make it more user friendly to check about skipping tests?
-
 	clusterInfo, err := env.LoadClusterDefFromFile(envPath)
 	if err != nil {
 		log.Fatal(err)

@@ -1,7 +1,0 @@
-suite_configs:
-  - ptp_tests_config:
-      namespace: openshift-ptp
-      pod_name: linuxptp-daemon-z5hh8
-      container: linuxptp-daemon-container
-      interface_name: ens7f0
-      tty_timeout: 10

@@ -42,6 +42,7 @@ func GetPTPDeviceInfo(interfaceName string, ctx clients.ContainerContext) (devIn
 // transform a bus ID to an expected GNSS TTY name.
 // e.g. "0000:86:00.0" -> "ttyGNSS_8600", "0000:51:02.1" -> "ttyGNSS_5102"
 func busToGNSS(busID string) (gnss string) {
+	log.Debugf("convert %s to GNSS tty", busID)
 	parts := strings.Split(busID, ":")
 	ttyGNSS := parts[1] + strings.Split(parts[2], ".")[0]
 	return "ttyGNSS_" + ttyGNSS

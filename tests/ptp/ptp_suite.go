@@ -1,8 +1,6 @@
 package ptp
 
 import (
-	"fmt"
-
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/config"
 )
 
@@ -19,6 +17,5 @@ type PtpConfig struct {
 var ptpConfig = PtpConfig{}
 
 func init() {
-	fmt.Println("ptp suite INit")
 	config.RegisterCustomConfig(ptpCustomConfigKey, &ptpConfig)
 }

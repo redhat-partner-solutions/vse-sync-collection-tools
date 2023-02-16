@@ -13,7 +13,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-// A Clientset is the usual way of collecting clients for the different k8s API groups in one place
+// A Clientset contains clients for the different k8s API groups in one place
 type Clientset struct {
 	RestConfig    *rest.Config
 	DynamicClient dynamic.Interface
