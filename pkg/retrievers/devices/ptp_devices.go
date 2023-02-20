@@ -15,6 +15,11 @@ type PTPDeviceInfo struct {
 	TtyGNSS  string
 }
 
+type DevDPLLInfo struct {
+	State   string
+	Offset  string
+}
+
 func GetPTPDeviceInfo(interfaceName string, ctx clients.ContainerContext) (devInfo PTPDeviceInfo) {
 	// expecting a string like "../../../0000:86:00.0" here, just keep the last path section with filepath.Base
 	busID := commandWithPostprocessFunc(ctx, filepath.Base, []string{
@@ -66,3 +71,39 @@ func ReadTtyGNSS(ctx clients.ContainerContext, devInfo PTPDeviceInfo, lines, tim
 		"timeout", strconv.Itoa(timeoutSeconds),  "head", "-n", strconv.Itoa(lines), devInfo.TtyGNSS,
 	})
 }
+
+// GetDevDPLLInfo returns the device DPLL info for an interface.
+func GetDevDPLLInfo(ctx clients.ContainerContext, interfaceName string) (dpllInfo DevDPLLInfo) {
+   
+    dpllInfo.State = "-1"
+    dpllInfo.Offset = "-1"
+	commands := []string{
+		"cat", "/sys/class/net/" + interfaceName + "/device/dpll_1_state",
+	}
+
+	clientset := clients.GetClientset()
+	stdout, _, err := clientset.ExecCommandContainer(ctx, commands)
+	if err != nil {
+		log.Errorf("command in container failed unexpectedly. context: %v", ctx)
+		log.Errorf("command in container failed unexpectedly. command: %v", commands)
+		log.Errorf("command in container failed unexpectedly. error: %v", err)
+		return 
+	}
+	dpllInfo.State = strings.TrimSpace(stdout)
+
+	
+	commands = []string{
+		"cat", "/sys/class/net/" + interfaceName + "/device/dpll_1_offset",
+	}
+
+	if err != nil {
+		log.Errorf("command in container failed unexpectedly. context: %v", ctx)
+		log.Errorf("command in container failed unexpectedly. command: %v", commands)
+		log.Errorf("command in container failed unexpectedly. error: %v", err)
+		return 
+	}
+	dpllInfo.Offset = strings.TrimSpace(stdout)
+
+	return 
+}
+
