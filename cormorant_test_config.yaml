@@ -5,3 +5,4 @@ suite_configs:
       container: linuxptp-daemon-container # this should be autodiscovered
       interface_name: ens7f0
       tty_timeout: 30
+      dpll_reads: 4

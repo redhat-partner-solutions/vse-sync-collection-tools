@@ -75,35 +75,13 @@ func ReadTtyGNSS(ctx clients.ContainerContext, devInfo PTPDeviceInfo, lines, tim
 // GetDevDPLLInfo returns the device DPLL info for an interface.
 func GetDevDPLLInfo(ctx clients.ContainerContext, interfaceName string) (dpllInfo DevDPLLInfo) {
    
-    dpllInfo.State = "-1"
-    dpllInfo.Offset = "-1"
-	commands := []string{
+	dpllInfo.State = commandWithPostprocessFunc(ctx, strings.TrimSpace, []string{
 		"cat", "/sys/class/net/" + interfaceName + "/device/dpll_1_state",
-	}
-
-	clientset := clients.GetClientset()
-	stdout, _, err := clientset.ExecCommandContainer(ctx, commands)
-	if err != nil {
-		log.Errorf("command in container failed unexpectedly. context: %v", ctx)
-		log.Errorf("command in container failed unexpectedly. command: %v", commands)
-		log.Errorf("command in container failed unexpectedly. error: %v", err)
-		return 
-	}
-	dpllInfo.State = strings.TrimSpace(stdout)
-
-	
-	commands = []string{
+	})
+	dpllInfo.Offset = commandWithPostprocessFunc(ctx, strings.TrimSpace, []string{
 		"cat", "/sys/class/net/" + interfaceName + "/device/dpll_1_offset",
-	}
-
-	if err != nil {
-		log.Errorf("command in container failed unexpectedly. context: %v", ctx)
-		log.Errorf("command in container failed unexpectedly. command: %v", commands)
-		log.Errorf("command in container failed unexpectedly. error: %v", err)
-		return 
-	}
-	dpllInfo.Offset = strings.TrimSpace(stdout)
-
+	})
+	
 	return 
 }
 

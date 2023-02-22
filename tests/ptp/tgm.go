@@ -15,7 +15,6 @@ import (
 const (
 	VendorIntel = "0x8086"
 	DeviceE810 = "0x1593"
-	DPLLReads = 2
 )
 
 var _ = Describe("TGM", func() {
@@ -48,11 +47,10 @@ var _ = Describe("TGM", func() {
 				Expect(s[6]).To(Not(Equal("0")))
 			}
 		})
-		It("DPLL should receive a valid and stable 1PPS signal coming from GNSS",  MustPassRepeatedly(DPLLReads), func() {
+		It("DPLL should receive a valid and stable 1PPS signal coming from GNSS",  MustPassRepeatedly(ptpConfig.DpllReads), func() {
 
 			ptpContext := clients.NewContainerContext(ptpConfig.Namespace, ptpConfig.PodName, ptpConfig.Container)
 			
-			// retrieve DPLL info
 			dpll := devices.GetDevDPLLInfo(ptpContext, ptpConfig.InterfaceName)
 
 			// TODO reveal actual DPLL status and provide recommendations 

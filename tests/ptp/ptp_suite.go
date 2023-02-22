@@ -12,6 +12,7 @@ type PtpConfig struct {
 	Container     string `yaml:"container"`
 	InterfaceName string `yaml:"interface_name"`
 	TtyTimeout    int    `yaml:"tty_timeout"`
+	DpllReads     int    `yaml:"dpll_reads"`
 }
 
 var ptpConfig = PtpConfig{}
