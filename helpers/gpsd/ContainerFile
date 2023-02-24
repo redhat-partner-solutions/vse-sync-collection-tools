@@ -28,6 +28,9 @@ COPY --from=builder /usr/local/bin/gpsmon /usr/local/bin/gpsmon
 #add ubxtool
 COPY --from=builder /usr/local/bin/ubxtool /usr/local/bin/ubxtool
 
+#add gpspipe
+COPY --from=builder /usr/local/bin/gpspipe /usr/local/bin/gpspipe
+
 #add gpsd
 COPY --from=builder /usr/local/sbin/gpsd /usr/local/sbin/gpsd
 
