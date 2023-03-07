@@ -3,9 +3,7 @@ FROM registry.access.redhat.com/ubi9 as builder
 
 RUN dnf -y install python3-pip
 
-RUN pip3 install allantools scipy pandas numpy
+RUN pip3 install allantools scipy pandas numpy matplotlib
 COPY . /app
 
-#run
-#ENTRYPOINT ["sh", "-c", ""]
-CMD ["python3", "/app/ptp_ngen_kpis.py"]
+ENTRYPOINT ["python3", "/app/ptp_ngen_kpis.py"]
