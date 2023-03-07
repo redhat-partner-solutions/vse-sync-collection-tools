@@ -3,8 +3,8 @@ module github.com/redhat-partner-solutions/vse-sync-testsuite
 go 1.19
 
 require (
-	github.com/onsi/ginkgo/v2 v2.8.3
-	github.com/onsi/gomega v1.27.0
+	github.com/onsi/ginkgo/v2 v2.9.0
+	github.com/onsi/gomega v1.27.1
 	github.com/openshift/client-go v0.0.0-20230120202327-72f107311084
 	github.com/sirupsen/logrus v1.9.0
 	gopkg.in/yaml.v3 v3.0.1

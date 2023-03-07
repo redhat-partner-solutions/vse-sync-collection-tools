@@ -1,14 +1,14 @@
 package ptp
 
 import (
-	"strings"
-	"strconv"
 	"math"
+	"strconv"
+	"strings"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/clients"
-	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/retrievers/devices"
+	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/collectors/devices"
 	log "github.com/sirupsen/logrus"
 )
 

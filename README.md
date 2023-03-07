@@ -35,7 +35,6 @@ See [Adding a Test](doc/implementing_a_test.md)
 ## To Do List
 
 * unit tests for all of `pkg/`
-* rename `retrievers` to `collectors`
 * Specify an interface for a `collector`
 * consider `collector`s as Go packages
 * `collector` registry?

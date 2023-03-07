@@ -45,7 +45,7 @@ Your package-scoped variable will then be automatically populated with configura
 
 If an existing collector exists for the thing you wish to observe, then reuse that.
 
-For an example Collector, see `GetClusterVersion` in [pkg/retrievers/cluster.go](../pkg/retrievers/cluster.go)
+For an example Collector, see `GetClusterVersion` in [pkg/collectors/cluster.go](../pkg/collectors/cluster.go)
 
 Defining these is work in progress, they should be as independent as possible from assumptions about the underlying cluster.
 

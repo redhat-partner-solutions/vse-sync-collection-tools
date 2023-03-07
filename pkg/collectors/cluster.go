@@ -1,4 +1,4 @@
-package retrievers
+package collectors
 
 import (
 	"context"
