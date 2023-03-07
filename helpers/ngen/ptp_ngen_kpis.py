@@ -1,22 +1,24 @@
+import sys
+import os
 from scipy import signal
 from scipy.signal import butter, filtfilt
-import os
 import  allantools
 import matplotlib.pyplot as plt
 import time
 import pandas as pd
 import numpy as np
 
-#Filter the phase data with 0.1Hz low-pass filter
-filename="./16Dec22_SC_ptp4l.csv"
-if os.path.exists(filename):
-    df=pd.read_csv(filename, dtype={"tstamp": "float64", "phase": "float64", "state": "float64", "freq": "float64", "delay": "float64", "event": "string"})
-    print ("reading file")
-    print (df.dtypes)
-    df.describe()
+if len(sys.argv) ==2:
+	filename=sys.argv[1]
+	if os.path.exists(filename):
+    	df=pd.read_csv(filename, dtype={"tstamp": "float64", "phase": "float64", "state": "float64", "freq": "float64", "delay": "float64", "event": "string"})
+    	print ("reading file")
+    	df.describe()
+	else:
+    	print ("no Such File named ", filename)
+    	sys.exit()
 else:
-    print ("no Such File")
-    sys.exit()
+	print ("no postprocessed input data received as input")
 
 starttime = df['tstamp'].values[0]
 
