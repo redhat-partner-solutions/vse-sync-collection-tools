@@ -3,10 +3,28 @@ import os
 from scipy import signal
 from scipy.signal import butter, filtfilt
 import  allantools
-import matplotlib.pyplot as plt
 import time
 import pandas as pd
 import numpy as np
+
+"""
+Calculate frequency of reception of new samples from ptp4l process
+
+Input: samples, number_of_samples
+Output: update_rate in 
+"""
+def calculate_update_rate(df,s2_count):
+    firstS2 = (df['state'].values == 2).argmax()
+    prevS2 = firstS2
+    cumS2delta = 0
+    x=0
+    S2count=0    
+    for x in range (firstS2+1, 1024): #use just about 1k samples (minus ~ init S0/S1's and any events)\n",
+        if df.loc[x].state == 2:
+            cumS2delta = cumS2delta+(df.loc[x].tstamp-df.loc[prevS2].tstamp)
+            prevS2=x
+            S2count=S2count+1
+    return round((1/(cumS2delta/S2count)))
 
 if len(sys.argv) == 2:
     filename=sys.argv[1]
@@ -20,28 +38,14 @@ else:
     print ("no postprocessed input data received as input")
 
 
-starttime = df['tstamp'].values[0]
-
+start_time = df['tstamp'].values[0]
 s2_count = (df['state'].values == 2).sum()
-print ("number of s2 :",s2_count)
+print ("number of samples with servo s2 :",s2_count)
 
-firstS2 = (df['state'].values == 2).argmax()
-prevS2 = firstS2
-cumS2delta = 0
-x=0
-S2count=0
-
-# calculate update rate from ptp4l stats frequency of reception of new samples from ptp4l process
-for x in range (firstS2+1, 1024): #use just about 1k samples (minus ~ init S0/S1's and any events)\n",
-    if df.loc[x].state == 2:
-    	cumS2delta = cumS2delta+(df.loc[x].tstamp-df.loc[prevS2].tstamp)
-    	prevS2=x
-    	S2count=S2count+1
-
-update_rate = round((1/(cumS2delta/S2count)))
+update_rate = calculate_update_rate(df, s2_count)
 print ("Update rate estimate from S2 deltas: ",update_rate, "updates/s")
 
-#initial transient sync period is fixed to 5'
+#initial transient sync period is fixed to 5 minutes
 end_initial_syncperiod=300*update_rate
 
 
@@ -88,11 +92,6 @@ else:
 print ("G.8273.2 7.1.1 Max. Constant Time Error averaged over 1000se cTE <= [-10ns,+10ns]")
 if s2_count > 2000 * update_rate:
     df['MovAvg'] = df.phase.rolling(1000*update_rate,min_periods=1000*update_rate).mean()
-    #df.loc[end_initial_syncperiod+1000*update_rate:len(df)].plot(kind='line',linewidth=0.25,x='tstamp', y='MovAvg', color='blue')
-    #plt.title("Constant Time Error (cTE), 1000s Moving Average", fontsize=12, weight='bold')
-    #plt.xlabel("Time (s)")
-    #plt.ylabel("cTE (ns)")
-    #plt.show()
     cte_min    = df.loc[(end_initial_syncperiod+1000*update_rate):len(df)].MovAvg.min()
     cte_mean   = df.loc[(end_initial_syncperiod+1000*update_rate):len(df)].MovAvg.mean()
     cte_stddev = df.loc[(end_initial_syncperiod+1000*update_rate):len(df)].MovAvg.std()
@@ -116,11 +115,6 @@ else:
 print("G.8273.2 7.1.2 Max. Dynamic Time Error, 0.1Hz Low-Pass Filtered; MTIE < 10ns")
 mtie_taus, mtie_devs, mtie_errs, ns = allantools.mtie(lpf_signal, rate=update_rate,
                                                      data_type='phase', taus=taus_list)
-#plt.plot(mtie_taus, mtie_devs, color='blue'),
-#plt.title("MTIE, G.8273.2 Class-C mask; Constant Temperature", fontsize=12, weight='bold'),
-#plt.xlabel("Tau (s)")
-#plt.ylabel("MTIE (ns)")
-#plt.show()
 mtie_min = mtie_devs.min()
 mtie_max = mtie_devs.max()
 mtie_pktpk = mtie_max-mtie_min
@@ -138,11 +132,6 @@ else:
 tdev_taus, tdev_devs, tdev_errs, ns = allantools.tdev(lpf_signal, rate=update_rate,
                                                      data_type='phase', taus=taus_list)
 
-#plt.plot(tdev_taus, tdev_devs, color='blue'),
-#plt.title("TDEV, G.8273.2 Class-C mask; Constant Temperature", fontsize=12, weight='bold'),
-#plt.xlabel("Tau (s)")
-#plt.ylabel("TDEV (ns)")
-#plt.show()
 tdev_min = tdev_devs.min()
 tdev_max = tdev_devs.max()
 tdev_pktpk = tdev_max-tdev_min
@@ -154,20 +143,3 @@ else:
     print ("Min TDEV:",'{:.3f}'.format(tdev_min), "ns")
     print ("Max TDEV:",'{:.3f}'.format(tdev_max), "ns")
     print ("Max-Min TDEV:",'{:.3f}'.format(tdev_pktpk), "ns")
-
-# G.8273.2 7.1.3 Max. dynamic Time Error, 0.1Hz High Pass Filtered; dTE
-
-# generate HPF
-#btype='high'        	 							# band type is type of filter
-#b, a = butter(fiorder, w, btype, analog, output)
-#hpf_signal = filtfilt(b, a, input_signal)
-#plt.plot(hpf_signal, linewidth=0.25, color='blue')
-#plt.title("Time Error (TE), 0.1Hz high-pass filtered\", fontsize=12, weight='bold')",
-#plt.xlabel("Time (s))"
-#plt.ylabel("TE (ns))"
-#plt.show()
-
-# G.8273.2 7.1.4.1 Relative Constant Time Error Noise Generation; cTE
-
-
-# G.8273.2 7.1.4.2 Relative Dynamic Time Error Low-Pass Filtered Noise Generation (MTIE)
