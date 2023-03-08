@@ -40,14 +40,8 @@ func (c *ContainerContext) GetContainerName() string {
 	return c.containerName
 }
 
-type Command interface {
-	ExecCommandContainer(ContainerContext, string) (string, string, error)
-}
-
 // ExecCommand runs command in a container and returns output buffers
 func (clientsholder *Clientset) ExecCommandContainer(ctx ContainerContext, command []string) (stdout, stderr string, err error) {
-	// commandStr := []string{"sh", "-c"}
-	// commandStr = append(commandStr, command...)
 	commandStr := command
 	var buffOut bytes.Buffer
 	var buffErr bytes.Buffer
