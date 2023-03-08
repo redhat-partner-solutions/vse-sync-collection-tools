@@ -39,7 +39,7 @@ event: Event information
 3) Run the container to calculate G.8273.2 Noise Generation KPIs consuming post-processed data from ptp4l in `/tmp/data.csv`:
 
 ```
-# podman run -it --rm -v /tmp:/tmp localhost/ngen_kpis:0.1 /tmp/data.csv
+# podman run -it --rm -v /tmp:/tmp quay.io/jnunez/ngen_kpis:0.1 /tmp/data.csv
 ```
 
 
