@@ -89,7 +89,7 @@ else:
     print ("Max phase:",'{:.3f}'.format(phase_max), "ns")
     print ("Phase stddev:",'{:.3f}'.format(phase_stddev), "ns")
 
-print ("G.8273.2 7.1.1 Max. Constant Time Error averaged over 1000se cTE <= [-10ns,+10ns]")
+print ("G.8273.2 7.1.1 Max. Constant Time Error averaged over 1000sec cTE <= 10ns")
 if s2_count > 2000 * update_rate:
     df['MovAvg'] = df.phase.rolling(1000*update_rate,min_periods=1000*update_rate).mean()
     cte_min    = df.loc[(end_initial_syncperiod+1000*update_rate):len(df)].MovAvg.min()
@@ -112,7 +112,7 @@ if s2_count > 2000 * update_rate:
 else:
 	print("Insufficient data for cTE computation, at least 2000s are needed")
 
-print("G.8273.2 7.1.2 Max. Dynamic Time Error, 0.1Hz Low-Pass Filtered; MTIE < 10ns")
+print("G.8273.2 7.1.2 Max. Dynamic Time Error, 0.1Hz Low-Pass Filtered; MTIE <= 10ns")
 mtie_taus, mtie_devs, mtie_errs, ns = allantools.mtie(lpf_signal, rate=update_rate,
                                                      data_type='phase', taus=taus_list)
 mtie_min = mtie_devs.min()
@@ -128,7 +128,7 @@ else:
     print ("Max-Min MTIE:",'{:.3f}'.format(mtie_pktpk), "ns")
 
 
-print("G.8273.2 7.1.2 Max. Dynamic Time Error, 0.1Hz Low-Pass Filtered; TDEV < 2ns")
+print("G.8273.2 7.1.2 Max. Dynamic Time Error, 0.1Hz Low-Pass Filtered; TDEV <= 2ns")
 tdev_taus, tdev_devs, tdev_errs, ns = allantools.tdev(lpf_signal, rate=update_rate,
                                                      data_type='phase', taus=taus_list)
 tdev_min = tdev_devs.min()
@@ -141,4 +141,5 @@ if max_abs_tdev > 2:
 else:
     print ("Min TDEV:",'{:.3f}'.format(tdev_min), "ns")
     print ("Max TDEV:",'{:.3f}'.format(tdev_max), "ns")
-    print ("Max-Min TDEV:",'{:.3f}'.format(tdev_pktpk), "ns")
+    print ("Max-Min TDEV:",'{:.3f}'.format(tdev_pktpk), "ns")  
+    print ("Max |TDEV| below 2ns:",'{:.3f}'.format(max_abs_tdev), "ns")
