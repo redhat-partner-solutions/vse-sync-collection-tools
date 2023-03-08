@@ -128,10 +128,9 @@ else:
     print ("Max-Min MTIE:",'{:.3f}'.format(mtie_pktpk), "ns")
 
 
-# G.8273.2 7.1.2 Max. Dynamic Time Error, 0.1Hz Low-Pass Filtered; TDEV < 2ns
+print("G.8273.2 7.1.2 Max. Dynamic Time Error, 0.1Hz Low-Pass Filtered; TDEV < 2ns")
 tdev_taus, tdev_devs, tdev_errs, ns = allantools.tdev(lpf_signal, rate=update_rate,
                                                      data_type='phase', taus=taus_list)
-
 tdev_min = tdev_devs.min()
 tdev_max = tdev_devs.max()
 tdev_pktpk = tdev_max-tdev_min
