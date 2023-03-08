@@ -6,7 +6,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	ocpconfigv1 "github.com/openshift/client-go/config/clientset/versioned/typed/config/v1"
+	ocpconfig "github.com/openshift/client-go/config/clientset/versioned"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -17,7 +17,7 @@ import (
 type Clientset struct {
 	RestConfig    *rest.Config
 	DynamicClient dynamic.Interface
-	OcpClient     ocpconfigv1.ConfigV1Interface
+	OcpClient     ocpconfig.Interface
 	K8sClient     kubernetes.Interface
 	ready         bool
 }
@@ -71,7 +71,7 @@ func newClientset(kubeconfigPaths ...string) (*Clientset, error) {
 		return nil, fmt.Errorf("cannot instantiate k8sclient: %s", err)
 	}
 	// create the oc client
-	clientset.OcpClient, err = ocpconfigv1.NewForConfig(clientset.RestConfig)
+	clientset.OcpClient, err = ocpconfig.NewForConfig(clientset.RestConfig)
 	if err != nil {
 		return nil, fmt.Errorf("cannot instantiate ocClient: %s", err)
 	}
