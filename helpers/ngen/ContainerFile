@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9 as builder
+FROM registry.access.redhat.com/ubi9
 
 
 RUN dnf -y install python3-pip
