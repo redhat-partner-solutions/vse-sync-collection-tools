@@ -24,7 +24,7 @@ parser.add_argument('-t', '--transient', type = int,
 parser.add_argument('-s', '--steady', type = int,
                     help='minimum steady state period to enable calculations, defaults to 2000sec', default = 2000)
 parser.add_argument('-p','--plot', type = bool,
-                    help='add plots to the results', default = "False")
+                    help='add plots to the results', default = False)
 parser.add_argument('-o','--output', 
                     help='Output file name, defaults to stdout', default="stdout")
 
@@ -34,7 +34,7 @@ args = parser.parse_args()
 if os.path.exists(args.input):
     df=pd.read_csv(args.input, dtype={"tstamp": "float64", "phase": "float64", "state": "float64", "freq": "float64", "delay": "float64", "event": "string"})
 else:
-    print ("no Such File named ", args.input)
+    raise FileNotFoundError
 
 lpf_signal, update_rate, s2_count = preprocess.run(df, args.transient)
-process.run(df, args.transient, args.clockclass, args.steady, args.plot, s2_count, update_rate, lpf_signal)
+process.run(df, args.transient, args.clockclass, args.steady, args.plot, args.output, s2_count, update_rate, lpf_signal)

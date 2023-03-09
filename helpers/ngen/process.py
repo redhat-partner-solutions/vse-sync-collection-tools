@@ -1,4 +1,3 @@
-import sys
 import os
 from scipy import signal
 from scipy.signal import butter, filtfilt
@@ -8,8 +7,25 @@ import time
 import pandas as pd
 import numpy as np
 
+def plot_abs_te(df, end_initial_syncperiod):
+    df.loc[end_initial_syncperiod:len(df)].plot(kind='line',linewidth=0.25, x='tstamp', y='phase', color='blue')
+    plt.title("Time Error, unfiltered", fontsize=12, weight='bold')
+    plt.xlabel("Time (s)")
+    plt.ylabel("TE (ns)")
+    plt.show()
 
-def calculate_abs_te(df, end_initial_syncperiod, mask_te, taus_list, visibility):
+
+def collect_abs_te(max_abs_te,mask_te,phase_pktpk,phase_mean,phase_min,phase_max,phase_stddev):         
+    if max_abs_te > mask_te:
+        print ("Max Absolute Time Error unfiltered above 30ns")
+    else:
+        print ("pk-pk phase:",'{:.3f}'.format(phase_pktpk), "ns")
+        print ("Mean phase:",'{:.3f}'.format(phase_mean), "ns")
+        print ("Min phase:",'{:.3f}'.format(phase_min), "ns")
+        print ("Max phase:",'{:.3f}'.format(phase_max), "ns")
+        print ("Phase stddev:",'{:.3f}'.format(phase_stddev), "ns")
+
+def calculate_abs_te(df, end_initial_syncperiod, mask_te, taus_list, visibility, output):
     """
     Calculate TE
 
@@ -27,24 +43,33 @@ def calculate_abs_te(df, end_initial_syncperiod, mask_te, taus_list, visibility)
     print ("Max |TE|:",'{:.3f}'.format(max_abs_te), "ns")
 
     if visibility:
-        df.loc[end_initial_syncperiod:len(df)].plot(kind='line',linewidth=0.25, x='tstamp', y='phase', color='blue')
-        plt.title("Time Error, unfiltered", fontsize=12, weight='bold')
-        plt.xlabel("Time (s)")
-        plt.ylabel("TE (ns)")
-        plt.show()
-
-    if max_abs_te > mask_te:
-        print ("Max Absolute Time Error unfiltered above 30ns")
-        sys.exit(1)
+        plot_abs_te(df,end_initial_syncperiod)
+    if output == 'stdout':
+        collect_abs_te(max_abs_te,mask_te,phase_pktpk,phase_mean,phase_min,phase_max,phase_stddev)
     else:
-        print ("pk-pk phase:",'{:.3f}'.format(phase_pktpk), "ns")
-        print ("Mean phase:",'{:.3f}'.format(phase_mean), "ns")
-        print ("Min phase:",'{:.3f}'.format(phase_min), "ns")
-        print ("Max phase:",'{:.3f}'.format(phase_max), "ns")
-        print ("Phase stddev:",'{:.3f}'.format(phase_stddev), "ns")
+        collect_abs_te(max_abs_te,mask_te,phase_pktpk,phase_mean,phase_min,phase_max,phase_stddev)
 
 
-def calculate_const_te(df, s2_count, update_rate, steady_syncperiod, end_initial_syncperiod, mask_cte, taus_list, visibility):
+def plot_const_te(df, end_initial_syncperiod, update_rate):
+    df.loc[end_initial_syncperiod+1000*update_rate:len(df)].plot(kind='line',linewidth=0.25,x='tstamp', y='MovAvg', color='blue')
+    plt.title("Constant Time Error (cTE), 1000s Moving Average", fontsize=12, weight='bold')
+    plt.xlabel("Time (s)")
+    plt.ylabel("cTE (ns)")
+    plt.show()
+
+
+def collect_const_te(max_abs_cte,mask_cte,cte_mean,cte_min,cte_max,cte_pktpk,cte_stdev,cte_var):
+    if max_abs_cte > mask_cte:
+        print ("Max constant Time Error averaged over 1000s above ", mask_cte,"ns")
+    else:
+        print ("Mean cTE:",'{:.3f}'.format(cte_mean), "ns")
+        print ("Min cTE:",'{:.3f}'.format(cte_min), "ns")
+        print ("Max cTE:",'{:.3f}'.format(cte_max), "ns")
+        print ("pk-pk cTE:",'{:.3f}'.format(cte_pktpk), "ns")
+        print ("cTE stdev:",'{:.3f}'.format(cte_stdev), "ns")
+        print ("cTE Var: +/-",'{:.3f}'.format(cte_var), "ns")
+
+def calculate_const_te(df, s2_count, update_rate, steady_syncperiod, end_initial_syncperiod, mask_cte, taus_list, visibility, output):
     """
     Calculate cTE
 
@@ -57,34 +82,39 @@ def calculate_const_te(df, s2_count, update_rate, steady_syncperiod, end_initial
         df['MovAvg'] = df.phase.rolling(observation_interval*update_rate,min_periods=observation_interval*update_rate).mean()
         cte_min    = df.loc[(end_initial_syncperiod+observation_interval*update_rate):len(df)].MovAvg.min()
         cte_mean   = df.loc[(end_initial_syncperiod+observation_interval*update_rate):len(df)].MovAvg.mean()
-        cte_stddev = df.loc[(end_initial_syncperiod+observation_interval*update_rate):len(df)].MovAvg.std()
+        cte_stdev = df.loc[(end_initial_syncperiod+observation_interval*update_rate):len(df)].MovAvg.std()
         cte_max = df.loc[(end_initial_syncperiod+observation_interval*update_rate):len(df)].MovAvg.max()
         cte_var = max(cte_max, abs(cte_mean-cte_min))
         cte_pktpk = cte_max-cte_min
         max_abs_cte = max(cte_max, abs(cte_min))
         print ("Max |cTE|:",'{:.3f}'.format(max_abs_cte), "ns")
-        
         if visibility:
-            df.loc[end_initial_syncperiod+1000*update_rate:len(df)].plot(kind='line',linewidth=0.25,x='tstamp', y='MovAvg', color='blue')
-            plt.title("Constant Time Error (cTE), 1000s Moving Average", fontsize=12, weight='bold')
-            plt.xlabel("Time (s)")
-            plt.ylabel("cTE (ns)")
-            plt.show()
-        
-        if max_abs_cte > mask_cte:
-            print ("Max constant Time Error averaged over 1000s above ", mask_cte,"ns")
+            plot_const_te(df, end_initial_syncperiod, update_rate)
+        if output == 'stdout':
+            collect_const_te(max_abs_cte,mask_cte,cte_mean,cte_min,cte_max,cte_pktpk,cte_stdev,cte_var)
         else:
-            print ("Mean cTE:",'{:.3f}'.format(cte_mean), "ns")
-            print ("Min cTE:",'{:.3f}'.format(cte_min), "ns")
-            print ("Max cTE:",'{:.3f}'.format(cte_max), "ns")
-            print ("pk-pk cTE:",'{:.3f}'.format(cte_pktpk), "ns")
-            print ("cTE stddev:",'{:.3f}'.format(cte_stddev), "ns")
-            print ("cTE Var: +/-",'{:.3f}'.format(cte_var), "ns")
+            collect_const_te(max_abs_cte,mask_cte,cte_mean,cte_min,cte_max,cte_pktpk,cte_stdev,cte_var)
     else:
         print ("Insufficient data for cTE computation, at least 2000s are needed")
 
 
-def calculate_mtie(df, lpf_signal, update_rate, mask_mtie, taus_list, visibility):
+def plot_mtie(mtie_taus, mtie_devs):
+    plt.plot(mtie_taus, mtie_devs, color='blue'),
+    plt.title("MTIE, G.8273.2 Class-C mask; Constant Temperature", fontsize=12, weight='bold'),
+    plt.xlabel("Tau (s)")
+    plt.ylabel("MTIE (ns)")
+    plt.show()
+
+
+def collect_mtie_to_stdout(max_abs_mtie,mask_mtie,mtie_min,mtie_max,mtie_pktpk):
+    if max_abs_mtie > mask_mtie:
+        print ("Max Dynamic Time Error, dTE (MTIE) above ", mask_mtie,"ns")
+    else:
+        print ("Min MTIE:",'{:.3f}'.format(mtie_min), "ns")
+        print ("Max MTIE:",'{:.3f}'.format(mtie_max), "ns")
+        print ("Max-Min MTIE:",'{:.3f}'.format(mtie_pktpk), "ns")
+
+def calculate_mtie(df, lpf_signal, update_rate, mask_mtie, taus_list, visibility, output):
     """
     Calculate mtie
 
@@ -100,21 +130,28 @@ def calculate_mtie(df, lpf_signal, update_rate, mask_mtie, taus_list, visibility
     max_abs_mtie = max(mtie_max, abs(mtie_min))
     print ("Max |MTIE|:",'{:.3f}'.format(max_abs_mtie), "ns")
     if visibility:
-        plt.plot(mtie_taus, mtie_devs, color='blue'),
-        plt.title("MTIE, G.8273.2 Class-C mask; Constant Temperature", fontsize=12, weight='bold'),
-        plt.xlabel("Tau (s)")
-        plt.ylabel("MTIE (ns)")
-        plt.show()
-
-    if max_abs_mtie > mask_mtie:
-        print ("Max Dynamic Time Error, dTE (MTIE) above ", mask_mtie,"ns")
+       plot_mtie(mtie_taus,mtie_devs) 
+    if output == 'stdout':
+        collect_mtie_to_stdout(max_abs_mtie, mask_mtie, mtie_min, mtie_max, mtie_pktpk)
     else:
-        print ("Min MTIE:",'{:.3f}'.format(mtie_min), "ns")
-        print ("Max MTIE:",'{:.3f}'.format(mtie_max), "ns")
-        print ("Max-Min MTIE:",'{:.3f}'.format(mtie_pktpk), "ns")
+        collect_mtie_to_stdout(max_abs_mtie, mask_mtie, mtie_min, mtie_max, mtie_pktpk)
 
+def plot_tdev(tdev_taus, tdev_devs):
+    plt.plot(tdev_taus, tdev_devs, color='blue'),
+    plt.title("TDEV, G.8273.2 Class-C mask; Constant Temperature", fontsize=12, weight='bold'),
+    plt.xlabel("Tau (s)")
+    plt.ylabel("TDEV (ns)")
+    plt.show()
 
-def calculate_tdev(df, lpf_signal, update_rate, mask_tdev, taus_list, visibility):
+def collect_tdev_to_stdout(max_abs_tdev,mask_tdev,tdev_min,tdev_max,tdev_pktpk):
+    if max_abs_tdev > mask_tdev:
+        print ("Max Dynamic Time Error (TDEV) above ", mask_tdev,"ns")
+    else:
+        print ("Min TDEV:",'{:.3f}'.format(tdev_min), "ns")
+        print ("Max TDEV:",'{:.3f}'.format(tdev_max), "ns")
+        print ("Max-Min TDEV:",'{:.3f}'.format(tdev_pktpk), "ns")
+
+def calculate_tdev(df, lpf_signal, update_rate, mask_tdev, taus_list, visibility, output):
     """
     Calculate tdev
 
@@ -130,20 +167,13 @@ def calculate_tdev(df, lpf_signal, update_rate, mask_tdev, taus_list, visibility
     max_abs_tdev = max(tdev_max, abs(tdev_min))
     print ("Max |TDEV|:",'{:.3f}'.format(max_abs_tdev), "ns")
     if visibility:
-            plt.plot(tdev_taus, tdev_devs, color='blue'),
-            plt.title("TDEV, G.8273.2 Class-C mask; Constant Temperature", fontsize=12, weight='bold'),
-            plt.xlabel("Tau (s)")
-            plt.ylabel("TDEV (ns)")
-            plt.show()
-    if max_abs_tdev > mask_tdev:
-        print ("Max Dynamic Time Error (TDEV) above ", mask_tdev,"ns")
+        plot_tdev(tdev_taus, tdev_devs)
+    if output == 'stdout':
+        collect_tdev_to_stdout(max_abs_tdev,mask_tdev,tdev_min,tdev_max,tdev_pktpk)
     else:
-        print ("Min TDEV:",'{:.3f}'.format(tdev_min), "ns")
-        print ("Max TDEV:",'{:.3f}'.format(tdev_max), "ns")
-        print ("Max-Min TDEV:",'{:.3f}'.format(tdev_pktpk), "ns")
+        collect_tdev_to_stdout(max_abs_tdev,mask_tdev,tdev_min,tdev_max,tdev_pktpk)
 
-
-def run(df, transient_period, clk_class, visibility, steady_period, s2_count,  update_rate, lpf_signal):
+def run(df, transient_period, clk_class, steady_period, visibility, output, s2_count,  update_rate, lpf_signal):
     """
     Calculate NGEN KPIs
 
@@ -169,10 +199,10 @@ def run(df, transient_period, clk_class, visibility, steady_period, s2_count,  u
                      100,200,300,400,500,600,700,800,900,
                      1000,2000,3000,4000,5000,6000,7000,8000,9000,10000])
 
-    calculate_abs_te(df, end_initial_syncperiod, mask_te, taus_list, visibility)
+    calculate_abs_te(df, end_initial_syncperiod, mask_te, taus_list, visibility, output)
     
-    calculate_const_te(df, s2_count, update_rate, steady_period, end_initial_syncperiod, mask_cte, taus_list, visibility) 
+    calculate_const_te(df, s2_count, update_rate, steady_period, end_initial_syncperiod, mask_cte, taus_list, visibility, output) 
 
-    calculate_mtie(df, lpf_signal, update_rate, mask_mtie, taus_list, visibility)
+    calculate_mtie(df, lpf_signal, update_rate, mask_mtie, taus_list, visibility, output)
 
-    calculate_tdev(df, lpf_signal, update_rate, mask_tdev, taus_list, visibility)
+    calculate_tdev(df, lpf_signal, update_rate, mask_tdev, taus_list, visibility, output)
