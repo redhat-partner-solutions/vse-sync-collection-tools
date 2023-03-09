@@ -8,13 +8,14 @@ import time
 import pandas as pd
 import numpy as np
 
-"""
-Calculate TE
 
-Input: samples, sample number identifiying end of transient period, mask, taus
-Output:  max|TE|
-"""
 def calculate_abs_te(df, end_initial_syncperiod, mask_te, taus_list, visibility):
+    """
+    Calculate TE
+
+    Input: samples, sample number identifiying end of transient period, mask, taus
+    Output:  max|TE|
+    """
     print ("G.8273.2 7.1 Max. Absolute Time Error, unfiltered measured; max|TE| <= ", mask_te,"ns")
     phase_min    = df.loc[end_initial_syncperiod:len(df)].phase.min()
     phase_mean   = df.loc[end_initial_syncperiod:len(df)].phase.mean()
@@ -42,13 +43,14 @@ def calculate_abs_te(df, end_initial_syncperiod, mask_te, taus_list, visibility)
         print ("Max phase:",'{:.3f}'.format(phase_max), "ns")
         print ("Phase stddev:",'{:.3f}'.format(phase_stddev), "ns")
 
-"""
-Calculate cTE
 
-Input: samples, amount_of_useful_samples, sample_rate, sample number identifiying end of transient period, mask, taus
-Output:  max|cTE|
-"""
 def calculate_const_te(df, s2_count, update_rate, steady_syncperiod, end_initial_syncperiod, mask_cte, taus_list, visibility):
+    """
+    Calculate cTE
+
+    Input: samples, amount_of_useful_samples, sample_rate, sample number identifiying end of transient period, mask, taus
+    Output:  max|cTE|
+    """    
     print ("G.8273.2 7.1.1 Max. Constant Time Error averaged over 1000sec cTE <= ", mask_cte, "ns")
     observation_interval=1000
     if s2_count > steady_syncperiod * update_rate:
@@ -81,13 +83,14 @@ def calculate_const_te(df, s2_count, update_rate, steady_syncperiod, end_initial
     else:
         print ("Insufficient data for cTE computation, at least 2000s are needed")
 
-"""
-Calculate mtie
 
-Input: samples, low_pass_filter, sample_rate,  mask, taus
-Output:  max|MTIE|
-"""
 def calculate_mtie(df, lpf_signal, update_rate, mask_mtie, taus_list, visibility):
+    """
+    Calculate mtie
+
+    Input: samples, low_pass_filter, sample_rate,  mask, taus
+    Output:  max|MTIE|
+    """ 
     print("G.8273.2 7.1.2 Max. Dynamic Time Error, 0.1Hz Low-Pass Filtered; MTIE <= ", mask_mtie, "ns")
     mtie_taus, mtie_devs, mtie_errs, ns = allantools.mtie(lpf_signal, rate=update_rate,
                                                      data_type='phase', taus=taus_list)
@@ -110,13 +113,14 @@ def calculate_mtie(df, lpf_signal, update_rate, mask_mtie, taus_list, visibility
         print ("Max MTIE:",'{:.3f}'.format(mtie_max), "ns")
         print ("Max-Min MTIE:",'{:.3f}'.format(mtie_pktpk), "ns")
 
-"""
-Calculate tdev
 
-Input: samples, low_pass_filter, sample_rate,  mask, taus
-Output:  max|TDEV|
-"""
 def calculate_tdev(df, lpf_signal, update_rate, mask_tdev, taus_list, visibility):
+    """
+    Calculate tdev
+
+    Input: samples, low_pass_filter, sample_rate,  mask, taus
+    Output:  max|TDEV|
+    """ 
     print("G.8273.2 7.1.2 Max. Dynamic Time Error, 0.1Hz Low-Pass Filtered; TDEV <= ", mask_tdev, "ns")
     tdev_taus, tdev_devs, tdev_errs, ns = allantools.tdev(lpf_signal, rate=update_rate, 
                                                      data_type='phase', taus=taus_list)
@@ -138,14 +142,14 @@ def calculate_tdev(df, lpf_signal, update_rate, mask_tdev, taus_list, visibility
         print ("Max TDEV:",'{:.3f}'.format(tdev_max), "ns")
         print ("Max-Min TDEV:",'{:.3f}'.format(tdev_pktpk), "ns")
 
-"""
-Calculate NGEN KPIs
 
-Input: samples, transient period, clock class, enable ploting, number_of_samples, update rate in seconds, low pass filter
-Output: update_rate in 
-"""
 def run(df, transient_period, clk_class, visibility, steady_period, s2_count,  update_rate, lpf_signal):
-    
+    """
+    Calculate NGEN KPIs
+
+    Input: samples, transient period, clock class, enable ploting, number_of_samples, update rate in seconds, low pass filter
+    Output: update_rate in 
+    """    
     if clk_class == 'C':
         mask_te=30
         mask_cte=10
@@ -157,7 +161,6 @@ def run(df, transient_period, clk_class, visibility, steady_period, s2_count,  u
         mask_mtie=3
         mask_tdev=1
 
-    #initial transient sync period is fixed to 5 minutes
     end_initial_syncperiod=transient_period*update_rate
 
     taus_list = np.array([1/update_rate,

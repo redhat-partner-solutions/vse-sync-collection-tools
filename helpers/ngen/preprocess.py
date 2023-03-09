@@ -6,13 +6,14 @@ import pandas as pd
 import numpy as np
 
 
-"""
-Calculate frequency of reception of new samples from ptp4l process
 
-Input: samples, number_of_samples
-Output: update_rate in seconds
-"""
 def calculate_update_rate(df,s2_count):
+    """
+    Calculate frequency of reception of new samples from ptp4l process
+
+    Input: samples, number_of_samples
+    Output: update_rate in seconds
+    """
     firstS2 = (df['state'].values == 2).argmax()
     prevS2 = firstS2
     cumS2delta = 0
@@ -25,14 +26,13 @@ def calculate_update_rate(df,s2_count):
             S2count=S2count+1
     return round((1/(cumS2delta/S2count)))
 
-
-"""
-Preprocess data
-
-Input: samples
-Output: lpf, frequency rate and samples in locked state
-"""
 def run(df, transient_period):
+    """
+    Preprocess data
+
+    Input: samples
+    Output: lpf, frequency rate and samples in locked state
+    """
     s2_count = (df['state'].values == 2).sum()
     print ("number of samples with servo s2 :",s2_count)
 
