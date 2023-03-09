@@ -21,7 +21,9 @@ parser.add_argument('-c', '--clockclass', type = str,
                     help='clock class-[C,D] requirement to satisfy, defaults to Class-C', default = 'C')
 parser.add_argument('-t', '--transient', type = int,
                     help='transient period, defaults to 300sec', default = 300)
-parser.add_argument('--plot', type = bool,
+parser.add_argument('-s', '--steady', type = int,
+                    help='minimum steady state period to enable calculations, defaults to 2000sec', default = 2000)
+parser.add_argument('-p','--plot', type = bool,
                     help='add plots to the results', default = "False")
 parser.add_argument('-o','--output', 
                     help='Output file name, defaults to stdout', default="stdout")
@@ -35,4 +37,4 @@ else:
     print ("no Such File named ", args.input)
 
 lpf_signal, update_rate, s2_count = preprocess.run(df, args.transient)
-process.run(df, args.transient, args.clockclass, s2_count, update_rate, lpf_signal)
+process.run(df, args.transient, args.clockclass, args.steady, args.plot, s2_count, update_rate, lpf_signal)
