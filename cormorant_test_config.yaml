@@ -1,8 +1,0 @@
-suite_configs:
-  - ptp_tests_config:
-      namespace: openshift-ptp
-      pod_name: linuxptp-daemon-z5hh8 # this should be autodiscovered
-      container: linuxptp-daemon-container # this should be autodiscovered
-      interface_name: ens7f0
-      tty_timeout: 30
-      dpll_reads: 4

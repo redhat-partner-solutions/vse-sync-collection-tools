@@ -15,6 +15,7 @@ type Node struct {
 type ClusterInfo struct {
 	KubeconfigPath string `yaml:"kubeconfig_path"`
 	ClusterName    string `yaml:"cluster_name"`
+	NgenImgPath    string `yaml:"ngen_path"`
 	Nodes          []Node `yaml:"nodes"`
 }
 

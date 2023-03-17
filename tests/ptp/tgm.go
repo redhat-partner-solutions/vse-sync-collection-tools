@@ -22,18 +22,18 @@ var _ = Describe("TGM", func() {
 		It("should have access to custom configuration", func() {
 			log.Warningf("Warning %v", ptpConfig)
 			Expect(ptpConfig.Namespace).To(Equal("openshift-ptp"))
-			Expect(ptpConfig.InterfaceName).To(Equal("ens7f0"))
+			Expect(ptpConfig.GrandMaster.InterfaceName).To(Equal("ens7f0"))
 		})
 	})
 	When("There is a Telco Grand Master under test", func() {
 		It("should receive GNSS signals", func() {
-			ptpContext := clients.NewContainerContext(ptpConfig.Namespace, ptpConfig.PodName, ptpConfig.Container)
-			ptpDevInfo := devices.GetPTPDeviceInfo(ptpConfig.InterfaceName, ptpContext)
+			ptpContext := clients.NewContainerContext(ptpConfig.Namespace, ptpConfig.GrandMaster.PodName, ptpConfig.Container)
+			ptpDevInfo := devices.GetPTPDeviceInfo(ptpConfig.GrandMaster.InterfaceName, ptpContext)
 			if ptpDevInfo.VendorID != VendorIntel || ptpDevInfo.DeviceID != DeviceE810 {
 				Skip("NIC device is not based on E810")
 			}
 
-			gnss := devices.ReadTtyGNSS(ptpContext, ptpDevInfo, 1, ptpConfig.TtyTimeout)
+			gnss := devices.ReadTtyGNSS(ptpContext, ptpDevInfo, 1, ptpConfig.GrandMaster.TtyTimeout)
 
 			s := strings.Split(gnss, ",")
 			Expect(len(s)).To(BeNumerically(">", 7), "Failed to parse GNSS string: %s", gnss)
@@ -47,11 +47,11 @@ var _ = Describe("TGM", func() {
 				Expect(s[6]).To(Not(Equal("0")))
 			}
 		})
-		It("DPLL should receive a valid and stable 1PPS signal coming from GNSS",  MustPassRepeatedly(ptpConfig.DpllReads), func() {
+		It("DPLL should receive a valid and stable 1PPS signal coming from GNSS",  MustPassRepeatedly(ptpConfig.GrandMaster.DpllReads), func() {
 
-			ptpContext := clients.NewContainerContext(ptpConfig.Namespace, ptpConfig.PodName, ptpConfig.Container)
+			ptpContext := clients.NewContainerContext(ptpConfig.Namespace, ptpConfig.GrandMaster.PodName, ptpConfig.Container)
 			
-			dpll := devices.GetDevDPLLInfo(ptpContext, ptpConfig.InterfaceName)
+			dpll := devices.GetDevDPLLInfo(ptpContext, ptpConfig.GrandMaster.InterfaceName)
 
 			// TODO reveal actual DPLL status and provide recommendations 
 			// 0: Invalid. Check your card, firmware, and drivers.

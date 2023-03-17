@@ -11,6 +11,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/clients"
+	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/images"
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/config"
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/env"
 
@@ -56,7 +57,7 @@ func TestRun(t *testing.T) {
 		log.Fatal(err)
 	}
 	clients.GetClientset(clusterInfo.KubeconfigPath)
-
+	images.AddImage(clusterInfo.NgenImgPath)
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Tests Suite")
 

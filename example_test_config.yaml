@@ -1,0 +1,14 @@
+suite_configs:
+  - ptp_tests_config:
+      namespace: openshift-ptp # this should be moved to the env file
+      container: linuxptp-daemon-container # this should be autodiscovered
+      tgm_config_group:
+        interface_name: ens7f0 # this should moved to the env file
+        pod_name: linuxptp-daemon-z5hh8 # this should be autodiscovered     
+        tty_timeout: 30
+        dpll_reads: 4
+      tbc_config_group:
+        interface_name: ens2f0 # this should moved to the env file
+        pod_name: linuxptp-daemon-5wr9 # this should be autodiscovered
+        max_transient_period: 300 # this should be moved to ptp_tests_config level
+        min_steady_period: 2000

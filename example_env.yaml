@@ -1,5 +1,6 @@
 kubeconfig_path: /home/jnunez/kubeconfig
 cluster_name: cormorant
+ngen_path: "quay.io/jnunez/ngen_kpis:0.1" # optional, calculate NGEN KPIs
 nodes:
   - hostname: cormorant
     ip: "192.168.49.141"
