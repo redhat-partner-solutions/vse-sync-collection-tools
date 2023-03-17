@@ -1,4 +1,4 @@
-kubeconfig_path: /home/cwheeler/kubeconfig
+kubeconfig_path: ~/kubeconfig
 cluster_name: Albatross
 nodes:
   - hostname: albatross
