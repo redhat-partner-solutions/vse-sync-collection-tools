@@ -32,7 +32,7 @@ def calculate_abs_te(df, end_initial_syncperiod, mask_te, taus_list, visibility,
     Input: samples, sample number identifiying end of transient period, mask, taus
     Output:  max|TE|
     """
-    print ("G.8273.2 7.1 Max. Absolute Time Error, unfiltered measured; max|TE| <= ", mask_te,"ns")
+    print ("G.8273.2 7.1 Max. Absolute Time Error, unfiltered measured; max|TE| <=", mask_te,"ns")
     phase_min    = df.loc[end_initial_syncperiod:len(df)].phase.min()
     phase_mean   = df.loc[end_initial_syncperiod:len(df)].phase.mean()
     phase_stddev = df.loc[end_initial_syncperiod:len(df)].phase.std()
@@ -76,7 +76,7 @@ def calculate_const_te(df, s2_count, update_rate, steady_syncperiod, end_initial
     Input: samples, amount_of_useful_samples, sample_rate, sample number identifiying end of transient period, mask, taus
     Output:  max|cTE|
     """    
-    print ("G.8273.2 7.1.1 Max. Constant Time Error averaged over 1000sec cTE <= ", mask_cte, "ns")
+    print ("G.8273.2 7.1.1 Max. Constant Time Error averaged over 1000sec cTE <=", mask_cte, "ns")
     observation_interval=1000
     if s2_count > steady_syncperiod * update_rate:
         df['MovAvg'] = df.phase.rolling(observation_interval*update_rate,min_periods=observation_interval*update_rate).mean()
@@ -121,7 +121,7 @@ def calculate_mtie(df, lpf_signal, update_rate, mask_mtie, taus_list, visibility
     Input: samples, low_pass_filter, sample_rate,  mask, taus
     Output:  max|MTIE|
     """ 
-    print("G.8273.2 7.1.2 Max. Dynamic Time Error, 0.1Hz Low-Pass Filtered; MTIE <= ", mask_mtie, "ns")
+    print("G.8273.2 7.1.2 Max. Dynamic Time Error, 0.1Hz Low-Pass Filtered; MTIE <=", mask_mtie, "ns")
     mtie_taus, mtie_devs, mtie_errs, ns = allantools.mtie(lpf_signal, rate=update_rate,
                                                      data_type='phase', taus=taus_list)
     mtie_min = mtie_devs.min()
@@ -158,7 +158,7 @@ def calculate_tdev(df, lpf_signal, update_rate, mask_tdev, taus_list, visibility
     Input: samples, low_pass_filter, sample_rate,  mask, taus
     Output:  max|TDEV|
     """ 
-    print("G.8273.2 7.1.2 Max. Dynamic Time Error, 0.1Hz Low-Pass Filtered; TDEV <= ", mask_tdev, "ns")
+    print("G.8273.2 7.1.2 Max. Dynamic Time Error, 0.1Hz Low-Pass Filtered; TDEV <=", mask_tdev, "ns")
     tdev_taus, tdev_devs, tdev_errs, ns = allantools.tdev(lpf_signal, rate=update_rate, 
                                                      data_type='phase', taus=taus_list)
     tdev_min = tdev_devs.min()

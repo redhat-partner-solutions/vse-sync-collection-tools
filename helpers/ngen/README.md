@@ -8,15 +8,17 @@
 # python3 ptp_ngen_kpis.py -h
 usage: ptp_ngen_kpis.py [-h] -i INPUT [-c CLOCKCLASS] [-t TRANSIENT] [--plot PLOT] [-o OUTPUT]
 
-Process ptp4l samples to calculate NGEN KPIs.
-
-options:
+optional arguments:
   -h, --help            show this help message and exit
   -c CLOCKCLASS, --clockclass CLOCKCLASS
-                        clock class-[C,D] requirement to satisfy, defaults to Class-C
+                        clock class-[C,D] requirement to satisfy, defaults to
+                        Class-C
   -t TRANSIENT, --transient TRANSIENT
                         transient period, defaults to 300sec
-  --plot PLOT           add plots to the results
+  -s STEADY, --steady STEADY
+                        minimum steady state period to enable calculations,
+                        defaults to 2000sec
+  -p PLOT, --plot PLOT  add plots to the results
   -o OUTPUT, --output OUTPUT
                         Output file name, defaults to stdout
 
@@ -30,7 +32,7 @@ required arguments:
 1) Build the image to calculate Noise Generation KPIs according to G.8273.2:
 
 ```
-# podman build -t quay.io/jnunez/ngen_kpis:0.1 -f ./ContainerFile
+# podman build -t quay.io/redhat-partner-solutions/ngen_kpis:0.1 -f ./ContainerFile
 ```
 
 ## Run
@@ -38,7 +40,7 @@ required arguments:
 1) Pull the G.8273.2 Noise Generation KPIs container image:
 
 ```
-# podman pull quay.io/jnunez/ngen_kpis:0.1
+# podman pull quay.io/redhat-partner-solutions/ngen_kpis:0.1
 ```
 
 2) Data File derivated from ptp4l messages:
