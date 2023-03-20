@@ -6,6 +6,19 @@ import pandas as pd
 import numpy as np
 
 
+def calculate_transient_period(df, update_rate, first_locked_sample, max_allowed_transient_period):
+    """
+    Calculate actual transient period and check if out of bounds
+
+    Input: samples, update_rate, max_allowed_transient_period (in seconds)
+    Output: update_rate in seconds
+    """
+
+    transient_period    = first_locked_sample/update_rate
+    if transient_period <= max_allowed_transient_period:
+        return transient_period
+    else: 
+        return -1
 
 def calculate_update_rate(df,s2_count):
     """
@@ -15,6 +28,7 @@ def calculate_update_rate(df,s2_count):
     Output: update_rate in seconds
     """
     firstS2 = (df['state'].values == 2).argmax()
+    print ("First Sample in Locked State is", firstS2)
     prevS2 = firstS2
     cumS2delta = 0
     x=0
@@ -24,9 +38,9 @@ def calculate_update_rate(df,s2_count):
             cumS2delta = cumS2delta+(df.loc[x].tstamp-df.loc[prevS2].tstamp)
             prevS2=x
             S2count=S2count+1
-    return round((1/(cumS2delta/S2count)))
+    return round((1/(cumS2delta/S2count))), firstS2
 
-def run(df, transient_period):
+def run(df, max_allowed_transient_period):
     """
     Preprocess data
 
@@ -34,13 +48,19 @@ def run(df, transient_period):
     Output: lpf, frequency rate and samples in locked state
     """
     s2_count = (df['state'].values == 2).sum()
-    print ("number of samples with servo s2 :",s2_count)
+    print ("number of samples in Locked State :",s2_count)
 
-    update_rate = calculate_update_rate(df, s2_count)
-    print ("Update rate estimate from S2 deltas: ",update_rate, "updates/s")
+    update_rate, first_locked_sample = calculate_update_rate(df, s2_count)
+    print ("Update rate estimate from S2 deltas:",update_rate, "updates/s")
+
+    actual_transient_period = calculate_transient_period(df, update_rate, first_locked_sample, max_allowed_transient_period)
+    if actual_transient_period > 0:
+        print ("Transient period below max allowed transient period", actual_transient_period,)
+    else: 
+        raise Exception ("Transient above max allowed transient period", actual_transient_period)
 
     #initial transient sync period is fixed to 5 minutes
-    end_transient_period=transient_period*update_rate
+    end_transient_period=max_allowed_transient_period*update_rate
 
     #input signal after transient sync period
     input_signal=df.phase[end_transient_period:len(df)]
