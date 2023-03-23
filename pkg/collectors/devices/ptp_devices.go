@@ -4,6 +4,13 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
+	"context"
+	"fmt"
+	"bufio"
+	"os"
+	"io"
+	corev1 "k8s.io/api/core/v1"
 
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/clients"
 	log "github.com/sirupsen/logrus"
@@ -81,7 +88,52 @@ func GetDevDPLLInfo(ctx clients.ContainerContext, interfaceName string) (dpllInf
 	dpllInfo.Offset = commandWithPostprocessFunc(ctx, strings.TrimSpace, []string{
 		"cat", "/sys/class/net/" + interfaceName + "/device/dpll_1_offset",
 	})
-	
 	return 
+}
+
+// Write Logs in file. This will write a lot of data, so bufio.Writer will be recommended
+func writeLogs(reader *bufio.Reader, writer io.Writer, timeout time.Duration) {
+	if _, ok := writer.(*bufio.Writer); !ok {
+        writer = bufio.NewWriter(writer)
+    }
+	for start := time.Now(); time.Since(start) < timeout; {
+		str, readErr := reader.ReadString('\n')
+		if readErr == io.EOF {
+			break
+		}
+		_, err := writer.Write([]byte(str))
+		if err != nil {
+			return
+		}
+	}
+}
+
+// GetPtpLogs2File writes in a file the logs for a given pod move to ptplogs
+func GetPtpDeviceLogsToFile(ctx clients.ContainerContext, timeout time.Duration, filename string) error {
+	clientset := clients.GetClientset()
+	// if the file does not exist, create it 
+	file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, 0666)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	//get the logs
+	logOptions := corev1.PodLogOptions{
+		Container: ctx.GetContainerName(),
+		Follow:    true,
+	}
+	logRequest := clientset.K8sClient.CoreV1().Pods(ctx.GetNamespace()).GetLogs(ctx.GetPodName(),&logOptions)
+	stream, err := logRequest.Stream(context.TODO())
+	defer stream.Close()
+	if err != nil {
+		return fmt.Errorf("could not retrieve log in ns=%s pod=%s, container=%s, err=%s", ctx.GetNamespace(), ctx.GetPodName(), ctx.GetContainerName(), err)
+	}
+	reader := bufio.NewReader(stream)
+	writer := io.Writer(file)
+	writeLogs(reader, writer, timeout)
+	if err != nil {
+		return fmt.Errorf("error getting log stream in ns=%s pod=%s, err=%s", ctx.GetNamespace(), ctx.GetPodName(), err)
+	}
+	return nil
 }
 
