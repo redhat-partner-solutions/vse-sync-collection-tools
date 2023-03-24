@@ -22,6 +22,9 @@ Create test configuration and environment description files, then run the follow
 ginkgo run tests -- --config=../cormorant_test_config.yaml --env=../cormorant_env.yaml
 ```
 
+For more information on `--config=../cormorant_test_config.yaml` see [Test Configuration](doc/test_configuration.md) 
+For more information on `--env=../cormorant_env.yaml` see [Test Environment](doc/test_environment.md)
+
 ## Testing the Framework
 
 TODO: implement tests for all packages
