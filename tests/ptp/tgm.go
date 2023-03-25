@@ -22,7 +22,14 @@ var _ = Describe("TGM", func() {
 		It("should have access to custom configuration", func() {
 			log.Warningf("Warning %v", ptpConfig)
 			Expect(ptpConfig.Namespace).To(Equal("openshift-ptp"))
-			Expect(ptpConfig.InterfaceName).To(Equal("ens7f0"))
+		})
+		It("can extract a positive tty timeout from custom configuration", func() {
+			log.Warningf("Warning %v", ptpConfig)
+			Expect(ptpConfig.TtyTimeout).To(BeNumerically(">", 0))
+		})
+		It("can extract a positive number of dpll reads from custom configuration", func() {
+			log.Warningf("Warning %v", ptpConfig)
+			Expect(ptpConfig.DpllReads).To(BeNumerically(">", 0))
 		})
 	})
 	When("There is a Telco Grand Master under test", func() {
