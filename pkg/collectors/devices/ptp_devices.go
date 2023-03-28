@@ -88,18 +88,20 @@ func GetDevDPLLInfo(ctx clients.ContainerContext, interfaceName string) (dpllInf
 	dpllInfo.Offset = commandWithPostprocessFunc(ctx, strings.TrimSpace, []string{
 		"cat", "/sys/class/net/" + interfaceName + "/device/dpll_1_offset",
 	})
-	
 	return 
 }
 
-// Write Logs in file
-func writeLogs(buffer *bufio.Reader, file *os.File, timeout time.Duration) {
+// Write Logs in file. This will write a lot of data, so bufio.Writer will be recommended
+func writeLogs(reader *bufio.Reader, writer io.Writer, timeout time.Duration) {
+	if _, ok := writer.(*bufio.Writer); !ok {
+        writer = bufio.NewWriter(writer)
+    }
 	for start := time.Now(); time.Since(start) < timeout; {
-		str, readErr := buffer.ReadString('\n')
+		str, readErr := reader.ReadString('\n')
 		if readErr == io.EOF {
 			break
 		}
-		_, err := file.Write([]byte(str))
+		_, err := writer.Write([]byte(str))
 		if err != nil {
 			return
 		}
@@ -112,7 +114,7 @@ func GetPtpDeviceLogsToFile(ctx clients.ContainerContext, timeout time.Duration,
 	// if the file does not exist, create it 
 	file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
-        return err
+		return err
 	}
 	defer file.Close()
 	//get the logs
@@ -126,8 +128,9 @@ func GetPtpDeviceLogsToFile(ctx clients.ContainerContext, timeout time.Duration,
 	if err != nil {
 		return fmt.Errorf("could not retrieve log in ns=%s pod=%s, container=%s, err=%s", ctx.GetNamespace(), ctx.GetPodName(), ctx.GetContainerName(), err)
 	}
-	buffer := bufio.NewReader(stream)
-	writeLogs(buffer, file, timeout)
+	reader := bufio.NewReader(stream)
+	writer := io.Writer(file)
+	writeLogs(reader, writer, timeout)
 	if err != nil {
 		return fmt.Errorf("error getting log stream in ns=%s pod=%s, err=%s", ctx.GetNamespace(), ctx.GetPodName(), err)
 	}
