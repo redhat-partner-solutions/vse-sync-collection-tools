@@ -28,7 +28,7 @@ type ImageSet struct {
 }
 
 const (
-	DefaultNgenImage = "quay.io/jnunez/ngen_kpis:0.1"
+	DefaultNgenImage = "quay.io/redhat-partner-solutions/ngen_kpis:0.1"
 )
 
 func AddImage(imageName string) *ImageSet {
