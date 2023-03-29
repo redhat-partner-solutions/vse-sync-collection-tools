@@ -26,10 +26,10 @@ def plot_abs_te(df, end_initial_syncperiod):
     df.loc[end_initial_syncperiod : len(df)].plot(
         kind="line", linewidth=0.25, x="tstamp", y="phase", color="blue"
     )
-    plt.title("Time Error, unfiltered", fontsize=12, weight="bold")
+    plt.title("G.8273.2 Time Error, unfiltered", fontsize=12, weight="bold")
     plt.xlabel("Time (s)")
     plt.ylabel("TE (ns)")
-    plt.show()
+    plt.savefig("g82732_time_error.png")
 
 
 def collect_abs_te(
@@ -38,11 +38,15 @@ def collect_abs_te(
     if max_abs_te > mask_te:
         print("Max Absolute Time Error unfiltered above 30ns")
     else:
-        print("pk-pk phase:", "{:.3f}".format(phase_pktpk), "ns")
-        print("Mean phase:", "{:.3f}".format(phase_mean), "ns")
-        print("Min phase:", "{:.3f}".format(phase_min), "ns")
-        print("Max phase:", "{:.3f}".format(phase_max), "ns")
-        print("Phase stddev:", "{:.3f}".format(phase_stddev), "ns")
+        print(
+            f"""
+            pk-pk phase: {phase_pktpk:.3f} ns
+            Mean phase: {phase_mean:.3f} ns
+            Min phase: {phase_min:.3f} ns
+            Max phase: {phase_max:.3f} ns
+            Phase stddev: {phase_stddev:.3f} ns
+            """
+        )
 
 
 def calculate_abs_te(
@@ -101,7 +105,7 @@ def plot_const_te(df, end_initial_syncperiod, update_rate):
     )
     plt.xlabel("Time (s)")
     plt.ylabel("cTE (ns)")
-    plt.show()
+    plt.savefig("g82732_constant_time_error.png")
 
 
 def collect_const_te(
@@ -110,12 +114,16 @@ def collect_const_te(
     if max_abs_cte > mask_cte:
         print("Max constant Time Error averaged over 1000s above ", mask_cte, "ns")
     else:
-        print("Mean cTE:", "{:.3f}".format(cte_mean), "ns")
-        print("Min cTE:", "{:.3f}".format(cte_min), "ns")
-        print("Max cTE:", "{:.3f}".format(cte_max), "ns")
-        print("pk-pk cTE:", "{:.3f}".format(cte_pktpk), "ns")
-        print("cTE stdev:", "{:.3f}".format(cte_stdev), "ns")
-        print("cTE Var: +/-", "{:.3f}".format(cte_var), "ns")
+        print(
+            f"""
+            Mean cTE: {cte_mean:.3f} ns
+            Min cTE: {cte_min:.3f} ns
+            Max cTE: {cte_max:.3f} ns
+            pk-pk cTE: {cte_pktpk:.3f} ns
+            cTE stdev: {cte_stdev:.3f} ns
+            cTE Var: +/-{cte_var:.3f} ns
+            """
+        )
 
 
 def calculate_const_te(
@@ -197,16 +205,20 @@ def plot_mtie(mtie_taus, mtie_devs):
     ),
     plt.xlabel("Tau (s)")
     plt.ylabel("MTIE (ns)")
-    plt.show()
+    plt.savefig("g82732_mtie.png")
 
 
 def collect_mtie_to_stdout(max_abs_mtie, mask_mtie, mtie_min, mtie_max, mtie_pktpk):
     if max_abs_mtie > mask_mtie:
-        print("Max Dynamic Time Error, dTE (MTIE) above ", mask_mtie, "ns")
+        print("Max Dynamic Time Error, dTE (MTIE) above", mask_mtie, "ns")
     else:
-        print("Min MTIE:", "{:.3f}".format(mtie_min), "ns")
-        print("Max MTIE:", "{:.3f}".format(mtie_max), "ns")
-        print("Max-Min MTIE:", "{:.3f}".format(mtie_pktpk), "ns")
+        print(
+            f"""
+            Min MTIE: {mtie_min:.3f} ns
+            Max MTIE: {mtie_max:.3f} ns
+            Max-Min MTIE: {mtie_pktpk:.3f} ns
+            """
+        )
 
 
 def calculate_mtie(
@@ -246,16 +258,20 @@ def plot_tdev(tdev_taus, tdev_devs):
     ),
     plt.xlabel("Tau (s)")
     plt.ylabel("TDEV (ns)")
-    plt.show()
+    plt.savefig("g82732_tdev.png")
 
 
 def collect_tdev_to_stdout(max_abs_tdev, mask_tdev, tdev_min, tdev_max, tdev_pktpk):
     if max_abs_tdev > mask_tdev:
         print("Max Dynamic Time Error (TDEV) above ", mask_tdev, "ns")
     else:
-        print("Min TDEV:", "{:.3f}".format(tdev_min), "ns")
-        print("Max TDEV:", "{:.3f}".format(tdev_max), "ns")
-        print("Max-Min TDEV:", "{:.3f}".format(tdev_pktpk), "ns")
+        print(
+            f"""
+            Min TDEV: {tdev_min:.3f} ns
+            Max TDEV: {tdev_max:.3f} ns
+            Max-Min TDEV: {tdev_pktpk:.3f} ns
+            """
+        )
 
 
 def calculate_tdev(

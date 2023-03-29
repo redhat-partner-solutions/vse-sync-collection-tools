@@ -27,6 +27,7 @@ import (
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/clients"
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/config"
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/env"
+	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/images"
 
 	_ "github.com/redhat-partner-solutions/vse-sync-testsuite/tests/ptp"
 )
@@ -70,6 +71,7 @@ func TestRun(t *testing.T) {
 		log.Fatal(err)
 	}
 	clients.GetClientset(clusterInfo.KubeconfigPath)
+	images.AddImage(clusterInfo.NgenImgPath)
 
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Tests Suite")

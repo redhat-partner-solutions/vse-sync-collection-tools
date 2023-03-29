@@ -45,6 +45,9 @@ def calculate_update_rate(df, s2_count):
     Output: update_rate in seconds
     """
     firstS2 = (df["state"].values == 2).argmax()
+    if firstS2 == 0:
+        print("Data has no transient period")
+        firstS2 = 1
     print("First Sample in Locked State is", firstS2)
     prevS2 = firstS2
     cumS2delta = 0
@@ -70,6 +73,7 @@ def run(df, max_allowed_transient_period):
     print("number of samples in Locked State :", s2_count)
 
     update_rate, first_locked_sample = calculate_update_rate(df, s2_count)
+    print("First sample in state locked:", first_locked_sample)
     print("Update rate estimate from S2 deltas:", update_rate, "updates/s")
 
     actual_transient_period = calculate_transient_period(
