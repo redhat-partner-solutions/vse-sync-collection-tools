@@ -1,0 +1,22 @@
+header:
+  license:
+    spdx-id: Apache-2.0
+    copyright-owner: Red Hat, Inc.
+
+  paths:
+    - '**/**.go'
+    - '**/**.py'
+
+  # paths-ignore:
+  #   - '.github/**'
+  #   - '**/*.md'
+  #   - '**/.*'
+  #   - 'LICENSE'
+  #   - 'NOTICE'
+
+  comment: never
+
+# If you don't want to check dependencies' license compatibility, remove the following part
+dependency:
+  files:
+    - go.mod

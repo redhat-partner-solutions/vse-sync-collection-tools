@@ -12,14 +12,13 @@ jobs:
   golint:
     name: Run Linter and Vet
     runs-on: ubuntu-latest
-
     steps:
       - name: Set up Go 1.18
         uses: actions/setup-go@v4
         with:
           go-version: 1.18.9
 
-      - name: Check out code into the Go module directory
+      - name: Check out code
         uses: actions/checkout@v3
 
       - name: Run go vet
@@ -53,17 +52,13 @@ jobs:
   tests:
     name: Run pkg tests
     runs-on: ubuntu-latest
-
     steps:
       - name: Set up Go 1.18
         uses: actions/setup-go@v4
         with:
           go-version: 1.18.9
 
-      - name: test
-        run: echo ${PATH}
-
-      - name: Check out code into the Go module directory
+      - name: Check out code
         uses: actions/checkout@v3
 
       - name: Set up ginkgo
@@ -73,11 +68,34 @@ jobs:
         run: ginkgo pkg/...
 
   yamllint:
+    name: Lint YAML files
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Check out code
+        uses: actions/checkout@v3
 
       - name: yaml-lint
         uses: ibiqlik/action-yamllint@v3
         with:
           no_warnings: true
+
+  licenses:
+    name: Ensure License Headers
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Go 1.18
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.18.9
+
+      - name: Check out code
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Install Apache License Eye
+        run: go install github.com/apache/skywalking-eyes/cmd/license-eye@latest
+
+      - name: Check for missing License headers on code files
+        run: license-eye header check
