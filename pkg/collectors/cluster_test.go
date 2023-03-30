@@ -28,10 +28,10 @@ var _ = Describe("Cluster", func() {
 	When("A cluster version exists", func() {
 		BeforeEach(func() {
 			ocp.ConfigV1().ClusterOperators().Create(context.TODO(), &ocpv1.ClusterOperator{
-				metav1.TypeMeta{Kind: "ClusterOperator", APIVersion: "config.openshift.io/v1"},
-				metav1.ObjectMeta{Name: "openshift-apiserver"},
-				ocpv1.ClusterOperatorSpec{},
-				ocpv1.ClusterOperatorStatus{Versions: []ocpv1.OperandVersion{
+				TypeMeta: metav1.TypeMeta{Kind: "ClusterOperator", APIVersion: "config.openshift.io/v1"},
+				ObjectMeta: metav1.ObjectMeta{Name: "openshift-apiserver"},
+				Spec: ocpv1.ClusterOperatorSpec{},
+				Status: ocpv1.ClusterOperatorStatus{Versions: []ocpv1.OperandVersion{
 					{Name: "notThisVersion",Version: "notThisVersion"},
 					{Name: collectors.ApiServerClusterOperator,Version: expectedVersion},
 				}},

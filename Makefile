@@ -25,3 +25,6 @@ build-image:
 
 lint:
 	golangci-lint run --timeout 5m0s
+
+vet:
+	go vet ./...
