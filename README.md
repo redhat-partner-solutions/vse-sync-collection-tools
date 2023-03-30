@@ -14,6 +14,15 @@ The core approach taken is to strongly encourage and enforce separation of conce
 1. Install required binaries: `make install-tools`. Ensure your `$GOBIN` is on your `$PATH`
 1. Install dependencies with `go mod tidy`
 
+### Development Extras
+
+1. yamllint
+    1. [Install yamllint](https://yamllint.readthedocs.io/en/stable/) with `sudo yum install yamllint`
+    1. run with `yamllint ./`
+1. golangci-lint
+    1. [Install golangci-lint](https://golangci-lint.run/usage/install/#local-installation)
+    1. run with `make lint`
+
 ## Running Tests
 
 Create test configuration and environment description files, then run the following command, referencing your created files as needed:
