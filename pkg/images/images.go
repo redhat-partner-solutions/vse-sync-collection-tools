@@ -20,19 +20,18 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-
 var imageset = ImageSet{}
 
 type ImageSet struct {
 	NgenBaseImage string
-	ready bool
+	ready         bool
 }
 
 const (
 	DefaultNgenImage = "quay.io/jnunez/ngen_kpis:0.1"
 )
 
-func AddImage (imageName string) *ImageSet {
+func AddImage(imageName string) *ImageSet {
 	if imageset.ready {
 		return &imageset
 	}
@@ -40,21 +39,21 @@ func AddImage (imageName string) *ImageSet {
 		log.Infof("use default image %v", DefaultNgenImage)
 		imageName = DefaultNgenImage
 	}
-    imageset, err := NewImage(imageName)
-    if err != nil {
-    	log.Panic("Failed to collect images")
-    }
-    return imageset
+	imageset, err := NewImage(imageName)
+	if err != nil {
+		log.Panic("Failed to collect images")
+	}
+	return imageset
 }
 
-func NewImage (imageName string) (*ImageSet,error) {
+func NewImage(imageName string) (*ImageSet, error) {
 	log.Infof("creating new image from %v", imageName)
 	if len(imageName) == 0 {
 		log.Panic("must have at least one image to intialise imageset")
 	}
 	imageset.NgenBaseImage = imageName
 	imageset.ready = true
-	return &imageset , nil
+	return &imageset, nil
 }
 
 func GetNgenBaseImage() (string, error) {

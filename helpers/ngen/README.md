@@ -27,7 +27,7 @@ required arguments:
                         Input sample data
 ```
 
-## Build 
+## Build
 
 1) Build the image to calculate Noise Generation KPIs according to G.8273.2:
 
@@ -60,12 +60,10 @@ phase: Phase offset in ns
 state: Servo clock state
 freq: Frequency offset
 delay: Path delay
-event: Event information   
+event: Event information
 
 3) Run the container to calculate G.8273.2 Noise Generation KPIs consuming post-processed data from ptp4l in `/tmp/data.csv`:
 
 ```
 # podman run -it --rm -v /tmp:/tmp quay.io/jnunez/ngen_kpis:0.1 -i /tmp/data.csv
 ```
-
-

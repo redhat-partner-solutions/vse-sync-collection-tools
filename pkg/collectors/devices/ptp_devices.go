@@ -15,16 +15,16 @@
 package devices
 
 import (
+	"bufio"
+	"context"
+	"fmt"
+	"io"
+	corev1 "k8s.io/api/core/v1"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
-	"context"
-	"fmt"
-	"bufio"
-	"os"
-	"io"
-	corev1 "k8s.io/api/core/v1"
 
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/clients"
 	log "github.com/sirupsen/logrus"
@@ -37,8 +37,8 @@ type PTPDeviceInfo struct {
 }
 
 type DevDPLLInfo struct {
-	State   string
-	Offset  string
+	State  string
+	Offset string
 }
 
 func GetPTPDeviceInfo(interfaceName string, ctx clients.ContainerContext) (devInfo PTPDeviceInfo) {
@@ -89,27 +89,27 @@ func commandWithPostprocessFunc(ctx clients.ContainerContext, cleanupFunc func(s
 // Read lines from the ttyGNSS of the passed devInfo.
 func ReadTtyGNSS(ctx clients.ContainerContext, devInfo PTPDeviceInfo, lines, timeoutSeconds int) string {
 	return commandWithPostprocessFunc(ctx, strings.TrimSpace, []string{
-		"timeout", strconv.Itoa(timeoutSeconds),  "head", "-n", strconv.Itoa(lines), devInfo.TtyGNSS,
+		"timeout", strconv.Itoa(timeoutSeconds), "head", "-n", strconv.Itoa(lines), devInfo.TtyGNSS,
 	})
 }
 
 // GetDevDPLLInfo returns the device DPLL info for an interface.
 func GetDevDPLLInfo(ctx clients.ContainerContext, interfaceName string) (dpllInfo DevDPLLInfo) {
-   
+
 	dpllInfo.State = commandWithPostprocessFunc(ctx, strings.TrimSpace, []string{
 		"cat", "/sys/class/net/" + interfaceName + "/device/dpll_1_state",
 	})
 	dpllInfo.Offset = commandWithPostprocessFunc(ctx, strings.TrimSpace, []string{
 		"cat", "/sys/class/net/" + interfaceName + "/device/dpll_1_offset",
 	})
-	return 
+	return
 }
 
 // Write Logs in file. This will write a lot of data, so bufio.Writer will be recommended
 func writeLogs(reader *bufio.Reader, writer io.Writer, timeout time.Duration) {
 	if _, ok := writer.(*bufio.Writer); !ok {
-        writer = bufio.NewWriter(writer)
-    }
+		writer = bufio.NewWriter(writer)
+	}
 	for start := time.Now(); time.Since(start) < timeout; {
 		str, readErr := reader.ReadString('\n')
 		if readErr == io.EOF {
@@ -125,7 +125,7 @@ func writeLogs(reader *bufio.Reader, writer io.Writer, timeout time.Duration) {
 // GetPtpLogs2File writes in a file the logs for a given pod move to ptplogs
 func GetPtpDeviceLogsToFile(ctx clients.ContainerContext, timeout time.Duration, filename string) error {
 	clientset := clients.GetClientset()
-	// if the file does not exist, create it 
+	// if the file does not exist, create it
 	file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
 		return err
@@ -136,7 +136,7 @@ func GetPtpDeviceLogsToFile(ctx clients.ContainerContext, timeout time.Duration,
 		Container: ctx.GetContainerName(),
 		Follow:    true,
 	}
-	logRequest := clientset.K8sClient.CoreV1().Pods(ctx.GetNamespace()).GetLogs(ctx.GetPodName(),&logOptions)
+	logRequest := clientset.K8sClient.CoreV1().Pods(ctx.GetNamespace()).GetLogs(ctx.GetPodName(), &logOptions)
 	stream, err := logRequest.Stream(context.TODO())
 	defer stream.Close()
 	if err != nil {
@@ -150,4 +150,3 @@ func GetPtpDeviceLogsToFile(ctx clients.ContainerContext, timeout time.Duration,
 	}
 	return nil
 }
-

@@ -22,6 +22,17 @@ The core approach taken is to strongly encourage and enforce separation of conce
 1. golangci-lint
     1. [Install golangci-lint](https://golangci-lint.run/usage/install/#local-installation)
     1. run with `make lint`
+1. license-eye
+    1. [Install license-eye](https://github.com/apache/skywalking-eyes) with `go install github.com/apache/skywalking-eyes/cmd/license-eye@latest`
+    1. run with `license-eye header check` or `license-eye header fix`
+1. pre-commit
+    1. on RHEL, `pre-commit` requires recompiling python to include optional sqlite modules:
+        1. `sudo yum install sqlite-devel`
+        1. See instructions [here](https://tecadmin.net/how-to-install-python-3-10-on-centos-rhel-8-fedora/)
+    1. install pre-commit with `pip3.10 install pre-commit`
+    1. configure your repository to run pre-commit hooks with `pre-commit install`
+    1. manually run against all files with `pre-commit run --all-files` or against staged files with `pre-commit run`.
+    1. Otherwise pre-commit will now run automatically when you make a new commit.
 
 ## Running Tests
 
@@ -31,7 +42,7 @@ Create test configuration and environment description files, then run the follow
 ginkgo run tests -- --config=../cormorant_test_config.yaml --env=../cormorant_env.yaml
 ```
 
-For more information on `--config=../cormorant_test_config.yaml` see [Test Configuration](doc/test_configuration.md) 
+For more information on `--config=../cormorant_test_config.yaml` see [Test Configuration](doc/test_configuration.md)
 
 For more information on `--env=../cormorant_env.yaml` see [Test Environment](doc/test_environment.md)
 
