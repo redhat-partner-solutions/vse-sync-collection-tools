@@ -17,7 +17,7 @@ package pods
 import (
 	"context"
 	"fmt"
-	
+
 	v1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
@@ -88,7 +88,7 @@ func (builder *Builder) Create() (*Builder, error) {
 			builder.Definition.Name, builder.Definition.Namespace)
 		builder.Object, err = builder.apiClients.K8sClient.CoreV1().Pods(builder.Definition.Namespace).Create(
 			context.TODO(), builder.Definition, metaV1.CreateOptions{})
-		 fmt.Printf("the output of err: %s\n", err)
+		fmt.Printf("the output of err: %s\n", err)
 
 	}
 
@@ -110,9 +110,9 @@ func getDefinition(name, nsName, image string, args []string) *v1.Pod {
 			TerminationGracePeriodSeconds: pointer.Int64Ptr(0),
 			Containers: []v1.Container{
 				{
-					Name:    name+"-container",
-					Image:   image,
-					Args: 	 args,
+					Name:  name + "-container",
+					Image: image,
+					Args:  args,
 				},
 			},
 		},

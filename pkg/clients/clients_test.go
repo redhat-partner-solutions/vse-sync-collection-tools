@@ -24,7 +24,7 @@ import (
 )
 
 const (
-	kubeconfigPath string = "test_files/kubeconfig"
+	kubeconfigPath     string = "test_files/kubeconfig"
 	notAKubeconfigPath string = ""
 )
 
@@ -36,9 +36,9 @@ var _ = Describe("Client", func() {
 	When("A clientset is requested with no kubeconfig", func() {
 		It("should panic", func() {
 			var clientset *clients.Clientset
-			Expect(func() {clientset = clients.GetClientset(notAKubeconfigPath)}).To(Panic())
+			Expect(func() { clientset = clients.GetClientset(notAKubeconfigPath) }).To(Panic())
 			Expect(clientset).To(BeNil())
-			Expect(func() {clientset = clients.GetClientset(emptyKubeconfigList...)}).To(Panic())
+			Expect(func() { clientset = clients.GetClientset(emptyKubeconfigList...) }).To(Panic())
 			Expect(clientset).To(BeNil())
 		})
 	})

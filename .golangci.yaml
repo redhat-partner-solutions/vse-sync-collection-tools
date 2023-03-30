@@ -1,4 +1,4 @@
-linters-settings:
+linters-settings:  # https://golangci-lint.run/
   dupl:
     threshold: 100
   funlen:
@@ -17,7 +17,7 @@ linters-settings:
       - performance
       - style
     disabled-checks:
-      - dupImport # https://github.com/go-critic/go-critic/issues/845
+      - dupImport  # https://github.com/go-critic/go-critic/issues/845
       - ifElseChain
       - octalLiteral
       - whyNoLint
@@ -52,60 +52,25 @@ linters-settings:
     require-explanation: false # don't require an explanation for nolint directives
     require-specific: true # require nolint directives to be specific about which linter is being skipped
 linters:
-  # please, do not use `enable-all`: it's deprecated and will be removed soon.
-  # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
-  disable-all: true
-  enable:
-    - bodyclose
+  enable-all: true
+  disable:
     - deadcode
-    - depguard
-    - dogsled
-    - dupl
-    - errcheck
-    - exhaustive
-    - exportloopref
-    - funlen
-    - goconst
-    - gocritic
-    - gocyclo
-    - gofmt
-    - goimports
-    - gomnd
-    - goprintffuncname
-    - gosec
-    - gosimple
-    - govet
-    - ineffassign
-    - lll
-    - misspell
-    - nakedret
-    - noctx
-    - nolintlint
-    - revive
-    - rowserrcheck
-    - staticcheck
-    - stylecheck
-    - typecheck
-    - unconvert
-    - unparam
-    - unused
+    - exhaustivestruct
+    - gochecknoglobals
+    - gochecknoinits
+    - gocognit
+    - godot
+    - godox
+    - goerr113
+    - golint
+    - ifshort
+    - interfacer
+    - maligned
+    - nosnakecase
+    - scopelint
+    - structcheck
     - varcheck
-    - whitespace
-  # don't enable:
-  # - asciicheck
-  # - gochecknoglobals
-  # - gochecknoinits
-  # - gocognit
-  # - godot
-  # - godox
-  # - goerr113
-  # - maligned
-  # - nestif
-  # - prealloc
-  # - scopelint
-  # - structcheck
-  # - testpackage
-  # - wsl
+    - wsl
 issues:
   # Excluding configuration per-path, per-linter, per-text and per-source
   exclude-rules:
@@ -118,16 +83,10 @@ issues:
     - linters:
         - lll
       source: "^(.*= (\".*\"|`.*`))$"
-    # https://github.com/go-critic/go-critic/issues/926
-    - linters:
-        - gocritic
-      text: "unnecessaryDefer:"
-    # Ignore static strings in tests
-
 
 # golangci.com configuration
 # https://github.com/golangci/golangci/wiki/Configuration
 service:
-  golangci-lint-version: 1.45.x # use the fixed version to not introduce new linters unexpectedly
+  golangci-lint-version: 1.52.x # use the fixed version to not introduce new linters unexpectedly
   prepare:
     - echo "here I can run custom commands, but no preparation needed for this repo"

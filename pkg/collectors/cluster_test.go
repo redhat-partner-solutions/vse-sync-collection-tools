@@ -42,12 +42,12 @@ var _ = Describe("Cluster", func() {
 	When("A cluster version exists", func() {
 		BeforeEach(func() {
 			ocp.ConfigV1().ClusterOperators().Create(context.TODO(), &ocpv1.ClusterOperator{
-				TypeMeta: metav1.TypeMeta{Kind: "ClusterOperator", APIVersion: "config.openshift.io/v1"},
+				TypeMeta:   metav1.TypeMeta{Kind: "ClusterOperator", APIVersion: "config.openshift.io/v1"},
 				ObjectMeta: metav1.ObjectMeta{Name: "openshift-apiserver"},
-				Spec: ocpv1.ClusterOperatorSpec{},
+				Spec:       ocpv1.ClusterOperatorSpec{},
 				Status: ocpv1.ClusterOperatorStatus{Versions: []ocpv1.OperandVersion{
-					{Name: "notThisVersion",Version: "notThisVersion"},
-					{Name: collectors.ApiServerClusterOperator,Version: expectedVersion},
+					{Name: "notThisVersion", Version: "notThisVersion"},
+					{Name: collectors.ApiServerClusterOperator, Version: expectedVersion},
 				}},
 			}, metav1.CreateOptions{})
 		})
@@ -60,7 +60,7 @@ var _ = Describe("Cluster", func() {
 			Expect(clusterVersion).To(Equal(expectedVersion))
 		})
 	})
-	When("No cluster version exists", func(){
+	When("No cluster version exists", func() {
 		It("should raise an error", func() {
 			clusterVersion, err := collectors.GetClusterVersion(ocp.ConfigV1())
 
