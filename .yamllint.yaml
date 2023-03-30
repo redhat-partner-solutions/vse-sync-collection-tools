@@ -1,0 +1,9 @@
+extends: default
+rules:
+  document-start: false
+  line-length:
+    max: 120
+  brackets:
+    forbid: non-empty
+  empty-lines:
+    level: warning
