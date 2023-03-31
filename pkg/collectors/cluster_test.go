@@ -47,7 +47,7 @@ var _ = Describe("Cluster", func() {
 				Spec:       ocpv1.ClusterOperatorSpec{},
 				Status: ocpv1.ClusterOperatorStatus{Versions: []ocpv1.OperandVersion{
 					{Name: "notThisVersion", Version: "notThisVersion"},
-					{Name: collectors.ApiServerClusterOperator, Version: expectedVersion},
+					{Name: collectors.APIServerClusterOperator, Version: expectedVersion},
 				}},
 			}, metav1.CreateOptions{})
 			Expect(err).ToNot(HaveOccurred())

@@ -34,7 +34,7 @@ type SimpleCustomTestConfig struct {
 // Check that a more complex struct will be handled correctly.
 type ComplexCustomTestConfig struct {
 	InterfaceName   string                 `yaml:"interface_name,omitempty"`
-	TargetIpAddress string                 `yaml:"target_ip,omitempty"`
+	TargetIPAddress string                 `yaml:"target_ip,omitempty"`
 	LatencyConfig   SimpleCustomTestConfig `yaml:"latency,omitempty"`
 }
 
@@ -63,7 +63,7 @@ var _ = Describe("Registry", Ordered, func() {
 			Expect(simpleConfigInstance.PermittedJitter).To(Equal(3))
 
 			Expect(complexConfigInstance.InterfaceName).To(Equal("en0"))
-			Expect(complexConfigInstance.TargetIpAddress).To(Equal("8.8.8.8"))
+			Expect(complexConfigInstance.TargetIPAddress).To(Equal("8.8.8.8"))
 			Expect(complexConfigInstance.LatencyConfig.TargetLatency).To(Equal(999))
 			Expect(complexConfigInstance.LatencyConfig.PermittedJitter).To(Equal(1))
 		})
