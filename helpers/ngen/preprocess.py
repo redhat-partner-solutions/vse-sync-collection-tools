@@ -50,9 +50,8 @@ def calculate_update_rate(df, s2_count):
     cumS2delta = 0
     x = 0
     S2count = 0
-    for x in range(
-        firstS2 + 1, 1024
-    ):  # use just about 1k samples (minus ~ init S0/S1's and any events)\n",
+    # use just about 1k samples (minus ~ init S0/S1's and any events)
+    for x in range(firstS2 + 1, 1024):
         if df.loc[x].state == 2:
             cumS2delta = cumS2delta + (df.loc[x].tstamp - df.loc[prevS2].tstamp)
             prevS2 = x

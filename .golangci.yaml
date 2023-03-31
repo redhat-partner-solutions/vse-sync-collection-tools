@@ -72,6 +72,7 @@ linters:
     - varcheck
     - wsl
 issues:
+  new: true
   # Excluding configuration per-path, per-linter, per-text and per-source
   exclude-rules:
     # Ignore magic numbers and inline strings in tests.
