@@ -5,7 +5,13 @@ linters-settings:  # https://golangci-lint.run/
     lines: 50
     statements: 25
   gci:
-    local-prefixes: github.com/golangci/golangci-lint
+    sections:
+      - standard
+      - dot
+      - default
+      - prefix(github.com/redhat-partner-solutions)
+      - blank
+    custom-order: true
   goconst:
     min-len: 4
     min-occurrences: 1

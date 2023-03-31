@@ -18,12 +18,12 @@ import (
 	"context"
 	"fmt"
 
+	log "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
 
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/clients"
-	log "github.com/sirupsen/logrus"
 )
 
 // Builder provides a struct for pod object from the cluster and a pod definition.
@@ -100,7 +100,7 @@ func (builder *Builder) Exists() bool {
 	return false
 }
 
-//create pod definition
+// create pod definition
 func getDefinition(name, nsName, image string, args []string) *v1.Pod {
 	return &v1.Pod{
 		ObjectMeta: metaV1.ObjectMeta{

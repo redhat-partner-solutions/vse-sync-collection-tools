@@ -21,11 +21,11 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/collectors"
-
 	ocpv1 "github.com/openshift/api/config/v1"
 	ocpfake "github.com/openshift/client-go/config/clientset/versioned/fake"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/collectors"
 )
 
 const (
