@@ -24,7 +24,4 @@ build-image:
 	podman build -t synctest:custom -f Containerfile
 
 lint:
-	golangci-lint run --timeout 5m0s
-
-vet:
-	go vet ./...
+	golangci-lint run --timeout 5m0s --fix
