@@ -59,7 +59,7 @@ var _ = Describe("TGM", func() {
 			gnss := devices.ReadTtyGNSS(ptpContext, ptpDevInfo, 1, ptpConfig.TtyTimeout)
 
 			gnssParts := strings.Split(gnss, ",")
-			Expect(len(gnssParts)).To(BeNumerically(">", 7), "Failed to parse GNSS string: %s", gnss)
+			Expect(len(gnssParts)).To(BeNumerically(">", 7), "Failed to parse GNSS string: %s", gnss) //nolint:gomnd // This code will be replaced with a better parser soon.
 
 			// TODO use ublox CLI to parse.
 			// (http://aprs.gids.nl/nmea/#rmc) These two are bad: "$GNRMC,,V,,,,,,,,,,N,V*37", "$GNGGA,,,,,,0,00,99.99,,,,,,*56"
@@ -84,13 +84,14 @@ var _ = Describe("TGM", func() {
 			By("validating PPS DPLL is in normal Operation")
 			Expect(dpll.State).To(Equal("3"), "PPS DPLL state NOT in normal operation")
 
+			// TODO: make these numbers test configuration with defaults
 			// The DPLL Offset value should be bounded by abs (-30,+30)ns.
 			// The value is in the order of 10s of picoseconds, so it needs to be divided by 100 to get ns.
 			By("validating DPLL phase offset is in sync")
 			dpllOffset, err := strconv.ParseFloat(dpll.Offset, 64)
 			Expect(err).NotTo(HaveOccurred())
 			dpllOffset /= 100
-			Expect(math.Abs(dpllOffset)).To(BeNumerically("<=", 30), "1PPS Phase OUT of Sync")
+			Expect(math.Abs(dpllOffset)).To(BeNumerically("<=", 30), "1PPS Phase OUT of Sync") //nolint:gomnd // This is part of a larger TODO
 		})
 	})
 })

@@ -40,5 +40,5 @@ func LoadConfigFromFile(filePath string) error {
 		return fmt.Errorf("could not open config file: %w", err)
 	}
 
-	return yaml.Unmarshal(contents, &Config)  //nolint:wrapcheck // Allowing error propagation in this instance
+	return yaml.Unmarshal(contents, &Config) //nolint:wrapcheck // Allowing error propagation in this instance
 }

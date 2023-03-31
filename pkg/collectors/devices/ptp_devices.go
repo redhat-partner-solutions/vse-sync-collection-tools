@@ -68,7 +68,7 @@ func GetPTPDeviceInfo(interfaceName string, ctx clients.ContainerContext) (devIn
 
 // transform a bus ID to an expected GNSS TTY name.
 // e.g. "0000:86:00.0" -> "ttyGNSS_8600", "0000:51:02.1" -> "ttyGNSS_5102"
-func busToGNSS(busID string) (string) {
+func busToGNSS(busID string) string {
 	log.Debugf("convert %s to GNSS tty", busID)
 	parts := strings.Split(busID, ":")
 	ttyGNSS := parts[1] + strings.Split(parts[2], ".")[0]
@@ -126,7 +126,7 @@ func writeLogs(reader *bufio.Reader, writer io.Writer, timeout time.Duration) {
 func GetPtpDeviceLogsToFile(ctx clients.ContainerContext, timeout time.Duration, filename string) error {
 	clientset := clients.GetClientset()
 	// if the file does not exist, create it
-	file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, 0666)
+	file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, 0666) //nolint:gomnd // purpose of number is clear
 	if err != nil {
 		return fmt.Errorf("could not open file for logging: %w", err)
 	}

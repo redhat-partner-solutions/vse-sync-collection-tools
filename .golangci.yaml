@@ -27,8 +27,6 @@ linters-settings:  # https://golangci-lint.run/
       - octalLiteral
   gocyclo:
     min-complexity: 15
-  goimports:
-    local-prefixes: github.com/golangci/golangci-lint
   gomnd:
     settings:
       mnd:
@@ -45,7 +43,7 @@ linters-settings:  # https://golangci-lint.run/
           - (github.com/sirupsen/logrus).Fatalf
     enable-all: true
   lll:
-    line-length: 250
+    line-length: 120
   maligned:
     suggest-new: true
   nolintlint:
@@ -63,9 +61,9 @@ linters-settings:  # https://golangci-lint.run/
         arguments:
           - "disableStutteringCheck"
 linters:
-  enable-all: true
   disable:
     - deadcode
+    - exhaustruct
     - exhaustivestruct
     - gochecknoglobals
     - gochecknoinits
@@ -73,17 +71,21 @@ linters:
     - godot
     - godox
     - goerr113
+    - gofumpt  # go1.19 and above.
+    - goimports
     - golint
     - ifshort
     - interfacer
     - maligned
+    - nlreturn
     - nosnakecase
+    - nonamedreturns
+    - paralleltest
     - scopelint
     - structcheck
     - varcheck
     - wsl
 issues:
-  new: true
   # Excluding configuration per-path, per-linter, per-text and per-source
   exclude-rules:
     # Ignore magic numbers and inline strings in tests.
@@ -91,7 +93,7 @@ issues:
       linters:
         - gomnd
         - goconst
-    # Ignore line length for string assignments (don't try and wrap regex definitions)
+    # Ignore line length for string assignments (don't try and line-wrap regex definitions)
     - linters:
         - lll
       source: "^(.*= (\".*\"|`.*`))$"
