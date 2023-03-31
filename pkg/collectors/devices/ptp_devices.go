@@ -146,8 +146,5 @@ func GetPtpDeviceLogsToFile(ctx clients.ContainerContext, timeout time.Duration,
 	reader := bufio.NewReader(stream)
 	writer := io.Writer(file)
 	writeLogs(reader, writer, timeout)
-	if err != nil {
-		return fmt.Errorf("error getting log stream in ns=%s pod=%s, err=%s", ctx.GetNamespace(), ctx.GetPodName(), err)
-	}
 	return nil
 }
