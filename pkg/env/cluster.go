@@ -15,6 +15,7 @@
 package env
 
 import (
+	"fmt"
 	"os"
 
 	log "github.com/sirupsen/logrus"
@@ -39,12 +40,12 @@ func LoadClusterDefFromFile(filePath string) (*ClusterInfo, error) {
 
 	contents, err := os.ReadFile(filePath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Could not open cluster definition file: %s", err)
 	}
 
 	err = yaml.Unmarshal(contents, &c)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Could not load cluster definition: %s", err)
 	}
 	return &c, nil
 }

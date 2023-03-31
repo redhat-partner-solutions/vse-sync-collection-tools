@@ -15,6 +15,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 
 	log "github.com/sirupsen/logrus"
@@ -36,8 +37,8 @@ func LoadConfigFromFile(filePath string) error {
 
 	contents, err := os.ReadFile(filePath)
 	if err != nil {
-		return err
+		return fmt.Errorf("Could not open config file: %s", err)
 	}
 
-	return yaml.Unmarshal(contents, &Config)
+	return yaml.Unmarshal(contents, &Config)  // nolint: wrapcheck
 }
