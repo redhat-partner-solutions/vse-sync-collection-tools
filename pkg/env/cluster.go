@@ -24,7 +24,7 @@ import (
 
 type Node struct {
 	Hostname string `yaml:"hostname"`
-	Ip       string `yaml:"ip"`
+	IP       string `yaml:"ip"`
 }
 
 type ClusterInfo struct {

@@ -57,6 +57,11 @@ linters-settings:  # https://golangci-lint.run/
     case:
       rules:
         yaml: snake
+  revive:
+    rules:
+      - name: exported
+        arguments:
+          - "disableStutteringCheck"
 linters:
   enable-all: true
   disable:
