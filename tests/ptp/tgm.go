@@ -89,7 +89,7 @@ var _ = Describe("TGM", func() {
 			By("validating DPLL phase offset is in sync")
 			dpllOffset, err := strconv.ParseFloat(dpll.Offset, 64)
 			Expect(err).NotTo(HaveOccurred())
-			dpllOffset = dpllOffset / 100
+			dpllOffset /= 100
 			Expect(math.Abs(dpllOffset)).To(BeNumerically("<=", 30), "1PPS Phase OUT of Sync")
 		})
 	})

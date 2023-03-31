@@ -79,7 +79,7 @@ func (builder *Builder) Create() (*Builder, error) {
 		builder.Definition.Name, builder.Definition.Namespace)
 
 	if builder.errorMsg != "" {
-		return nil, fmt.Errorf(builder.errorMsg)
+		return nil, fmt.Errorf("%s", builder.errorMsg)
 	}
 
 	var err error

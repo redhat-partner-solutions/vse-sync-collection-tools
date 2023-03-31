@@ -35,7 +35,7 @@ func AddImage(imageName string) *ImageSet {
 	if imageset.ready {
 		return &imageset
 	}
-	if len(imageName) == 0 {
+	if imageName == "" {
 		log.Infof("use default image %v", DefaultNgenImage)
 		imageName = DefaultNgenImage
 	}
@@ -48,7 +48,7 @@ func AddImage(imageName string) *ImageSet {
 
 func NewImage(imageName string) (*ImageSet, error) {
 	log.Infof("creating new image from %v", imageName)
-	if len(imageName) == 0 {
+	if imageName == "" {
 		log.Panic("must have at least one image to intialise imageset")
 	}
 	imageset.NgenBaseImage = imageName
@@ -57,7 +57,7 @@ func NewImage(imageName string) (*ImageSet, error) {
 }
 
 func GetNgenBaseImage() (string, error) {
-	if len(imageset.NgenBaseImage) == 0 {
+	if imageset.NgenBaseImage == "" {
 		return "", fmt.Errorf("can't find a null NGEN base image name")
 	}
 	return imageset.NgenBaseImage, nil
