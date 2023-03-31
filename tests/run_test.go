@@ -19,10 +19,10 @@ import (
 	"flag"
 	"testing"
 
-	log "github.com/sirupsen/logrus"
-
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/clients"
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/config"

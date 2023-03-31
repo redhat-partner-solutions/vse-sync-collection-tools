@@ -18,9 +18,8 @@ import (
 	"context"
 	"fmt"
 
-	log "github.com/sirupsen/logrus"
-
 	ocpconfigv1 "github.com/openshift/client-go/config/clientset/versioned/typed/config/v1"
+	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

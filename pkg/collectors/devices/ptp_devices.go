@@ -19,15 +19,16 @@ import (
 	"context"
 	"fmt"
 	"io"
-	corev1 "k8s.io/api/core/v1"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/clients"
 	log "github.com/sirupsen/logrus"
+	corev1 "k8s.io/api/core/v1"
+
+	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/clients"
 )
 
 type PTPDeviceInfo struct {
