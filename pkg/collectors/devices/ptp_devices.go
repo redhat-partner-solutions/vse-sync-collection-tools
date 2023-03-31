@@ -138,10 +138,10 @@ func GetPtpDeviceLogsToFile(ctx clients.ContainerContext, timeout time.Duration,
 	}
 	logRequest := clientset.K8sClient.CoreV1().Pods(ctx.GetNamespace()).GetLogs(ctx.GetPodName(), &logOptions)
 	stream, err := logRequest.Stream(context.TODO())
-	defer stream.Close()
 	if err != nil {
 		return fmt.Errorf("could not retrieve log in ns=%s pod=%s, container=%s, err=%w", ctx.GetNamespace(), ctx.GetPodName(), ctx.GetContainerName(), err)
 	}
+	defer stream.Close()
 	reader := bufio.NewReader(stream)
 	writer := io.Writer(file)
 	writeLogs(reader, writer, timeout)
