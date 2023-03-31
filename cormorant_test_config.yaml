@@ -4,7 +4,7 @@
 suite_configs:
   - ptp_tests_config:
       namespace: openshift-ptp
-      pod_name: linuxptp-daemon-zmplr  # TODO this should be autodiscovered
+      pod_name: linuxptp-daemon-xbrxw  # TODO this should be autodiscovered
       container: linuxptp-daemon-container  # TODO this should be autodiscovered
       interface_name: ens7f0  # TODO this should be discovered or env config
       tty_timeout: 30
