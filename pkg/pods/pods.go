@@ -32,10 +32,10 @@ type Builder struct {
 	Definition *v1.Pod
 	// Created pod object.
 	Object *v1.Pod
-	// Used to store latest error message upon defining or mutating pod definition.
-	errorMsg string
 	// api clients to interact with the cluster.
 	apiClients *clients.Clientset
+	// Used to store latest error message upon defining or mutating pod definition.
+	errorMsg string
 }
 
 // NewBuilder creates a new instance of Builder.

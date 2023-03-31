@@ -39,10 +39,11 @@ linters-settings:  # https://golangci-lint.run/
     settings:
       printf:
         funcs:
-          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Infof
-          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
-          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
-          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
+          - (github.com/sirupsen/logrus).Infof
+          - (github.com/sirupsen/logrus).Warnf
+          - (github.com/sirupsen/logrus).Errorf
+          - (github.com/sirupsen/logrus).Fatalf
+    enable-all: true
   lll:
     line-length: 250
   maligned:
