@@ -37,8 +37,8 @@ func LoadConfigFromFile(filePath string) error {
 
 	contents, err := os.ReadFile(filePath)
 	if err != nil {
-		return fmt.Errorf("Could not open config file: %w", err)
+		return fmt.Errorf("could not open config file: %w", err)
 	}
 
-	return yaml.Unmarshal(contents, &Config)  // nolint: wrapcheck
+	return yaml.Unmarshal(contents, &Config)  //nolint:wrapcheck // Allowing error propagation in this instance
 }

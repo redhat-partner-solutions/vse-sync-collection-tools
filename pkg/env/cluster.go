@@ -40,12 +40,12 @@ func LoadClusterDefFromFile(filePath string) (*ClusterInfo, error) {
 
 	contents, err := os.ReadFile(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("Could not open cluster definition file: %w", err)
+		return nil, fmt.Errorf("could not open cluster definition file: %w", err)
 	}
 
 	err = yaml.Unmarshal(contents, &clusterInfo)
 	if err != nil {
-		return nil, fmt.Errorf("Could not load cluster definition: %w", err)
+		return nil, fmt.Errorf("could not load cluster definition: %w", err)
 	}
 	return &clusterInfo, nil
 }

@@ -91,7 +91,7 @@ func (builder *Builder) Create() (*Builder, error) {
 		fmt.Printf("the output of err: %s\n", err)
 	}
 
-	return builder, fmt.Errorf("Error when attempting to create Pod: %w", err)
+	return builder, fmt.Errorf("error when attempting to create Pod: %w", err)
 }
 
 // Exists checks whether the given pod in the namespace exists.
