@@ -129,7 +129,7 @@ func GetPtpDeviceLogsToFile(ctx clients.ContainerContext, timeout time.Duration,
 	// if the file does not exist, create it
 	file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
-		return err
+		return fmt.Errorf("Could not open file for logging: %s", err)
 	}
 	defer file.Close()
 	// get the logs
