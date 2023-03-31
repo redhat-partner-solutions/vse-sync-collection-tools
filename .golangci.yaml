@@ -47,10 +47,10 @@ linters-settings:  # https://golangci-lint.run/
   maligned:
     suggest-new: true
   nolintlint:
-    allow-leading-space: false # disallow leading spaces. A space means the //nolint comment shows in `godoc` output.
-    allow-unused: true # report any unused nolint directives
-    require-explanation: true # don't require an explanation for nolint directives
-    require-specific: true # require nolint directives to be specific about which linter is being skipped
+    allow-leading-space: false  # disallow leading spaces. A space means the //nolint comment shows in `godoc` output.
+    allow-unused: true  # report any unused nolint directives
+    require-explanation: true  # don't require an explanation for nolint directives
+    require-specific: true  # require nolint directives to be specific about which linter is being skipped
   tagliatelle:
     case:
       rules:
@@ -101,6 +101,6 @@ issues:
 # golangci.com configuration
 # https://github.com/golangci/golangci/wiki/Configuration
 service:
-  golangci-lint-version: 1.52.x # use the fixed version to not introduce new linters unexpectedly
+  golangci-lint-version: 1.52.x  # use the fixed version to not introduce new linters unexpectedly
   prepare:
     - echo "here I can run custom commands, but no preparation needed for this repo"
