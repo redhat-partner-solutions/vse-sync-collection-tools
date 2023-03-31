@@ -37,6 +37,12 @@ type Builder struct {
 	errorMsg string
 }
 
+const (
+	errorNameUnset      = "Name is not set"
+	errorNamespaceUnset = "Namespace is not set"
+	errorImageUnset     = "Image is not set"
+)
+
 // NewBuilder creates a new instance of Builder.
 func NewBuilder(name, nsname, image string, args []string) *Builder {
 	log.Infof(
@@ -52,21 +58,18 @@ func NewBuilder(name, nsname, image string, args []string) *Builder {
 	}
 
 	if name == "" {
-		log.Infof("The name of the pod is empty")
-
-		builder.errorMsg = "pod's name is empty"
+		log.Infof(errorNameUnset)
+		builder.errorMsg = errorNameUnset
 	}
 
 	if nsname == "" {
-		log.Infof("The namespace of the pod is empty")
-
-		builder.errorMsg = "namespace's name is empty"
+		log.Infof(errorNamespaceUnset)
+		builder.errorMsg = errorNamespaceUnset
 	}
 
 	if image == "" {
-		log.Infof("The image of the pod is empty")
-
-		builder.errorMsg = "pod's image is empty"
+		log.Infof(errorImageUnset)
+		builder.errorMsg = errorImageUnset
 	}
 
 	return builder
@@ -87,7 +90,7 @@ func (builder *Builder) Create() (*Builder, error) {
 			builder.Definition.Name, builder.Definition.Namespace)
 		builder.Object, err = builder.apiClients.K8sClient.CoreV1().Pods(builder.Definition.Namespace).Create(
 			context.TODO(), builder.Definition, metaV1.CreateOptions{})
-		fmt.Printf("the output of err: %s\n", err)
+		log.Errorf("the output of err: %s", err)
 	}
 
 	return builder, fmt.Errorf("error when attempting to create Pod: %w", err)
