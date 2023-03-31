@@ -33,19 +33,19 @@ type ClusterInfo struct {
 	Nodes          []Node `yaml:"nodes"`
 }
 
-var c ClusterInfo
+var clusterInfo ClusterInfo
 
 func LoadClusterDefFromFile(filePath string) (*ClusterInfo, error) {
 	log.Debugf("Loading cluster definition from file: %s", filePath)
 
 	contents, err := os.ReadFile(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("Could not open cluster definition file: %s", err)
+		return nil, fmt.Errorf("Could not open cluster definition file: %w", err)
 	}
 
-	err = yaml.Unmarshal(contents, &c)
+	err = yaml.Unmarshal(contents, &clusterInfo)
 	if err != nil {
-		return nil, fmt.Errorf("Could not load cluster definition: %s", err)
+		return nil, fmt.Errorf("Could not load cluster definition: %w", err)
 	}
-	return &c, nil
+	return &clusterInfo, nil
 }

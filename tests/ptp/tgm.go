@@ -58,16 +58,16 @@ var _ = Describe("TGM", func() {
 
 			gnss := devices.ReadTtyGNSS(ptpContext, ptpDevInfo, 1, ptpConfig.TtyTimeout)
 
-			s := strings.Split(gnss, ",")
-			Expect(len(s)).To(BeNumerically(">", 7), "Failed to parse GNSS string: %s", gnss)
+			gnssParts := strings.Split(gnss, ",")
+			Expect(len(gnssParts)).To(BeNumerically(">", 7), "Failed to parse GNSS string: %s", gnss)
 
 			// TODO use ublox CLI to parse.
 			// (http://aprs.gids.nl/nmea/#rmc) These two are bad: "$GNRMC,,V,,,,,,,,,,N,V*37", "$GNGGA,,,,,,0,00,99.99,,,,,,*56"
 			By("validating TTY GNSS GNRMC GPS/Transit data and GNGGA Positioning System Fix Data")
-			if strings.Contains(s[0], "GNRMC") {
-				Expect(s[2]).To(Not(Equal("V")))
-			} else if strings.Contains(s[0], "GNGGA") {
-				Expect(s[6]).To(Not(Equal("0")))
+			if strings.Contains(gnssParts[0], "GNRMC") {
+				Expect(gnssParts[2]).To(Not(Equal("V")))
+			} else if strings.Contains(gnssParts[0], "GNGGA") {
+				Expect(gnssParts[6]).To(Not(Equal("0")))
 			}
 		})
 		It("DPLL should receive a valid and stable 1PPS signal coming from GNSS", MustPassRepeatedly(ptpConfig.DpllReads), func() {
