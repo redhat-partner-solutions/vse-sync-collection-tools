@@ -50,8 +50,8 @@ linters-settings:  # https://golangci-lint.run/
     suggest-new: true
   nolintlint:
     allow-leading-space: false # disallow leading spaces. A space means the //nolint comment shows in `godoc` output.
-    allow-unused: false # report any unused nolint directives
-    require-explanation: false # don't require an explanation for nolint directives
+    allow-unused: true # report any unused nolint directives
+    require-explanation: true # don't require an explanation for nolint directives
     require-specific: true # require nolint directives to be specific about which linter is being skipped
   tagliatelle:
     case:

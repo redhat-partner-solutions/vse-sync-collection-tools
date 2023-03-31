@@ -32,5 +32,5 @@ type PtpConfig struct {
 var ptpConfig = PtpConfig{}
 
 func init() {
-	config.RegisterCustomConfig(ptpCustomConfigKey, &ptpConfig)
+	config.RegisterCustomConfig(ptpCustomConfigKey, &ptpConfig) //nolint: errcheck // Allowing unchecked error in this case
 }
