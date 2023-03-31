@@ -77,7 +77,7 @@ func (clientsholder *Clientset) ExecCommandContainer(ctx ContainerContext, comma
 	exec, err := remotecommand.NewSPDYExecutor(clientsholder.RestConfig, "POST", req.URL())
 	if err != nil {
 		log.Error(err)
-		return stdout, stderr, fmt.Errorf("Error setting up remote command: %w", err)
+		return stdout, stderr, fmt.Errorf("error setting up remote command: %w", err)
 	}
 	err = exec.StreamWithContext(context.TODO(), remotecommand.StreamOptions{
 		Stdout: &buffOut,
@@ -90,7 +90,7 @@ func (clientsholder *Clientset) ExecCommandContainer(ctx ContainerContext, comma
 		log.Error("command: ", command)
 		log.Error("stderr: ", stderr)
 		log.Error("stdout: ", stdout)
-		return stdout, stderr, fmt.Errorf("Error running remote command: %w", err)
+		return stdout, stderr, fmt.Errorf("error running remote command: %w", err)
 	}
 	return stdout, stderr, nil
 }

@@ -40,7 +40,7 @@ func (cc *customConfig) UnmarshalYAML(value *yaml.Node) error {
 	for item := 0; item < len(value.Content); item += 2 {
 		var customConfigKey string
 		if err := value.Content[item].Decode(&customConfigKey); err != nil {
-			return fmt.Errorf("Could not decode custom config key: %w", err)
+			return fmt.Errorf("could not decode custom config key: %w", err)
 		}
 		log.Infof("Found individual test configuration section: %s", customConfigKey)
 		log.Debugf("Raw value of %s is: %v", customConfigKey, value.Content[item+1])
@@ -54,7 +54,7 @@ func (cc *customConfig) UnmarshalYAML(value *yaml.Node) error {
 		log.Debugf("Retrieved [%T]%+v", testConfigStruct, testConfigStruct)
 
 		if err := value.Content[item+1].Decode(testConfigStruct); err != nil {
-			return fmt.Errorf("Could not load custom config section: %w", err)
+			return fmt.Errorf("could not load custom config section: %w", err)
 		}
 	}
 	return nil

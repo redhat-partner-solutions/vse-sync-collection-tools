@@ -19,8 +19,8 @@ import (
 	"strconv"
 	"strings"
 
-	. "github.com/onsi/ginkgo/v2" // nolint: revive // ginkgo and gomega are dot imports by convention.
-	. "github.com/onsi/gomega" // nolint: revive // ginkgo and gomega are dot imports by convention.
+	. "github.com/onsi/ginkgo/v2" //nolint:stylecheck // ginkgo and gomega are dot imports by convention.
+	. "github.com/onsi/gomega"    //nolint:stylecheck // ginkgo and gomega are dot imports by convention.
 
 	log "github.com/sirupsen/logrus"
 
