@@ -22,12 +22,11 @@ repos:
         entry: license-eye header fix
         pass_filenames: false
 
-      # Fix linting issues and enable this
-      # - id: golangci-lint
-      #   name: golangci-lint must pass
-      #   language: system
-      #   entry: make lint
-      #   pass_filenames: false
+      - id: golangci-lint
+        name: golangci-lint must pass
+        language: system
+        entry: make lint
+        pass_filenames: false
 
       - id: go-mod-tidy
         name: run go mod tidy
