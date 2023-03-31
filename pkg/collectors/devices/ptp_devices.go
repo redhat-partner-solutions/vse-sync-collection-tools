@@ -96,7 +96,6 @@ func ReadTtyGNSS(ctx clients.ContainerContext, devInfo PTPDeviceInfo, lines, tim
 
 // GetDevDPLLInfo returns the device DPLL info for an interface.
 func GetDevDPLLInfo(ctx clients.ContainerContext, interfaceName string) (dpllInfo DevDPLLInfo) {
-
 	dpllInfo.State = commandWithPostprocessFunc(ctx, strings.TrimSpace, []string{
 		"cat", "/sys/class/net/" + interfaceName + "/device/dpll_1_state",
 	})
@@ -129,7 +128,7 @@ func GetPtpDeviceLogsToFile(ctx clients.ContainerContext, timeout time.Duration,
 	// if the file does not exist, create it
 	file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
-		return fmt.Errorf("Could not open file for logging: %s", err)
+		return fmt.Errorf("Could not open file for logging: %w", err)
 	}
 	defer file.Close()
 	// get the logs
@@ -141,7 +140,7 @@ func GetPtpDeviceLogsToFile(ctx clients.ContainerContext, timeout time.Duration,
 	stream, err := logRequest.Stream(context.TODO())
 	defer stream.Close()
 	if err != nil {
-		return fmt.Errorf("could not retrieve log in ns=%s pod=%s, container=%s, err=%s", ctx.GetNamespace(), ctx.GetPodName(), ctx.GetContainerName(), err)
+		return fmt.Errorf("could not retrieve log in ns=%s pod=%s, container=%s, err=%w", ctx.GetNamespace(), ctx.GetPodName(), ctx.GetContainerName(), err)
 	}
 	reader := bufio.NewReader(stream)
 	writer := io.Writer(file)

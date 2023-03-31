@@ -89,10 +89,9 @@ func (builder *Builder) Create() (*Builder, error) {
 		builder.Object, err = builder.apiClients.K8sClient.CoreV1().Pods(builder.Definition.Namespace).Create(
 			context.TODO(), builder.Definition, metaV1.CreateOptions{})
 		fmt.Printf("the output of err: %s\n", err)
-
 	}
 
-	return builder, fmt.Errorf("Error when attempting to create Pod: %s", err)
+	return builder, fmt.Errorf("Error when attempting to create Pod: %w", err)
 }
 
 // Exists checks whether the given pod in the namespace exists.

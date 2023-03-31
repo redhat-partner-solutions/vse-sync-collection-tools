@@ -37,13 +37,13 @@ func (cc *customConfig) UnmarshalYAML(value *yaml.Node) error {
 	if value.Kind != yaml.MappingNode {
 		return fmt.Errorf("CustomConfig must contain YAML Map, has %v", value.Kind)
 	}
-	for i := 0; i < len(value.Content); i += 2 {
+	for item := 0; item < len(value.Content); item += 2 {
 		var customConfigKey string
-		if err := value.Content[i].Decode(&customConfigKey); err != nil {
-			return fmt.Errorf("Could not decode custom config key: %s", err)
+		if err := value.Content[item].Decode(&customConfigKey); err != nil {
+			return fmt.Errorf("Could not decode custom config key: %w", err)
 		}
 		log.Infof("Found individual test configuration section: %s", customConfigKey)
-		log.Debugf("Raw value of %s is: %v", customConfigKey, value.Content[i+1])
+		log.Debugf("Raw value of %s is: %v", customConfigKey, value.Content[item+1])
 
 		// Get the object into which to decode from the section registry
 		testConfigStruct, err := getRegisteredInstancePtr(customConfigKey)
@@ -53,8 +53,8 @@ func (cc *customConfig) UnmarshalYAML(value *yaml.Node) error {
 		}
 		log.Debugf("Retrieved [%T]%+v", testConfigStruct, testConfigStruct)
 
-		if err := value.Content[i+1].Decode(testConfigStruct); err != nil {
-			return fmt.Errorf("Could not load custom config section: %s", err)
+		if err := value.Content[item+1].Decode(testConfigStruct); err != nil {
+			return fmt.Errorf("Could not load custom config section: %w", err)
 		}
 	}
 	return nil

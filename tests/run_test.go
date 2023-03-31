@@ -13,7 +13,7 @@
 // limitations under the License.
 
 // run_tests provides the entrypoint into the tests
-package run_tests //nolint: revive // entrypoint for the framework, will allow two words.
+package run_tests //nolint:revive,stylecheck,testpackage //entrypoint to framework, we will allow two words
 
 import (
 	"flag"

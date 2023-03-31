@@ -27,7 +27,7 @@ var _ = Describe("Cluster", func() {
 	When("Loading  a cluster definition from file", func() {
 		It("should load without error", func() {
 			_, err := env.LoadClusterDefFromFile("test_files/cluster_load.yaml")
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 		})
 		It("should load data from the file", func() {
 			clusterDef, _ := env.LoadClusterDefFromFile("test_files/cluster_load.yaml")

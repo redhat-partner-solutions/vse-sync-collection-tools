@@ -69,7 +69,7 @@ func newClientset(kubeconfigPaths ...string) (*Clientset, error) {
 	var err error
 	clientset.RestConfig, err = kubeconfig.ClientConfig()
 	if err != nil {
-		return nil, fmt.Errorf("cannot instantiate rest config: %s", err)
+		return nil, fmt.Errorf("cannot instantiate rest config: %w", err)
 	}
 
 	DefaultTimeout := 10 * time.Second
@@ -77,16 +77,16 @@ func newClientset(kubeconfigPaths ...string) (*Clientset, error) {
 
 	clientset.DynamicClient, err = dynamic.NewForConfig(clientset.RestConfig)
 	if err != nil {
-		return nil, fmt.Errorf("cannot instantiate dynamic client (unstructured/dynamic): %s", err)
+		return nil, fmt.Errorf("cannot instantiate dynamic client (unstructured/dynamic): %w", err)
 	}
 	clientset.K8sClient, err = kubernetes.NewForConfig(clientset.RestConfig)
 	if err != nil {
-		return nil, fmt.Errorf("cannot instantiate k8sclient: %s", err)
+		return nil, fmt.Errorf("cannot instantiate k8sclient: %w", err)
 	}
 	// create the oc client
 	clientset.OcpClient, err = ocpconfig.NewForConfig(clientset.RestConfig)
 	if err != nil {
-		return nil, fmt.Errorf("cannot instantiate ocClient: %s", err)
+		return nil, fmt.Errorf("cannot instantiate ocClient: %w", err)
 	}
 
 	clientset.ready = true
