@@ -132,7 +132,7 @@ func GetPtpDeviceLogsToFile(ctx clients.ContainerContext, timeout time.Duration,
 		return err
 	}
 	defer file.Close()
-	//get the logs
+	// get the logs
 	logOptions := corev1.PodLogOptions{
 		Container: ctx.GetContainerName(),
 		Follow:    true,
