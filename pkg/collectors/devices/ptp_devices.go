@@ -75,7 +75,7 @@ func busToGNSS(busID string) string {
 	return "ttyGNSS_" + ttyGNSS
 }
 
-func commandWithPostprocessFunc(ctx clients.ContainerContext, cleanupFunc func(string) string, command []string) (result string) {
+func commandWithPostprocessFunc(ctx clients.ContainerContext, cleanupFunc func(string) string, command []string) (result string) { //nolint:lll // allow slightly long function definition
 	clientset := clients.GetClientset()
 	stdout, _, err := clientset.ExecCommandContainer(ctx, command)
 	if err != nil {
@@ -139,7 +139,13 @@ func GetPtpDeviceLogsToFile(ctx clients.ContainerContext, timeout time.Duration,
 	logRequest := clientset.K8sClient.CoreV1().Pods(ctx.GetNamespace()).GetLogs(ctx.GetPodName(), &logOptions)
 	stream, err := logRequest.Stream(context.TODO())
 	if err != nil {
-		return fmt.Errorf("could not retrieve log in ns=%s pod=%s, container=%s, err=%w", ctx.GetNamespace(), ctx.GetPodName(), ctx.GetContainerName(), err)
+		return fmt.Errorf(
+			"could not retrieve log in ns=%s pod=%s, container=%s, err=%w",
+			ctx.GetNamespace(),
+			ctx.GetPodName(),
+			ctx.GetContainerName(),
+			err,
+		)
 	}
 	defer stream.Close()
 	reader := bufio.NewReader(stream)

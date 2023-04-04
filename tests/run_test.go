@@ -48,7 +48,7 @@ var _ = setLogLevel()
 
 // The workaround could be made unnecessary if the framework had control over when the test Suite packages are loaded.
 // One possibility for this would be dynamically loading Suite packages as Go plugins but that method has different
-// compromises and restrictions. See https://github.com/redhat-partner-solutions/vse-sync-testsuite/tree/plugin-test/tests
+// compromises and restrictions. https://github.com/redhat-partner-solutions/vse-sync-testsuite/tree/plugin-test/tests
 
 func init() {
 	flag.StringVar(&configPath, "config", "./config.yaml", "path to the config file")

@@ -61,6 +61,7 @@ linters-settings:  # https://golangci-lint.run/
         arguments:
           - "disableStutteringCheck"
 linters:
+  enable-all: true
   disable:
     - deadcode
     - exhaustruct
@@ -93,10 +94,13 @@ issues:
       linters:
         - gomnd
         - goconst
-    # Ignore line length for string assignments (don't try and line-wrap regex definitions)
+    # Ignore line length for string assignments (don't try and line-wrap regex definitions) and trailing comments
     - linters:
         - lll
       source: "^(.*= (\".*\"|`.*`))$"
+    - linters:
+        - lll
+      source: "\\/\\/.+$"
 
 # golangci.com configuration
 # https://github.com/golangci/golangci/wiki/Configuration
