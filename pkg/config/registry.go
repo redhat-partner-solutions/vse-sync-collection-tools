@@ -84,6 +84,11 @@ func getRegisteredInstancePtr(sectionKey string) (interface{}, error) {
 	if _, exists := configSectionRegistry[sectionKey]; !exists {
 		return nil, fmt.Errorf("cannot find: %s", sectionKey)
 	}
-	log.Debugf("Retrieved section '%s', got [%T]%v", sectionKey, configSectionRegistry[sectionKey], configSectionRegistry[sectionKey])
+	log.Debugf(
+		"Retrieved section '%s', got [%T]%v",
+		sectionKey,
+		configSectionRegistry[sectionKey],
+		configSectionRegistry[sectionKey],
+	)
 	return *configSectionRegistry[sectionKey], nil
 }

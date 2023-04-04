@@ -54,11 +54,19 @@ func (c *ContainerContext) GetContainerName() string {
 }
 
 // ExecCommand runs command in a container and returns output buffers
+//
+//nolint:lll // allow slightly long function definition
 func (clientsholder *Clientset) ExecCommandContainer(ctx ContainerContext, command []string) (stdout, stderr string, err error) {
 	commandStr := command
 	var buffOut bytes.Buffer
 	var buffErr bytes.Buffer
-	log.Debug(fmt.Sprintf("execute command on ns=%s, pod=%s container=%s, cmd: %s", ctx.GetNamespace(), ctx.GetPodName(), ctx.GetContainerName(), strings.Join(commandStr, " ")))
+	log.Debug(fmt.Sprintf(
+		"execute command on ns=%s, pod=%s container=%s, cmd: %s",
+		ctx.GetNamespace(),
+		ctx.GetPodName(),
+		ctx.GetContainerName(),
+		strings.Join(commandStr, " "),
+	))
 	req := clientsholder.K8sClient.CoreV1().RESTClient().
 		Post().
 		Namespace(ctx.GetNamespace()).

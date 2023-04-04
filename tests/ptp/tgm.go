@@ -70,7 +70,7 @@ var _ = Describe("TGM", func() {
 				Expect(gnssParts[6]).To(Not(Equal("0")))
 			}
 		})
-		It("DPLL should receive a valid and stable 1PPS signal coming from GNSS", MustPassRepeatedly(ptpConfig.DpllReads), func() {
+		It("DPLL should receive a valid and stable 1PPS signal from GNSS", MustPassRepeatedly(ptpConfig.DpllReads), func() {
 
 			ptpContext := clients.NewContainerContext(ptpConfig.Namespace, ptpConfig.PodName, ptpConfig.Container)
 
