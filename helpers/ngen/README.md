@@ -107,3 +107,5 @@ See some preliminary Noise Generation plots by using `-p True`:
 
 ![Time Error](fig/g82732_time_error.png)
 ![Constant Time Error](fig/g82732_constant_time_error.png)
+![Maximum Time Interval Error](fig/g82732_mtie.png)
+![Time Deviation](fig/g82732_tdev.png)

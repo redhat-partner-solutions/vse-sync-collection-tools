@@ -107,5 +107,6 @@ def run(df, max_allowed_transient_period):
     b, a = butter(fiorder, w, btype, analog, output)
 
     lpf_signal = filtfilt(b, a, input_signal)
+    lpf_signal = lpf_signal[max_allowed_transient_period : len(lpf_signal)]
 
     return lpf_signal, update_rate, s2_count
