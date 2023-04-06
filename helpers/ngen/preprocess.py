@@ -100,12 +100,13 @@ def run(df, max_allowed_transient_period):
         update_rate / 2
     )  # the critical frequency for digital filters w is normalized from 0 to 1 where 1 is Nyquist freqency.
     btype = "low"  # band type is type of filter
-    fiorder = 5  # the order of the filter
+    fiorder = 1  # the order of the filter
     analog = False  # it is always a digital filter
     output = "ba"  # type of output: b numerator coefficient vector and a is denominator coefficient vector
 
     b, a = butter(fiorder, w, btype, analog, output)
 
     lpf_signal = filtfilt(b, a, input_signal)
+    lpf_signal = lpf_signal[max_allowed_transient_period : len(lpf_signal)]
 
     return lpf_signal, update_rate, s2_count

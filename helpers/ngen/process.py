@@ -199,6 +199,8 @@ def calculate_const_te(
 
 
 def plot_mtie(mtie_taus, mtie_devs):
+    plt.figure()
+    plt.axes(xscale="log", yscale="log")
     plt.plot(mtie_taus, mtie_devs, color="blue"),
     plt.title(
         "MTIE, G.8273.2 Class-C mask; Constant Temperature", fontsize=12, weight="bold"
@@ -252,6 +254,8 @@ def calculate_mtie(
 
 
 def plot_tdev(tdev_taus, tdev_devs):
+    plt.figure()
+    plt.axes(xscale="log", yscale="log")
     plt.plot(tdev_taus, tdev_devs, color="blue"),
     plt.title(
         "TDEV, G.8273.2 Class-C mask; Constant Temperature", fontsize=12, weight="bold"
