@@ -7,7 +7,41 @@
 # podman build -t gnss-utils:3.25_dev -f ./ContainerFile
 ```
 
-## Run
+## Run in OpenShift
+
+1) Deploy the manifest `pod_gpsd.yaml`
+
+```
+# oc apply -f pod_gpsd.yaml
+```
+
+2) Check logs
+
+```
+# oc logs -f gnss-utils
+GNSS Device : gnss0
+PTY device: /dev/pts/0
+gpsd:INFO: launching (Version 3.25.1~dev, revision release-3.25-26-g8ab2872d3)
+gpsd:INFO: starting uid 0, gid 0
+gpsd:INFO: Command line: /usr/local/sbin/gpsd -p -n -S 2947 -G -N -D 5 /dev/gnss0
+....
+psd:PROG: CORE: switch_driver(u-blox) called...
+gpsd:PROG: CORE: selecting u-blox driver...
+gpsd:INFO: CORE: /dev/gnss0 identified as type u-blox, 0 sec
+gpsd:PROG: => GPS: UBX class: 0a, id: 04, len: 0, crc: 0e34
+gpsd:IO: SER: => GPS: b5620a0400000e34
+gpsd:PROG: UBX-NAV-PVT
+gpsd:PROG: NAV-PVT: flags=01 time= 1681327668.999550643 lat=42.55 lon=-71.21 altHAE=25.98 track=0.00 speed=0.00 mode=3 status=1 used=0
+gpsd:PROG:   headVeh 0.00000 magDec nan magAcc nan
+gpsd:PROG: UBX: new PROTVER 14 was 0
+gpsd:IO: UBX: len 28
+gpsd:PROG: UBX-NAV-POSECEF: iTOW=329287000 ECEF x=1515414.24 y=-4455226.90 z=4290845.27 pAcc=2.61
+gpsd:IO: UBX: len 28
+gpsd:PROG: UBX-NAV-VELECEF
+gpsd:PROG: UBX-NAV-VELECEF: iTOW=329287000 ECEF vx=0.00 vy=0.00 vz=0.00 vAcc=0.02
+```
+
+## Run in RHEL
 
 1) Pull the container:
 
