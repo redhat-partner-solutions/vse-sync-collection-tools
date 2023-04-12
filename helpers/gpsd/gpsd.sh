@@ -1,10 +1,11 @@
-#!/bin/bash
+#!/bin/sh
 
-# Use if mounted the whole /sys/class/net/*
-# ETH=`grep 000e /sys/class/net/*/device/subsystem_device | awk -F"/" '{print$5}' | head -n 1`
-# BUS=`grep PCI_SLOT_NAME /sys/class/net/${ETH}/device/uevent | cut -c 20- | head -c 5 | sed 's/://'
-# BUS is in the bash environment
 
 echo "GNSS Device : "${BUS}
 
+SOCAT_OUTPUT=/tmp/out-socat
+socat -d -d pty,raw,echo=0 pty,raw,echo=0 > /dev/null 2> $SOCAT_OUTPUT &
+sleep 2
+DEVICE_PTY=$(head -n1 $SOCAT_OUTPUT | grep -o '/dev/.\+')
+echo "PTY device: "${DEVICE_PTY}
 /usr/local/sbin/gpsd -p -n -S 2947 -G -N -D 5 /dev/${BUS}
