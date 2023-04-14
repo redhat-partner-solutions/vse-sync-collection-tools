@@ -46,6 +46,8 @@ For more information on `--config=../cormorant_test_config.yaml` see [Test Confi
 
 For more information on `--env=../cormorant_env.yaml` see [Test Environment](doc/test_environment.md)
 
+For more examples on how to run tests see [Test Execution](doc/test_execution.md)
+
 ## Testing the Framework
 
 TODO: implement tests for all packages
