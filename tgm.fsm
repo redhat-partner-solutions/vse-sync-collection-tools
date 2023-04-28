@@ -1,0 +1,55 @@
+{
+    "name": "tgm",
+    "initial": "TESTING",
+    "states": [{
+        "state": "TESTING",
+        "initial": "UNKNOWN",
+        "transitions": [{
+            "event": "S0",
+            "next": "./INITIALIZING"
+        }, {
+            "event": "S1",
+            "next": "./LOCKING"
+        }, {
+            "event": "S2",
+            "condition": "tight",
+            "next": "./LOCKED/STABLE"
+        }, {
+            "event": "S2",
+            "next": "./LOCKED/STABILIZING"
+        }],
+        "states": [{
+            "state": "UNKNOWN"
+        }, {
+            "state": "INITIALIZING"
+        }, {
+            "state": "LOCKING"
+        }, {
+            "state": "LOCKED",
+            "exit": ["unstable"],
+            "transitions": [{
+                "event": "S2",
+                "condition": "tight",
+                "next": "./STABLE"
+            }, {
+                "event": "S2"
+            }],
+            "states": [{
+                "state": "STABILIZING"
+            }, {
+                "state": "STABLE",
+                "enter": ["stable"],
+                "transitions": [{
+                    "event": "S2",
+                    "condition": {"not": "tight"},
+                    "next": "WOBBLE"
+                }, {
+                    "event": "S2"
+                }]
+            }, {
+                "state": "WOBBLE",
+                "enter": ["wobble"]
+            }]
+        }]
+    }]
+}
