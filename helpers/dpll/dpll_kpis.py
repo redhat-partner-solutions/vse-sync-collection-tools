@@ -24,7 +24,7 @@ import process
 """
 
 parser = argparse.ArgumentParser(
-    description="Process ptp4l samples to calculate NGEN KPIs."
+    description="Process dpll samples to calculate NGEN KPIs."
 )
 required = parser.add_argument_group("required arguments")
 required.add_argument(
@@ -48,4 +48,7 @@ else:
     raise FileNotFoundError
 
 
-process.run(df)
+process.tgm_terror(df)
+process.tgm_cte(df)
+process.tgm_mtie(df)
+process.tgm_tdev(df)
