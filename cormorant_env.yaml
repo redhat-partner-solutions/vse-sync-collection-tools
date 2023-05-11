@@ -1,8 +1,0 @@
-kubeconfig_path: /home/cwheeler/kubeconfig
-
-# Additional stuff can go here as it's needed e.g. individual node capabilities,
-# anything that cannot (yet) be autodiscovered etc
-# cluster_name: cormorant
-# nodes:
-#   - hostname: cormorant
-#     ip: "192.168.49.141"

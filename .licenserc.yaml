@@ -1,11 +1,12 @@
 header:
   license:
-    spdx-id: Apache-2.0
+    spdx-id: GPL-2.0-or-later
     copyright-owner: Red Hat, Inc.
+    content: "SPDX-License-Identifier: GPL-2.0-or-later"
+    pattern: "SPDX-License-Identifier: GPL-2.0-or-later"
 
   paths:
     - '**/**.go'
-    - '**/**.py'
 
   # paths-ignore:
   #   - '.github/**'
@@ -13,6 +14,7 @@ header:
   #   - '**/.*'
   #   - 'LICENSE'
   #   - 'NOTICE'
+
 
   comment: never
 

@@ -1,8 +1,0 @@
-value: testvalue
-suite_configs:
-  - tests.simple_config:
-      target_latency: 120
-      permitted_jitter: 3
-    tests.extra_section:
-      nowehere: "for this"
-      to_go: 2

@@ -1,5 +1,0 @@
-value: ThisIsATopLevelValue
-suite_configs:
-  - ptp_tests_config:
-      max_sync_offset: 30
-      other_val: foo
