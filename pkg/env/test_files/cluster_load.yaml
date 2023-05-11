@@ -1,5 +1,0 @@
-kubeconfig_path: ~/kubeconfig
-cluster_name: Albatross
-nodes:
-  - hostname: albatross
-    ip: "192.168.1.299"

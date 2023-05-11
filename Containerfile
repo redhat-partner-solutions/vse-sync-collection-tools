@@ -20,10 +20,10 @@ WORKDIR ${SRC_DIR}
 RUN make install-tools
 
 RUN pwd && ls
-# build the test binary: outputs to ${SRC_DIR}/tests/tests.test
+# build the test binary: outputs to ${SRC_DIR}/vse-sync-testsuite
 RUN make build
 
-RUN cp ${SRC_DIR}/tests/tests.test ${BIN_DIR}/
+RUN cp ${SRC_DIR}/vse-sync-testsuite ${BIN_DIR}/collector-tool
 
 RUN dnf remove -y go make && \
 	dnf clean all && \
@@ -39,4 +39,4 @@ RUN dnf remove -y go make && \
 FROM scratch
 COPY --from=build / /
 WORKDIR /usr/th/bin
-CMD ./tests.test --config=/usr/th/cfg/test_config.yaml --env=/usr/th/cfg/env.yaml
+CMD ./collector-tool

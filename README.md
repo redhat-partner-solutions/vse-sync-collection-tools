@@ -1,6 +1,6 @@
 # synchronization-testsuites
 
-The purpose of this project is to make a single repository for all the existent used synchronization testing suites for the OpenShift platform, typically testing suites that target  different levels of testing (integration, operator testing, performance testing)
+The main purpose of this repo is build the necessary tooling to collect necessary synchronization-related data logs from a running OpenShift cluster. This data will then be leveraged by different analysis tools to determine if the cluster is running within acceptable bounds synchronization-wise.```
 
 The core approach taken is to strongly encourage and enforce separation of concerns between:
 1. Declarative description of the cluster(s) under test
@@ -34,21 +34,15 @@ The core approach taken is to strongly encourage and enforce separation of conce
     1. manually run against all files with `pre-commit run --all-files` or against staged files with `pre-commit run`.
     1. Otherwise pre-commit will now run automatically when you make a new commit.
 
-## Running Tests
+## Running Collectors
 
-Create test configuration and environment description files, then run the following command, referencing your created files as needed:
+Run the following command, referencing your created files as needed:
 
 ```shell
-ginkgo run tests -- --config=../cormorant_test_config.yaml --env=../cormorant_env.yaml
+./vse-sync-testsuite --interface="<ptp interface>" --kubeconfig="${KUBECONFIG}"
 ```
 
-For more information on `--config=../cormorant_test_config.yaml` see [Test Configuration](doc/test_configuration.md)
-
-For more information on `--env=../cormorant_env.yaml` see [Test Environment](doc/test_environment.md)
-
-For more examples on how to run tests see [Test Execution](doc/test_execution.md)
-
-## Testing the Framework
+## Running tests
 
 TODO: implement tests for all packages
 
@@ -56,12 +50,12 @@ To test the framework components run `ginkgo pkg/<packagename>`, for example to 
 
 ## Contributing to the repo
 
-See [Adding a Test](doc/implementing_a_test.md)
+See [Adding a collector](doc/implementing_a_collector.md)
 
 ## To Do List
 
 * unit tests for all of `pkg/`
-* Specify an interface for a `collector`
-* consider `collector`s as Go packages
-* `collector` registry?
-* reconsider dynamically loading tests suites from Go packages, would force people slightly further away from standard ginkgo but have significant potential benefits for modularity
+* add more collectors
+* allow user to specify the collectors they want to run
+* move collectors into go routines
+* better data persistance options
