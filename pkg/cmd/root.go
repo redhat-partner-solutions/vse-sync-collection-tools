@@ -9,6 +9,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/logging"
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/runner"
@@ -22,6 +24,7 @@ const (
 )
 
 var (
+	configFile             string
 	kubeConfig             string
 	pollCount              int
 	pollInterval           int
@@ -37,8 +40,29 @@ var (
 		Use:   "vse-sync-testsuite",
 		Short: "A monitoring tool for PTP related metrics",
 		Long:  `A monitoring tool for PTP related metrics.`,
-		Run: func(cmd *cobra.Command, args []string) {
+		PreRun: func(cmd *cobra.Command, args []string) {
 			logging.SetupLogging(logLevel, os.Stdout)
+
+			// Load config from file or from env vars
+			if configFile != "" {
+				log.Debugf("config: %v", configFile)
+				viper.SetConfigFile(configFile)
+			}
+			err := viper.ReadInConfig()
+			utils.IfErrorExitOrPanic(err)
+
+			// Update flag values with values from viper
+			log.Debugf("Updating CLI flags with config")
+			cmd.PersistentFlags().VisitAll(func(f *pflag.Flag) {
+				log.Debugf("flagName: %v", f.Name)
+				if viper.IsSet(f.Name) {
+					log.Debugf("flagValue: %v", viper.GetString(f.Name))
+					err = cmd.PersistentFlags().Set(f.Name, viper.GetString(f.Name))
+					utils.IfErrorExitOrPanic(err)
+				}
+			})
+		},
+		Run: func(cmd *cobra.Command, args []string) {
 			collectionRunner := runner.NewCollectorRunner(collectorNames)
 			collectionRunner.Run(
 				kubeConfig,
@@ -63,6 +87,11 @@ func Execute() {
 }
 
 func init() { //nolint:funlen // Allow this to get a little long
+	viper.AutomaticEnv()
+	viper.SetEnvPrefix("COLLECTOR")
+
+	rootCmd.Flags().StringVar(&configFile, "config", "", "Path to config file")
+
 	rootCmd.PersistentFlags().StringVarP(&kubeConfig, "kubeconfig", "k", "", "Path to the kubeconfig file")
 	err := rootCmd.MarkPersistentFlagRequired("kubeconfig")
 	utils.IfErrorExitOrPanic(err)
