@@ -108,6 +108,7 @@ func (clientsholder *Clientset) ExecCommandContainer(ctx ContainerContext, comma
 		log.Error(err)
 		return stdout, stderr, fmt.Errorf("error setting up remote command: %w", err)
 	}
+
 	err = exec.StreamWithContext(context.TODO(), remotecommand.StreamOptions{
 		Stdout: &buffOut,
 		Stderr: &buffErr,
@@ -117,6 +118,56 @@ func (clientsholder *Clientset) ExecCommandContainer(ctx ContainerContext, comma
 		log.Error(err)
 		log.Error(req.URL())
 		log.Error("command: ", command)
+		log.Error("stderr: ", stderr)
+		log.Error("stdout: ", stdout)
+		return stdout, stderr, fmt.Errorf("error running remote command: %w", err)
+	}
+	return stdout, stderr, nil
+}
+
+//nolint:lll // allow slightly long function definition
+func (clientsholder *Clientset) ExecCommandContainerStdIn(ctx ContainerContext, command []string, buffIn bytes.Buffer) (stdout, stderr string, err error) {
+	commandStr := command
+	var buffOut bytes.Buffer
+	var buffErr bytes.Buffer
+	log.Debug(fmt.Sprintf(
+		"execute command on ns=%s, pod=%s container=%s, cmd: %s",
+		ctx.GetNamespace(),
+		ctx.GetPodName(),
+		ctx.GetContainerName(),
+		strings.Join(commandStr, " "),
+	))
+	req := clientsholder.K8sRestClient.Post().
+		Namespace(ctx.GetNamespace()).
+		Resource("pods").
+		Name(ctx.GetPodName()).
+		SubResource("exec").
+		VersionedParams(&corev1.PodExecOptions{
+			Container: ctx.GetContainerName(),
+			Command:   command,
+			Stdin:     true,
+			Stdout:    true,
+			Stderr:    true,
+			TTY:       false,
+		}, scheme.ParameterCodec)
+
+	exec, err := NewSPDYExecutor(clientsholder.RestConfig, "POST", req.URL())
+	if err != nil {
+		log.Error(err)
+		return stdout, stderr, fmt.Errorf("error setting up remote command: %w", err)
+	}
+
+	err = exec.StreamWithContext(context.TODO(), remotecommand.StreamOptions{
+		Stdin:  &buffIn,
+		Stdout: &buffOut,
+		Stderr: &buffErr,
+	})
+	stdin, stdout, stderr := buffIn.String(), buffOut.String(), buffErr.String()
+	if err != nil {
+		log.Error(err)
+		log.Error(req.URL())
+		log.Error("command: ", command)
+		log.Error("stdin: ", stdin)
 		log.Error("stderr: ", stderr)
 		log.Error("stdout: ", stdout)
 		return stdout, stderr, fmt.Errorf("error running remote command: %w", err)
