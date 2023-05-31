@@ -3,10 +3,9 @@
 package devices_test
 
 import (
+	"bufio"
 	"fmt"
 	"net/url"
-	"strconv"
-	"strings"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -14,6 +13,7 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/tools/remotecommand"
 
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/clients"
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/collectors/devices"
@@ -34,9 +34,16 @@ var _ = Describe("NewContainerContext", func() {
 	BeforeEach(func() {
 		clientset = testutils.GetMockedClientSet(testPod)
 		response = make(map[string][]byte)
-		responder := func(method string, url *url.URL) ([]byte, []byte, error) {
-			cmd := url.Query()["command"]
-			return response[strings.Join(cmd, " ")], []byte(""), nil
+		responder := func(method string, url *url.URL, options remotecommand.StreamOptions) ([]byte, []byte, error) {
+			reader := bufio.NewReader(options.Stdin)
+			cmd := ""
+			keepReading := true
+			for keepReading {
+				line, prefix, _ := reader.ReadLine()
+				keepReading = prefix
+				cmd += string(line)
+			}
+			return response[cmd], []byte(""), nil
 		}
 		clients.NewSPDYExecutor = testutils.NewFakeNewSPDYExecutor(responder, nil)
 	})
@@ -47,9 +54,17 @@ var _ = Describe("NewContainerContext", func() {
 			devID := "0x1593"
 			gnssDev := "gnss0"
 
-			response["ls /sys/class/net/aFakeInterface/device/gnss/"] = []byte(gnssDev)
-			response["cat /sys/class/net/aFakeInterface/device/device"] = []byte(devID)
-			response["cat /sys/class/net/aFakeInterface/device/vendor"] = []byte(vendor)
+			expectedInput := "echo '<date>' ; date +%s.%N ; echo '</date>' ; "
+			expectedInput += "echo '<gnss>' ; ls /sys/class/net/aFakeInterface/device/gnss/ ; echo '</gnss>' ; "
+			expectedInput += "echo '<devID>' ; cat /sys/class/net/aFakeInterface/device/device ; echo '</devID>' ; "
+			expectedInput += "echo '<vendorID>' ; cat /sys/class/net/aFakeInterface/device/vendor ; echo '</vendorID>' ;"
+
+			expectedOutput := "<date>\n1234\n</date>\n"
+			expectedOutput += fmt.Sprintf("<gnss>\n%s\n</gnss>\n", gnssDev)
+			expectedOutput += fmt.Sprintf("<devID>\n%s\n</devID>\n", devID)
+			expectedOutput += fmt.Sprintf("<vendorID>\n%s\n</vendorID>\n", vendor)
+
+			response[expectedInput] = []byte(expectedOutput)
 
 			ctx, err := clients.NewContainerContext(clientset, "TestNamespace", "Test", "TestContainer")
 			Expect(err).NotTo(HaveOccurred())
@@ -65,9 +80,17 @@ var _ = Describe("NewContainerContext", func() {
 			pssState := "10"
 			offset := "-34"
 
-			response["cat /sys/class/net/aFakeInterface/device/dpll_0_state"] = []byte(eecState)
-			response["cat /sys/class/net/aFakeInterface/device/dpll_1_state"] = []byte(pssState)
-			response["cat /sys/class/net/aFakeInterface/device/dpll_1_offset"] = []byte(offset)
+			expectedInput := "echo '<date>' ; date +%s.%N ; echo '</date>' ; "
+			expectedInput += "echo '<dpll_0_state>' ; cat /sys/class/net/aFakeInterface/device/dpll_0_state ; echo '</dpll_0_state>' ; "
+			expectedInput += "echo '<dpll_1_state>' ; cat /sys/class/net/aFakeInterface/device/dpll_1_state ; echo '</dpll_1_state>' ; "
+			expectedInput += "echo '<dpll_1_offset>' ; cat /sys/class/net/aFakeInterface/device/dpll_1_offset ; echo '</dpll_1_offset>' ;"
+
+			expectedOutput := "<date>\n1234\n</date>\n"
+			expectedOutput += fmt.Sprintf("<dpll_0_state>\n%s\n</dpll_0_state>\n", eecState)
+			expectedOutput += fmt.Sprintf("<dpll_1_state>\n%s\n</dpll_1_state>\n", pssState)
+			expectedOutput += fmt.Sprintf("<dpll_1_offset>\n%s\n</dpll_1_offset>\n", offset)
+
+			response[expectedInput] = []byte(expectedOutput)
 
 			ctx, err := clients.NewContainerContext(clientset, "TestNamespace", "Test", "TestContainer")
 			Expect(err).NotTo(HaveOccurred())
@@ -85,9 +108,19 @@ var _ = Describe("NewContainerContext", func() {
 			devInfo := devices.PTPDeviceInfo{
 				GNSSDev: "/dev/gnss0",
 			}
-			key := fmt.Sprintf("timeout %d head -n %s %s", timeout, strconv.Itoa(nLines), devInfo.GNSSDev)
 
-			response[key] = []byte(line)
+			expectedInput := "echo '<date>' ; date +%s.%N ; echo '</date>' ; "
+			expectedInput += fmt.Sprintf(
+				"echo '<lines>' ; timeout %d head -n %d %s ; echo '</lines>' ;",
+				timeout,
+				nLines,
+				devInfo.GNSSDev,
+			)
+
+			expectedOutput := "<date>\n1234\n</date>\n"
+			expectedOutput += fmt.Sprintf("<lines>\n%s\n</lines>\n", line)
+
+			response[expectedInput] = []byte(expectedOutput)
 
 			ctx, err := clients.NewContainerContext(clientset, "TestNamespace", "Test", "TestContainer")
 			Expect(err).NotTo(HaveOccurred())

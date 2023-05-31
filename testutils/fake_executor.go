@@ -13,7 +13,7 @@ import (
 
 // Return a SPDYExectuor with stdout, stderr and an error embedded
 func NewFakeNewSPDYExecutor(
-	responder func(method string, url *url.URL) ([]byte, []byte, error),
+	responder func(method string, url *url.URL, options remotecommand.StreamOptions) ([]byte, []byte, error),
 	execCreationErr error,
 ) func(config *rest.Config, method string, url *url.URL) (remotecommand.Executor, error) {
 	return func(config *rest.Config, method string, url *url.URL) (remotecommand.Executor, error) {
@@ -23,12 +23,12 @@ func NewFakeNewSPDYExecutor(
 
 type fakeExecutor struct {
 	url       *url.URL
-	responder func(method string, url *url.URL) ([]byte, []byte, error)
+	responder func(method string, url *url.URL, options remotecommand.StreamOptions) ([]byte, []byte, error)
 	method    string
 }
 
 func (f *fakeExecutor) Stream(options remotecommand.StreamOptions) error {
-	stdout, stderr, responseErr := f.responder(f.method, f.url)
+	stdout, stderr, responseErr := f.responder(f.method, f.url, options)
 	_, err := options.Stdout.Write(stdout)
 	if err != nil {
 		return fmt.Errorf("failed to write stdout Error: %w", err)
@@ -41,7 +41,7 @@ func (f *fakeExecutor) Stream(options remotecommand.StreamOptions) error {
 }
 
 func (f *fakeExecutor) StreamWithContext(ctx context.Context, options remotecommand.StreamOptions) error {
-	stdout, stderr, reponseErr := f.responder(f.method, f.url)
+	stdout, stderr, reponseErr := f.responder(f.method, f.url, options)
 	_, err := options.Stdout.Write(stdout)
 	if err != nil {
 		return fmt.Errorf("failed to write stdout Error: %w", err)
