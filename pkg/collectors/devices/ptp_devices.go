@@ -18,8 +18,9 @@ type PTPDeviceInfo struct {
 }
 
 type DevDPLLInfo struct {
-	State  string `json:"state"`
-	Offset string `json:"offset"`
+	EECState  string `json:"EECState"`  //nolint:tagliatelle // Because EEC is dpll name
+	PPSState  string `json:"PPSState"`  //nolint:tagliatelle // Because PPS is dpll name
+	PPSOffset string `json:"PPSOffset"` //nolint:tagliatelle // Because PPS is dpll name
 }
 type GNSSDevLines struct {
 	Dev   string `json:"dev"`
@@ -74,10 +75,13 @@ func ReadGNSSDev(ctx clients.ContainerContext, devInfo PTPDeviceInfo, lines, tim
 
 // GetDevDPLLInfo returns the device DPLL info for an interface.
 func GetDevDPLLInfo(ctx clients.ContainerContext, interfaceName string) (dpllInfo DevDPLLInfo) {
-	dpllInfo.State = commandWithPostprocessFunc(ctx, strings.TrimSpace, []string{
+	dpllInfo.EECState = commandWithPostprocessFunc(ctx, strings.TrimSpace, []string{
+		"cat", "/sys/class/net/" + interfaceName + "/device/dpll_0_state",
+	})
+	dpllInfo.PPSState = commandWithPostprocessFunc(ctx, strings.TrimSpace, []string{
 		"cat", "/sys/class/net/" + interfaceName + "/device/dpll_1_state",
 	})
-	dpllInfo.Offset = commandWithPostprocessFunc(ctx, strings.TrimSpace, []string{
+	dpllInfo.PPSOffset = commandWithPostprocessFunc(ctx, strings.TrimSpace, []string{
 		"cat", "/sys/class/net/" + interfaceName + "/device/dpll_1_offset",
 	})
 	return

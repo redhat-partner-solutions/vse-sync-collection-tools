@@ -61,18 +61,20 @@ var _ = Describe("NewContainerContext", func() {
 	})
 	When("called GetDevDPLLInfo", func() {
 		It("should return a valid PTPDeviceInfo", func() {
-			state := "10"
+			eecState := "2"
+			pssState := "10"
 			offset := "-34"
 
-			response["cat /sys/class/net/aFakeInterface/device/dpll_1_state"] = []byte(state)
+			response["cat /sys/class/net/aFakeInterface/device/dpll_0_state"] = []byte(eecState)
+			response["cat /sys/class/net/aFakeInterface/device/dpll_1_state"] = []byte(pssState)
 			response["cat /sys/class/net/aFakeInterface/device/dpll_1_offset"] = []byte(offset)
 
 			ctx, err := clients.NewContainerContext(clientset, "TestNamespace", "Test", "TestContainer")
 			Expect(err).NotTo(HaveOccurred())
 			info := devices.GetDevDPLLInfo(ctx, "aFakeInterface")
-			Expect(info.State).To(Equal(state))
-			Expect(info.Offset).To(Equal(offset))
-
+			Expect(info.EECState).To(Equal(eecState))
+			Expect(info.PPSState).To(Equal(pssState))
+			Expect(info.PPSOffset).To(Equal(offset))
 		})
 	})
 	When("called ReadGNSSDev", func() {
