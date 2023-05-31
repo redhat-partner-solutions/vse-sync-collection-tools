@@ -12,6 +12,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	fakeK8s "k8s.io/client-go/kubernetes/fake"
+	"k8s.io/client-go/tools/remotecommand"
 
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/clients"
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/testutils"
@@ -73,7 +74,7 @@ var _ = Describe("ExecCommandContainer", func() {
 		It("should exec the command and return the std buffers", func() {
 			expectedStdOut := "my test command stdout"
 			expectedStdErr := "my test command stderr"
-			responder := func(method string, url *url.URL) ([]byte, []byte, error) {
+			responder := func(method string, url *url.URL, options remotecommand.StreamOptions) ([]byte, []byte, error) {
 				return []byte(expectedStdOut), []byte(expectedStdErr), nil
 			}
 			clients.NewSPDYExecutor = testutils.NewFakeNewSPDYExecutor(responder, nil)
@@ -92,7 +93,7 @@ var _ = Describe("ExecCommandContainer", func() {
 			expectedStdOut := ""
 			expectedStdErr := ""
 			expectedErr := errors.New("Something went horribly wrong when creating the executor")
-			responder := func(method string, url *url.URL) ([]byte, []byte, error) {
+			responder := func(method string, url *url.URL, options remotecommand.StreamOptions) ([]byte, []byte, error) {
 				return []byte(expectedStdOut), []byte(expectedStdErr), nil
 			}
 			clients.NewSPDYExecutor = testutils.NewFakeNewSPDYExecutor(responder, expectedErr)
@@ -111,7 +112,7 @@ var _ = Describe("ExecCommandContainer", func() {
 			expectedStdOut := ""
 			expectedStdErr := ""
 			expectedErr := errors.New("Something went horribly wrong with the stream")
-			responder := func(method string, url *url.URL) ([]byte, []byte, error) {
+			responder := func(method string, url *url.URL, options remotecommand.StreamOptions) ([]byte, []byte, error) {
 				return []byte(expectedStdOut), []byte(expectedStdErr), expectedErr
 			}
 			clients.NewSPDYExecutor = testutils.NewFakeNewSPDYExecutor(responder, nil)
