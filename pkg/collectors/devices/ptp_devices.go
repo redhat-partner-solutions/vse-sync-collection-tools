@@ -41,7 +41,7 @@ func init() {
 	devFetcher = make(map[string]*fetcher)
 	gnssFetcher = make(map[string]*fetcher)
 	dpllFetcher = make(map[string]*fetcher)
-	dateCmdInst, err := clients.NewCmd("date", []string{"date +%s.%N"})
+	dateCmdInst, err := clients.NewCmd("date", []string{"date --iso-8601=ns"})
 	if err != nil {
 		panic(err)
 	}
