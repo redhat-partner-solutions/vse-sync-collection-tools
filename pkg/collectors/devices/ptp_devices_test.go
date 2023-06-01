@@ -54,7 +54,7 @@ var _ = Describe("NewContainerContext", func() {
 			devID := "0x1593"
 			gnssDev := "gnss0"
 
-			expectedInput := "echo '<date>' ; date +%s.%N ; echo '</date>' ; "
+			expectedInput := "echo '<date>' ; date --iso-8601=ns ; echo '</date>' ; "
 			expectedInput += "echo '<gnss>' ; ls /sys/class/net/aFakeInterface/device/gnss/ ; echo '</gnss>' ; "
 			expectedInput += "echo '<devID>' ; cat /sys/class/net/aFakeInterface/device/device ; echo '</devID>' ; "
 			expectedInput += "echo '<vendorID>' ; cat /sys/class/net/aFakeInterface/device/vendor ; echo '</vendorID>' ;"
@@ -80,7 +80,7 @@ var _ = Describe("NewContainerContext", func() {
 			pssState := "10"
 			offset := "-34"
 
-			expectedInput := "echo '<date>' ; date +%s.%N ; echo '</date>' ; "
+			expectedInput := "echo '<date>' ; date --iso-8601=ns ; echo '</date>' ; "
 			expectedInput += "echo '<dpll_0_state>' ; cat /sys/class/net/aFakeInterface/device/dpll_0_state ; echo '</dpll_0_state>' ; "
 			expectedInput += "echo '<dpll_1_state>' ; cat /sys/class/net/aFakeInterface/device/dpll_1_state ; echo '</dpll_1_state>' ; "
 			expectedInput += "echo '<dpll_1_offset>' ; cat /sys/class/net/aFakeInterface/device/dpll_1_offset ; echo '</dpll_1_offset>' ;"
@@ -109,7 +109,7 @@ var _ = Describe("NewContainerContext", func() {
 				GNSSDev: "/dev/gnss0",
 			}
 
-			expectedInput := "echo '<date>' ; date +%s.%N ; echo '</date>' ; "
+			expectedInput := "echo '<date>' ; date --iso-8601=ns ; echo '</date>' ; "
 			expectedInput += fmt.Sprintf(
 				"echo '<lines>' ; timeout %d head -n %d %s ; echo '</lines>' ;",
 				timeout,
