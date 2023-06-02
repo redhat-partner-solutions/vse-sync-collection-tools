@@ -15,14 +15,14 @@ type PTPDeviceInfo struct {
 	Timestamp string `json:"date" fetcherKey:"date"`
 	VendorID  string `json:"vendorId" fetcherKey:"vendorID"`
 	DeviceID  string `json:"deviceInfo" fetcherKey:"devID"`
-	GNSSDev   string `json:"GNSSDev" fetcherKey:"gnss"` //nolint:tagliatelle // Because GNSS is an ancronym
+	GNSSDev   string `json:"GNSSDev" fetcherKey:"gnss"`
 }
 
 type DevDPLLInfo struct {
 	Timestamp string `json:"date" fetcherKey:"date"`
-	EECState  string `json:"EECState" fetcherKey:"dpll_0_state"`   //nolint:tagliatelle // Because EEC is dpll name
-	PPSState  string `json:"PPSState" fetcherKey:"dpll_1_state"`   //nolint:tagliatelle // Because PPS is dpll name
-	PPSOffset string `json:"PPSOffset" fetcherKey:"dpll_1_offset"` //nolint:tagliatelle // Because PPS is dpll name
+	EECState  string `json:"EECState" fetcherKey:"dpll_0_state"`
+	PPSState  string `json:"PPSState" fetcherKey:"dpll_1_state"`
+	PPSOffset string `json:"PPSOffset" fetcherKey:"dpll_1_offset"`
 }
 type GNSSDevLines struct {
 	Timestamp string `json:"date" fetcherKey:"date"`
