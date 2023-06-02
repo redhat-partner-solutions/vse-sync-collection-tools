@@ -10,40 +10,34 @@ import (
 )
 
 type Cmder interface {
-	GetCommand() []string
+	GetCommand() string
 	ExtractResult(string) (map[string]string, error)
 }
 
 type Cmd struct {
 	key         string
-	prefix      []string
-	suffix      []string
-	cmd         []string
+	prefix      string
+	suffix      string
+	cmd         string
 	cleanupFunc func(string) string
 	regex       *regexp.Regexp
-	fullCmd     []string
+	fullCmd     string
 }
 
-func NewCmd(key string, cmd []string) (*Cmd, error) {
+func NewCmd(key, cmd string) (*Cmd, error) {
 	cmdInstance := Cmd{
 		key:    key,
 		cmd:    cmd,
-		prefix: []string{"echo", fmt.Sprintf("'<%s>'", key)},
-		suffix: []string{"echo", fmt.Sprintf("'</%s>'", key)},
+		prefix: fmt.Sprintf("echo '<%s>'", key),
+		suffix: fmt.Sprintf("echo '</%s>'", key),
 	}
 
-	cmdInstance.fullCmd = make([]string, 0)
-	cmdInstance.fullCmd = append(cmdInstance.fullCmd, cmdInstance.prefix...)
-	cmdInstance.fullCmd = append(cmdInstance.fullCmd, ";")
-	cmdInstance.fullCmd = append(cmdInstance.fullCmd, cmdInstance.cmd...)
-
-	lastPart := cmdInstance.cmd[len(cmdInstance.cmd)-1]
-	if string(lastPart[len(lastPart)-1]) != ";" {
-		cmdInstance.fullCmd = append(cmdInstance.fullCmd, ";")
+	cmdInstance.fullCmd = fmt.Sprintf("%s;", cmdInstance.prefix)
+	cmdInstance.fullCmd += cmdInstance.cmd
+	if string(cmd[len(cmd)-1]) != ";" {
+		cmdInstance.fullCmd += ";"
 	}
-
-	cmdInstance.fullCmd = append(cmdInstance.fullCmd, cmdInstance.suffix...)
-	cmdInstance.fullCmd = append(cmdInstance.fullCmd, ";")
+	cmdInstance.fullCmd += fmt.Sprintf("%s;", cmdInstance.suffix)
 
 	compiledRegex, err := regexp.Compile(`(?s)<` + key + `>\n` + `(.*)` + `\n</` + key + `>`)
 	if err != nil {
@@ -57,7 +51,7 @@ func (c *Cmd) SetCleanupFunc(f func(string) string) {
 	c.cleanupFunc = f
 }
 
-func (c *Cmd) GetCommand() []string {
+func (c *Cmd) GetCommand() string {
 	return c.fullCmd
 }
 
@@ -88,14 +82,10 @@ func (cgrp *CmdGroup) AddCommand(c *Cmd) {
 	cgrp.cmds = append(cgrp.cmds, c)
 }
 
-func (cgrp *CmdGroup) GetCommand() []string {
-	res := make([]string, 0)
+func (cgrp *CmdGroup) GetCommand() string {
+	res := ""
 	for _, c := range cgrp.cmds {
-		res = append(res, c.GetCommand()...)
-		lastPart := res[len(res)-1]
-		if string(lastPart[len(lastPart)-1]) != ";" {
-			res = append(res, ";")
-		}
+		res += c.GetCommand()
 	}
 	return res
 }

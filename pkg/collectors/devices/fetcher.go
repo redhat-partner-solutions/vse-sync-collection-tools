@@ -25,7 +25,7 @@ func NewFetcher() *fetcher {
 	}
 }
 
-func (inst *fetcher) AddNewCommand(key string, cmd []string, trim bool) error {
+func (inst *fetcher) AddNewCommand(key, cmd string, trim bool) error {
 	cmdInst, err := clients.NewCmd(key, cmd)
 	if err != nil {
 		return fmt.Errorf("add fetcher cmd failed %w", err)
@@ -81,7 +81,7 @@ func runCommands(ctx clients.ContainerContext, cmdGrp clients.Cmder) (result map
 	cmd := cmdGrp.GetCommand()
 	command := []string{"/usr/bin/sh"}
 	var buffIn bytes.Buffer
-	buffIn.WriteString(strings.Join(cmd, " "))
+	buffIn.WriteString(cmd)
 
 	stdout, _, err := clientset.ExecCommandContainerStdIn(ctx, command, buffIn)
 	if err != nil {

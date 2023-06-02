@@ -3,7 +3,7 @@
 package devices
 
 import (
-	"strconv"
+	"fmt"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -41,7 +41,7 @@ func init() {
 	devFetcher = make(map[string]*fetcher)
 	gnssFetcher = make(map[string]*fetcher)
 	dpllFetcher = make(map[string]*fetcher)
-	dateCmdInst, err := clients.NewCmd("date", []string{"date --iso-8601=ns"})
+	dateCmdInst, err := clients.NewCmd("date", "date --iso-8601=ns")
 	if err != nil {
 		panic(err)
 	}
@@ -64,19 +64,24 @@ func GetPTPDeviceInfo(interfaceName string, ctx clients.ContainerContext) (devIn
 
 		fetcherInst.AddCommand(dateCmd)
 
-		err := fetcherInst.AddNewCommand("gnss", []string{
-			"ls", "/sys/class/net/" + interfaceName + "/device/gnss/",
-		}, true)
+		err := fetcherInst.AddNewCommand(
+			"gnss",
+			fmt.Sprintf("ls /sys/class/net/%s/device/gnss/", interfaceName),
+			true,
+		)
 		ifCmdErrorLog("gnss", err)
 
-		err = fetcherInst.AddNewCommand("devID", []string{
-			"cat", "/sys/class/net/" + interfaceName + "/device/device",
-		}, true)
+		err = fetcherInst.AddNewCommand(
+			"devID",
+			fmt.Sprintf("cat /sys/class/net/%s/device/device", interfaceName),
+			true,
+		)
 		ifCmdErrorLog("devId", err)
 
-		err = fetcherInst.AddNewCommand("vendorID", []string{
-			"cat", "/sys/class/net/" + interfaceName + "/device/vendor",
-		}, true)
+		err = fetcherInst.AddNewCommand("vendorID",
+			fmt.Sprintf("cat /sys/class/net/%s/device/vendor", interfaceName),
+			true,
+		)
 		ifCmdErrorLog("vendorID", err)
 	}
 
@@ -97,9 +102,11 @@ func ReadGNSSDev(ctx clients.ContainerContext, devInfo PTPDeviceInfo, lines, tim
 
 		fetcherInst.AddCommand(dateCmd)
 
-		err := fetcherInst.AddNewCommand("lines", []string{
-			"timeout", strconv.Itoa(timeoutSeconds), "head", "-n", strconv.Itoa(lines), devInfo.GNSSDev,
-		}, true)
+		err := fetcherInst.AddNewCommand(
+			"lines",
+			fmt.Sprintf("timeout %d head -n %d %s", timeoutSeconds, lines, devInfo.GNSSDev),
+			true,
+		)
 		ifCmdErrorLog("lines", err)
 	}
 
@@ -122,24 +129,30 @@ func GetDevDPLLInfo(ctx clients.ContainerContext, interfaceName string) (dpllInf
 
 		fetcherInst.AddCommand(dateCmd)
 
-		err := fetcherInst.AddNewCommand("dpll_0_state", []string{
-			"cat", "/sys/class/net/" + interfaceName + "/device/dpll_0_state",
-		}, true)
+		err := fetcherInst.AddNewCommand(
+			"dpll_0_state",
+			fmt.Sprintf("cat /sys/class/net/%s/device/dpll_0_state", interfaceName),
+			true,
+		)
 		ifCmdErrorLog("dpll_0_state", err)
 
-		err = fetcherInst.AddNewCommand("dpll_1_state", []string{
-			"cat", "/sys/class/net/" + interfaceName + "/device/dpll_1_state",
-		}, true)
+		err = fetcherInst.AddNewCommand(
+			"dpll_1_state",
+			fmt.Sprintf("cat /sys/class/net/%s /device/dpll_1_state", interfaceName),
+			true,
+		)
 		ifCmdErrorLog("dpll_1_state", err)
 
-		err = fetcherInst.AddNewCommand("dpll_1_offset", []string{
-			"cat", "/sys/class/net/" + interfaceName + "/device/dpll_1_offset",
-		}, true)
+		err = fetcherInst.AddNewCommand(
+			"dpll_1_offset",
+			fmt.Sprintf("cat /sys/class/net/%s /device/dpll_1_offset", interfaceName),
+			true,
+		)
 		ifCmdErrorLog("dpll_1_offset", err)
 	}
 	err := fetcherInst.Fetch(ctx, &dpllInfo)
 	if err != nil {
 		log.Errorf("failed to fetch dpllInfo %s", err.Error())
 	}
-	return
+	return dpllInfo
 }
