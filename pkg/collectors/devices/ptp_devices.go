@@ -138,14 +138,14 @@ func GetDevDPLLInfo(ctx clients.ContainerContext, interfaceName string) (dpllInf
 
 		err = fetcherInst.AddNewCommand(
 			"dpll_1_state",
-			fmt.Sprintf("cat /sys/class/net/%s /device/dpll_1_state", interfaceName),
+			fmt.Sprintf("cat /sys/class/net/%s/device/dpll_1_state", interfaceName),
 			true,
 		)
 		ifCmdErrorLog("dpll_1_state", err)
 
 		err = fetcherInst.AddNewCommand(
 			"dpll_1_offset",
-			fmt.Sprintf("cat /sys/class/net/%s /device/dpll_1_offset", interfaceName),
+			fmt.Sprintf("cat /sys/class/net/%s/device/dpll_1_offset", interfaceName),
 			true,
 		)
 		ifCmdErrorLog("dpll_1_offset", err)
