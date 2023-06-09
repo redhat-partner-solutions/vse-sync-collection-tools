@@ -41,7 +41,7 @@ func NewCmd(key, cmd string) (*Cmd, error) {
 
 	compiledRegex, err := regexp.Compile(`(?s)<` + key + `>\n` + `(.*)` + `\n</` + key + `>`)
 	if err != nil {
-		return nil, fmt.Errorf("failed to complie regex for key %s: %w", key, err)
+		return nil, fmt.Errorf("failed to compile regex for key %s: %w", key, err)
 	}
 	cmdInstance.regex = compiledRegex
 	return &cmdInstance, nil
