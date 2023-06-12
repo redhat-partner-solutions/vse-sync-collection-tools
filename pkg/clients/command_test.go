@@ -51,3 +51,45 @@ var _ = Describe("Cmd", func() {
 		})
 	})
 })
+
+var _ = Describe("CmdGrp", func() {
+	When("a command is added", func() {
+		It("should be added to GetCommand's output", func() {
+			cmd, err := clients.NewCmd("TestKey", "Hello This is a test")
+			Expect(err).ToNot(HaveOccurred())
+			cmdGrp := &clients.CmdGroup{}
+			cmdGrp.AddCommand(cmd)
+			cmdString := cmdGrp.GetCommand()
+			Expect(cmdString).To(Equal(cmd.GetCommand()))
+
+			cmd2, err := clients.NewCmd("TestKey2", "This is another test goodbye.")
+			Expect(err).ToNot(HaveOccurred())
+			cmdGrp.AddCommand(cmd2)
+			cmdString2 := cmdGrp.GetCommand()
+			Expect(cmdString2).To(Equal(cmd.GetCommand() + cmd2.GetCommand()))
+		})
+	})
+	When("passed a valid result", func() {
+		It("should set the values to the key", func() {
+			key1 := "TestKey"
+			key2 := "TestKey2"
+			answer1 := "Result of key1"
+			answer2 := "Result of key2"
+			cmd, err := clients.NewCmd(key1, "Hello This is a test")
+			Expect(err).ToNot(HaveOccurred())
+			cmd2, err := clients.NewCmd(key2, "This is another test goodbye.")
+			Expect(err).ToNot(HaveOccurred())
+			cmdGrp := &clients.CmdGroup{}
+			cmdGrp.AddCommand(cmd)
+			cmdGrp.AddCommand(cmd2)
+			result, err := cmdGrp.ExtractResult(fmt.Sprintf(
+				"<%s>\n%s\n</%s>\n<%s>\n%s\n</%s>\n",
+				key1, answer1, key1,
+				key2, answer2, key2,
+			))
+			Expect(result[key1]).To(Equal(answer1))
+			Expect(result[key2]).To(Equal(answer2))
+			Expect(err).ToNot(HaveOccurred())
+		})
+	})
+})
