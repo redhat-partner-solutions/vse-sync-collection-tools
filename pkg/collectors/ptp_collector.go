@@ -26,6 +26,8 @@ type PTPCollector struct {
 }
 
 const (
+	PTPCollectorName = "PTP"
+
 	VendorIntel = "0x8086"
 	DeviceE810  = "0x1593"
 
