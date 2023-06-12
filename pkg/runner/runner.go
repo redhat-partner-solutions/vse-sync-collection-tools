@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -15,6 +17,11 @@ import (
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/clients"
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/collectors"
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/utils"
+)
+
+const (
+	maxConnsecutivePollErrors = 1800
+	pollResultsQueueSize      = 10
 )
 
 // getQuitChannel creates and returns a channel for notifying
@@ -36,19 +43,33 @@ func selectCollectorCallback(outputFile string) (callbacks.Callback, error) {
 	}
 }
 
+type PollResult struct {
+	CollectorName string
+	Errors        []error
+}
+
 type CollectorRunner struct {
-	quit               chan os.Signal
-	collecterInstances []*collectors.Collector
-	collectorNames     []string
+	quit                  chan os.Signal
+	collectorQuitChannel  map[string]chan os.Signal
+	pollResults           chan PollResult
+	collecterInstances    map[string]*collectors.Collector
+	consecutivePollErrors map[string]int
+	collectorNames        []string
+	pollCount             int
+	pollRate              float64
+	runningCollectorsWG   WaitGroupCount
 }
 
 func NewCollectorRunner() *CollectorRunner {
 	collectorNames := make([]string, 0)
-	collectorNames = append(collectorNames, "PTP")
+	collectorNames = append(collectorNames, collectors.PTPCollectorName)
 	return &CollectorRunner{
-		collecterInstances: make([]*collectors.Collector, 0),
-		collectorNames:     collectorNames,
-		quit:               getQuitChannel(),
+		collecterInstances:    make(map[string]*collectors.Collector),
+		collectorNames:        collectorNames,
+		quit:                  getQuitChannel(),
+		pollResults:           make(chan PollResult, pollResultsQueueSize),
+		collectorQuitChannel:  make(map[string]chan os.Signal, 1),
+		consecutivePollErrors: make(map[string]int),
 	}
 }
 
@@ -59,7 +80,11 @@ func (runner *CollectorRunner) initialise(
 	ptpInterface string,
 	clientset *clients.Clientset,
 	pollRate float64,
+	pollCount int,
 ) {
+	runner.pollRate = pollRate
+	runner.pollCount = pollCount
+
 	constuctor := collectors.CollectionConstuctor{
 		Callback:     callback,
 		PTPInterface: ptpInterface,
@@ -70,7 +95,7 @@ func (runner *CollectorRunner) initialise(
 	for _, constuctorName := range runner.collectorNames {
 		var newCollector collectors.Collector
 		switch constuctorName {
-		case "PTP":
+		case collectors.PTPCollectorName:
 			NewPTPCollector, err := constuctor.NewPTPCollector() //nolint:govet // TODO clean this up
 			utils.IfErrorPanic(err)
 			newCollector = NewPTPCollector
@@ -80,45 +105,68 @@ func (runner *CollectorRunner) initialise(
 			panic("Unknown collector")
 		}
 		if newCollector != nil {
-			runner.collecterInstances = append(runner.collecterInstances, &newCollector)
+			runner.collecterInstances[constuctorName] = &newCollector
 			log.Debugf("Added collector %T, %v", newCollector, newCollector)
 		}
 	}
 	log.Debugf("Collectors %v", runner.collecterInstances)
 }
 
-// start configures all collectors to start collecting all there data keys
+func (runner *CollectorRunner) poller(collectorName string, collector collectors.Collector, quit chan os.Signal) {
+	defer runner.runningCollectorsWG.Done()
+	for numberOfPolls := 1; runner.pollCount < 0 || numberOfPolls <= runner.pollCount; numberOfPolls++ {
+		log.Debugf("Collector GoRoutine: %s", collectorName)
+		select {
+		case <-quit:
+			log.Infof("Killed shutting down collector %s", collectorName)
+			return
+		default:
+			if collector.ShouldPoll() {
+				log.Debugf("poll %s", collectorName)
+				errors := collector.Poll()
+				runner.pollResults <- PollResult{
+					CollectorName: collectorName,
+					Errors:        errors,
+				}
+			}
+			time.Sleep(time.Duration(float64(time.Second.Nanoseconds()) / runner.pollRate))
+		}
+	}
+	log.Debugf("Collector finished %s", collectorName)
+}
+
+// start configures all collectors to start collecting all their data keys
 func (runner *CollectorRunner) start() {
-	for _, collector := range runner.collecterInstances {
+	for collectorName, collector := range runner.collecterInstances {
 		log.Debugf("start collector %v", collector)
 		err := (*collector).Start(collectors.All)
 		utils.IfErrorPanic(err)
+
+		log.Debugf("Spawning  collector: %v", collector)
+		collectorName := collectorName
+		collector := collector
+		quit := make(chan os.Signal, 1)
+		runner.collectorQuitChannel[collectorName] = quit
+		runner.runningCollectorsWG.Add(1)
+		go runner.poller(collectorName, (*collector), quit)
 	}
 }
 
-// poll iterates though each running collector and
-// checks if it should be polled if so then will call poll
-func (runner *CollectorRunner) poll() {
-	for _, collector := range runner.collecterInstances {
-		log.Debugf("Running collector: %v", collector)
-
-		if (*collector).ShouldPoll() {
-			log.Debugf("poll %v", collector)
-			errors := (*collector).Poll()
-			if len(errors) > 0 {
-				// TODO: handle errors (better)
-				log.Error(errors)
-			}
-		}
-	}
+func (runner *CollectorRunner) stop(collectorName string) {
+	log.Errorf("Stopping collector %s for to manny consecutive polling errors", collectorName)
+	collector := runner.collecterInstances[collectorName]
+	quit := runner.collectorQuitChannel[collectorName]
+	quit <- os.Kill
+	err := (*collector).CleanUp(collectors.All)
+	utils.IfErrorPanic(err)
 }
 
 // cleanup calls cleanup on each collector
-func (runner *CollectorRunner) cleanUp() {
-	for _, collector := range runner.collecterInstances {
-		log.Debugf("cleanup %v", collector)
-		errColletor := (*collector).CleanUp(collectors.All)
-		utils.IfErrorPanic(errColletor)
+func (runner *CollectorRunner) cleanUpAll() {
+	for collectorName, collector := range runner.collecterInstances {
+		log.Debugf("cleanup %s", collectorName)
+		err := (*collector).CleanUp(collectors.All)
+		utils.IfErrorPanic(err)
 	}
 }
 
@@ -136,22 +184,63 @@ func (runner *CollectorRunner) Run(
 	clientset := clients.GetClientset(kubeConfig)
 	callback, err := selectCollectorCallback(outputFile)
 	utils.IfErrorPanic(err)
-
-	runner.initialise(callback, ptpInterface, clientset, pollRate)
+	runner.initialise(callback, ptpInterface, clientset, pollRate, pollCount)
 	runner.start()
 
-out:
-	for numberOfPolls := 1; pollCount < 0 || numberOfPolls <= pollCount; numberOfPolls++ {
+	// Use wg count to know if any collectors are running.
+	for runner.runningCollectorsWG.GetCount() > 0 {
+		log.Debugf("Main Loop ")
 		select {
-		case <-runner.quit:
-			log.Info("Killed shuting down")
-			break out
+		case sig := <-runner.quit:
+			log.Info("Killed shutting down")
+			// Forward signal to collector QuitChannels
+			for collectorName, quit := range runner.collectorQuitChannel {
+				log.Infof("Killed shutting down: %s", collectorName)
+				quit <- sig
+			}
+			runner.runningCollectorsWG.Wait()
+		case pollRes := <-runner.pollResults:
+			log.Infof("Received %v", pollRes)
+			if len(pollRes.Errors) > 0 {
+				runner.consecutivePollErrors[pollRes.CollectorName] += 1
+				log.Warnf(
+					"Increment failures for %s. Number of consecutive errors %d",
+					pollRes.CollectorName,
+					runner.consecutivePollErrors[pollRes.CollectorName],
+				)
+			} else {
+				runner.consecutivePollErrors[pollRes.CollectorName] = 0
+				log.Debugf("Reset failures for %s", pollRes.CollectorName)
+			}
+			if runner.consecutivePollErrors[pollRes.CollectorName] >= maxConnsecutivePollErrors {
+				runner.stop(pollRes.CollectorName)
+			}
 		default:
-			runner.poll()
+			log.Debug("Sleeping main func")
 			time.Sleep(time.Duration(float64(time.Second.Nanoseconds()) / pollRate))
 		}
 	}
-	runner.cleanUp()
-	errCallback := callback.CleanUp()
-	utils.IfErrorPanic(errCallback)
+	log.Info("Doing Cleanup")
+	runner.cleanUpAll()
+	err = callback.CleanUp()
+	utils.IfErrorPanic(err)
+}
+
+type WaitGroupCount struct {
+	sync.WaitGroup
+	count int64
+}
+
+func (wg *WaitGroupCount) Add(delta int) {
+	atomic.AddInt64(&wg.count, int64(delta))
+	wg.WaitGroup.Add(delta)
+}
+
+func (wg *WaitGroupCount) Done() {
+	atomic.AddInt64(&wg.count, -1)
+	wg.WaitGroup.Done()
+}
+
+func (wg *WaitGroupCount) GetCount() int {
+	return int(atomic.LoadInt64(&wg.count))
 }
