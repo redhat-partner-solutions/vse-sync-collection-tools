@@ -15,14 +15,19 @@ import (
 )
 
 type fetcher struct {
-	cmdGrp *clients.CmdGroup
-	Result map[string]string
+	cmdGrp        *clients.CmdGroup
+	Result        map[string]string
+	postProcesser func(map[string]string) (map[string]string, error)
 }
 
 func NewFetcher() *fetcher {
 	return &fetcher{
 		cmdGrp: &clients.CmdGroup{},
 	}
+}
+
+func (inst *fetcher) SetPostProcesser(ppFunc func(map[string]string) (map[string]string, error)) {
+	inst.postProcesser = ppFunc
 }
 
 func (inst *fetcher) AddNewCommand(key, cmd string, trim bool) error {
@@ -68,15 +73,25 @@ func (inst *fetcher) Unmarshall(pack interface{}) error {
 }
 
 func (inst *fetcher) Fetch(ctx clients.ContainerContext, pack interface{}) error {
-	inst.Result = runCommands(ctx, inst.cmdGrp)
-	err := inst.Unmarshall(pack)
+	result, err := runCommands(ctx, inst.cmdGrp)
+	if err != nil {
+		return err
+	}
+	if inst.postProcesser != nil {
+		result, err = inst.postProcesser(result)
+		if err != nil {
+			return fmt.Errorf("feching failed post process the data %w", err)
+		}
+	}
+	inst.Result = result
+	err = inst.Unmarshall(pack)
 	if err != nil {
 		return fmt.Errorf("feching failed to unpack data %w", err)
 	}
 	return nil
 }
 
-func runCommands(ctx clients.ContainerContext, cmdGrp clients.Cmder) (result map[string]string) { //nolint:lll // allow slightly long function definition
+func runCommands(ctx clients.ContainerContext, cmdGrp clients.Cmder) (result map[string]string, err error) { //nolint:lll // allow slightly long function definition
 	clientset := clients.GetClientset()
 	cmd := cmdGrp.GetCommand()
 	command := []string{"/usr/bin/sh"}
@@ -88,12 +103,13 @@ func runCommands(ctx clients.ContainerContext, cmdGrp clients.Cmder) (result map
 		log.Errorf("command in container failed unexpectedly. context: %v", ctx)
 		log.Errorf("command in container failed unexpectedly. command: %v", command)
 		log.Errorf("command in container failed unexpectedly. error: %v", err)
-		return result
+		return result, fmt.Errorf("runCommands failed %w", err)
 	}
 	result, err = cmdGrp.ExtractResult(stdout)
 	if err != nil {
 		log.Errorf("extraction failed %s", err.Error())
 		log.Errorf("output was %s", stdout)
+		return result, fmt.Errorf("runCommands failed %w", err)
 	}
-	return
+	return result, nil
 }
