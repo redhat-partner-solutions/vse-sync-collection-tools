@@ -31,7 +31,7 @@ var testPod = &v1.Pod{
 var _ = Describe("NewContainerContext", func() {
 	var clientset *clients.Clientset
 	var response map[string][]byte
-	BeforeEach(func() {
+	BeforeEach(func() { //nolint:dupl // this is test setup code
 		clientset = testutils.GetMockedClientSet(testPod)
 		response = make(map[string][]byte)
 		responder := func(method string, url *url.URL, options remotecommand.StreamOptions) ([]byte, []byte, error) {
