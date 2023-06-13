@@ -62,7 +62,7 @@ type CollectorRunner struct {
 
 func NewCollectorRunner() *CollectorRunner {
 	collectorNames := make([]string, 0)
-	collectorNames = append(collectorNames, collectors.PTPCollectorName)
+	collectorNames = append(collectorNames, collectors.PTPCollectorName, collectors.GPSCollectorName)
 	return &CollectorRunner{
 		collecterInstances:    make(map[string]*collectors.Collector),
 		collectorNames:        collectorNames,
@@ -96,9 +96,14 @@ func (runner *CollectorRunner) initialise(
 		var newCollector collectors.Collector
 		switch constuctorName {
 		case collectors.PTPCollectorName:
-			NewPTPCollector, err := constuctor.NewPTPCollector() //nolint:govet // TODO clean this up
+			NewPTPCollector, err := constuctor.NewPTPCollector()
 			utils.IfErrorPanic(err)
 			newCollector = NewPTPCollector
+			log.Debug("PTP Collector")
+		case collectors.GPSCollectorName:
+			NewGPSCollector, err := constuctor.NewGPSCollector()
+			utils.IfErrorPanic(err)
+			newCollector = NewGPSCollector
 			log.Debug("PTP Collector")
 		default:
 			newCollector = nil

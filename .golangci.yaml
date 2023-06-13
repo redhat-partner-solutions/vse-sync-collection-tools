@@ -103,7 +103,7 @@ issues:
       source: "\\/\\/.+$"
     - linters:
         - tagliatelle
-      source: "^.*(PPS|EEC|GNSS).*$"
+      source: "^.*(PPS|EEC|GNSS|GPS).*$"
 
 
 # golangci.com configuration
