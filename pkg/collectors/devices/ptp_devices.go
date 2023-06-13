@@ -49,13 +49,8 @@ func init() {
 	dateCmd.SetCleanupFunc(strings.TrimSpace)
 }
 
-func ifCmdErrorLog(key string, err error) {
-	if err != nil {
-		log.Errorf("failed to add command %s %s", key, err.Error())
-	}
-}
-
-func GetPTPDeviceInfo(interfaceName string, ctx clients.ContainerContext) (devInfo PTPDeviceInfo) {
+func GetPTPDeviceInfo(interfaceName string, ctx clients.ContainerContext) (PTPDeviceInfo, error) {
+	devInfo := PTPDeviceInfo{}
 	// Find the dev for the GNSS for this interface
 	fetcherInst, ok := devFetcher[interfaceName]
 	if !ok {
@@ -69,32 +64,41 @@ func GetPTPDeviceInfo(interfaceName string, ctx clients.ContainerContext) (devIn
 			fmt.Sprintf("ls /sys/class/net/%s/device/gnss/", interfaceName),
 			true,
 		)
-		ifCmdErrorLog("gnss", err)
+		if err != nil {
+			log.Errorf("failed to add command %s %s", "gnss", err.Error())
+			return devInfo, fmt.Errorf("failed to fetch devInfo %w", err)
+		}
 
 		err = fetcherInst.AddNewCommand(
 			"devID",
 			fmt.Sprintf("cat /sys/class/net/%s/device/device", interfaceName),
 			true,
 		)
-		ifCmdErrorLog("devId", err)
-
+		if err != nil {
+			log.Errorf("failed to add command %s %s", "devId", err.Error())
+			return devInfo, fmt.Errorf("failed to fetch devInfo %w", err)
+		}
 		err = fetcherInst.AddNewCommand("vendorID",
 			fmt.Sprintf("cat /sys/class/net/%s/device/vendor", interfaceName),
 			true,
 		)
-		ifCmdErrorLog("vendorID", err)
+		if err != nil {
+			log.Errorf("failed to add command %s %s", "vendorID", err.Error())
+			return devInfo, fmt.Errorf("failed to fetch devInfo %w", err)
+		}
 	}
 
 	err := fetcherInst.Fetch(ctx, &devInfo)
 	if err != nil {
 		log.Errorf("failed to fetch devInfo %s", err.Error())
+		return devInfo, fmt.Errorf("failed to fetch devInfo %w", err)
 	}
 	devInfo.GNSSDev = "/dev/" + devInfo.GNSSDev
-	return devInfo
+	return devInfo, nil
 }
 
 // Read lines from the GNSSDev of the passed devInfo.
-func ReadGNSSDev(ctx clients.ContainerContext, devInfo PTPDeviceInfo, lines, timeoutSeconds int) GNSSDevLines {
+func ReadGNSSDev(ctx clients.ContainerContext, devInfo PTPDeviceInfo, lines, timeoutSeconds int) (GNSSDevLines, error) {
 	fetcherInst, ok := gnssFetcher[devInfo.GNSSDev]
 	if !ok {
 		fetcherInst = NewFetcher()
@@ -107,7 +111,10 @@ func ReadGNSSDev(ctx clients.ContainerContext, devInfo PTPDeviceInfo, lines, tim
 			fmt.Sprintf("timeout %d head -n %d %s", timeoutSeconds, lines, devInfo.GNSSDev),
 			true,
 		)
-		ifCmdErrorLog("lines", err)
+		if err != nil {
+			log.Errorf("failed to add command %s %s", "lines", err.Error())
+			return GNSSDevLines{}, err
+		}
 	}
 
 	gnssInfo := GNSSDevLines{
@@ -116,12 +123,14 @@ func ReadGNSSDev(ctx clients.ContainerContext, devInfo PTPDeviceInfo, lines, tim
 	err := fetcherInst.Fetch(ctx, &gnssInfo)
 	if err != nil {
 		log.Errorf("failed to fetch gnssInfo %s", err.Error())
+		return GNSSDevLines{}, err
 	}
-	return gnssInfo
+	return gnssInfo, nil
 }
 
 // GetDevDPLLInfo returns the device DPLL info for an interface.
-func GetDevDPLLInfo(ctx clients.ContainerContext, interfaceName string) (dpllInfo DevDPLLInfo) {
+func GetDevDPLLInfo(ctx clients.ContainerContext, interfaceName string) (DevDPLLInfo, error) {
+	dpllInfo := DevDPLLInfo{}
 	fetcherInst, ok := dpllFetcher[interfaceName]
 	if !ok {
 		fetcherInst = NewFetcher()
@@ -134,25 +143,35 @@ func GetDevDPLLInfo(ctx clients.ContainerContext, interfaceName string) (dpllInf
 			fmt.Sprintf("cat /sys/class/net/%s/device/dpll_0_state", interfaceName),
 			true,
 		)
-		ifCmdErrorLog("dpll_0_state", err)
+		if err != nil {
+			log.Errorf("failed to add command %s %s", "dpll_0_state", err.Error())
+			return dpllInfo, err
+		}
 
 		err = fetcherInst.AddNewCommand(
 			"dpll_1_state",
 			fmt.Sprintf("cat /sys/class/net/%s/device/dpll_1_state", interfaceName),
 			true,
 		)
-		ifCmdErrorLog("dpll_1_state", err)
+		if err != nil {
+			log.Errorf("failed to add command %s %s", "dpll_1_state", err.Error())
+			return dpllInfo, err
+		}
 
 		err = fetcherInst.AddNewCommand(
 			"dpll_1_offset",
 			fmt.Sprintf("cat /sys/class/net/%s/device/dpll_1_offset", interfaceName),
 			true,
 		)
-		ifCmdErrorLog("dpll_1_offset", err)
+		if err != nil {
+			log.Errorf("failed to add command %s %s", "dpll_1_offset", err.Error())
+			return dpllInfo, err
+		}
 	}
 	err := fetcherInst.Fetch(ctx, &dpllInfo)
 	if err != nil {
 		log.Errorf("failed to fetch dpllInfo %s", err.Error())
+		return dpllInfo, err
 	}
-	return dpllInfo
+	return dpllInfo, nil
 }

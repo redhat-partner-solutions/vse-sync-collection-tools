@@ -41,7 +41,7 @@ const (
 	PTPContainer  = "linuxptp-daemon-container"
 )
 
-var collectables = [3]string{
+var ptpCollectables = [3]string{
 	DeviceInfo,
 	DPLLInfo,
 	GNSSDev,
@@ -88,31 +88,39 @@ func (ptpDev *PTPCollector) ShouldPoll() bool {
 // fetchLine will call the requested key's function
 // store the result of that function into the collectors data
 // and returns a json encoded version of that data
-func (ptpDev *PTPCollector) fetchLine(key string) (line []byte, err error) {
+func (ptpDev *PTPCollector) fetchLine(key string) (line []byte, err error) { //nolint:funlen // allow slightly long function
 	switch key {
 	case DeviceInfo:
-		ptpDevInfo := devices.GetPTPDeviceInfo(ptpDev.interfaceName, ptpDev.ctx)
+		ptpDevInfo, fetchError := devices.GetPTPDeviceInfo(ptpDev.interfaceName, ptpDev.ctx)
+		if fetchError != nil {
+			return []byte{}, fmt.Errorf("failed to fetch ptpDevInfo %w", fetchError)
+		}
 		ptpDev.data[DeviceInfo] = ptpDevInfo
 		line, err = json.Marshal(ptpDevInfo)
 	case DPLLInfo:
-		dpllInfo := devices.GetDevDPLLInfo(ptpDev.ctx, ptpDev.interfaceName)
+		dpllInfo, fetchError := devices.GetDevDPLLInfo(ptpDev.ctx, ptpDev.interfaceName)
+		if fetchError != nil {
+			return []byte{}, fmt.Errorf("failed to fetch dpllInfo %w", fetchError)
+		}
 		ptpDev.data[DPLLInfo] = dpllInfo
 		line, err = json.Marshal(dpllInfo)
 	case GNSSDev:
 		// TODO make lines and timeout configs
 		devInfo, ok := ptpDev.data[DeviceInfo].(devices.PTPDeviceInfo)
 		if !ok {
-			return nil, fmt.Errorf("DeviceInfo was not able to be unpacked")
+			return []byte{}, fmt.Errorf("not able to unpack DeviceInfo %w", err)
 		}
-		gnssDevLine := devices.ReadGNSSDev(ptpDev.ctx, devInfo, 1, 1)
-
+		gnssDevLine, fetchError := devices.ReadGNSSDev(ptpDev.ctx, devInfo, 1, 1)
+		if fetchError != nil {
+			return []byte{}, fmt.Errorf("failed to fetch gnssDevLine %w", fetchError)
+		}
 		ptpDev.data[GNSSDev] = gnssDevLine
 		line, err = json.Marshal(gnssDevLine)
 	default:
-		return nil, ptpDev.getNotCollectableError(key)
+		return []byte{}, ptpDev.getNotCollectableError(key)
 	}
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshall line(%v) in PTP collector: %w", key, err)
+		return []byte{}, fmt.Errorf("failed to marshall line(%v) in PTP collector: %w", key, err)
 	}
 	return line, nil
 }
@@ -167,9 +175,14 @@ func (constuctor *CollectionConstuctor) NewPTPCollector() (*PTPCollector, error)
 	data := make(map[string]interface{})
 	running := make(map[string]bool)
 
-	data[DeviceInfo] = devices.GetPTPDeviceInfo(constuctor.PTPInterface, ctx)
-	data[DPLLInfo] = devices.GetDevDPLLInfo(ctx, constuctor.PTPInterface)
-
+	data[DeviceInfo], err = devices.GetPTPDeviceInfo(constuctor.PTPInterface, ctx)
+	if err != nil {
+		return &PTPCollector{}, fmt.Errorf("failed to fetch initial DeviceInfo %w", err)
+	}
+	data[DPLLInfo], err = devices.GetDevDPLLInfo(ctx, constuctor.PTPInterface)
+	if err != nil {
+		return &PTPCollector{}, fmt.Errorf("failed to fetch initial DevDPLLInfo %w", err)
+	}
 	ptpDevInfo, ok := data[DeviceInfo].(devices.PTPDeviceInfo)
 	if !ok {
 		return &PTPCollector{}, fmt.Errorf("DeviceInfo was not able to be unpacked")
@@ -184,7 +197,7 @@ func (constuctor *CollectionConstuctor) NewPTPCollector() (*PTPCollector, error)
 	collector := PTPCollector{
 		interfaceName:   constuctor.PTPInterface,
 		ctx:             ctx,
-		DataTypes:       collectables,
+		DataTypes:       ptpCollectables,
 		data:            data,
 		running:         running,
 		callback:        constuctor.Callback,

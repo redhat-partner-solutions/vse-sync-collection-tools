@@ -68,7 +68,8 @@ var _ = Describe("NewContainerContext", func() {
 
 			ctx, err := clients.NewContainerContext(clientset, "TestNamespace", "Test", "TestContainer")
 			Expect(err).NotTo(HaveOccurred())
-			info := devices.GetPTPDeviceInfo("aFakeInterface", ctx)
+			info, err := devices.GetPTPDeviceInfo("aFakeInterface", ctx)
+			Expect(err).NotTo(HaveOccurred())
 			Expect(info.DeviceID).To(Equal(devID))
 			Expect(info.VendorID).To(Equal(vendor))
 			Expect(info.GNSSDev).To(Equal("/dev/" + gnssDev))
@@ -94,7 +95,8 @@ var _ = Describe("NewContainerContext", func() {
 
 			ctx, err := clients.NewContainerContext(clientset, "TestNamespace", "Test", "TestContainer")
 			Expect(err).NotTo(HaveOccurred())
-			info := devices.GetDevDPLLInfo(ctx, "aFakeInterface")
+			info, err := devices.GetDevDPLLInfo(ctx, "aFakeInterface")
+			Expect(err).NotTo(HaveOccurred())
 			Expect(info.EECState).To(Equal(eecState))
 			Expect(info.PPSState).To(Equal(pssState))
 			Expect(info.PPSOffset).To(Equal(offset))
@@ -124,7 +126,8 @@ var _ = Describe("NewContainerContext", func() {
 
 			ctx, err := clients.NewContainerContext(clientset, "TestNamespace", "Test", "TestContainer")
 			Expect(err).NotTo(HaveOccurred())
-			GNSSLines := devices.ReadGNSSDev(ctx, devInfo, nLines, timeout)
+			GNSSLines, err := devices.ReadGNSSDev(ctx, devInfo, nLines, timeout)
+			Expect(err).NotTo(HaveOccurred())
 			Expect(GNSSLines.Dev).To(Equal(devInfo.GNSSDev))
 			Expect(GNSSLines.Lines).To(Equal(line))
 		})
