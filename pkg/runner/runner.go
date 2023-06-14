@@ -133,7 +133,7 @@ func (runner *CollectorRunner) poller(collectorName string, collector collectors
 				runningPolls.Add(1)
 				go collector.Poll(runner.pollResults, &runningPolls)
 			}
-			time.Sleep(time.Duration(float64(time.Second.Nanoseconds()) / runner.pollRate))
+			time.Sleep(time.Microsecond)
 		}
 	}
 	runningPolls.Wait()
@@ -222,7 +222,7 @@ func (runner *CollectorRunner) Run(
 			}
 		default:
 			log.Debug("Sleeping main func")
-			time.Sleep(time.Duration(float64(time.Second.Nanoseconds()) / pollRate))
+			time.Sleep(time.Millisecond)
 		}
 	}
 	log.Info("Doing Cleanup")
