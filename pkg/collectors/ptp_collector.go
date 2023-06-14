@@ -101,7 +101,7 @@ func (ptpDev *PTPCollector) fetchLine(key string) (line []byte, err error) { //n
 
 // Poll collects information from the cluster then
 // calls the callback.Call to allow that to persist it
-func (ptpDev *PTPCollector) Poll() []error {
+func (ptpDev *PTPCollector) Poll(resultsChan chan PollResult) {
 	errorsToReturn := make([]error, 0)
 
 	for key, isRunning := range ptpDev.running {
@@ -118,7 +118,10 @@ func (ptpDev *PTPCollector) Poll() []error {
 			}
 		}
 	}
-	return errorsToReturn
+	resultsChan <- PollResult{
+		CollectorName: PTPCollectorName,
+		Errors:        errorsToReturn,
+	}
 }
 
 // CleanUp stops a running collector

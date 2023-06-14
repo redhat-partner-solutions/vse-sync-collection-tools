@@ -40,22 +40,37 @@ func (gps *GPSCollector) Start(key string) error {
 
 // Poll collects information from the cluster then
 // calls the callback.Call to allow that to persist it
-func (gps *GPSCollector) Poll() []error {
+func (gps *GPSCollector) Poll(resultsChan chan PollResult) {
 	gpsNav, err := devices.GetGPSNav(gps.ctx)
 	if err != nil {
-		return []error{err}
+		resultsChan <- PollResult{
+			CollectorName: GPSCollectorName,
+			Errors:        []error{err},
+		}
+		return
 	}
 	line, err := json.Marshal(gpsNav)
 	if err != nil {
-		return []error{err}
+		resultsChan <- PollResult{
+			CollectorName: GPSCollectorName,
+			Errors:        []error{err},
+		}
+		return
 	} else {
 		err = gps.callback.Call(fmt.Sprintf("%T", gps), gpsNavKey, string(line))
 		if err != nil {
-			return []error{err}
+			resultsChan <- PollResult{
+				CollectorName: GPSCollectorName,
+				Errors:        []error{err},
+			}
+			return
 		}
 	}
 
-	return []error{}
+	resultsChan <- PollResult{
+		CollectorName: GPSCollectorName,
+		Errors:        []error{},
+	}
 }
 
 // CleanUp stops a running collector

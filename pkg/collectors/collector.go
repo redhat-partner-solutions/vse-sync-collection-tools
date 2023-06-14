@@ -9,7 +9,7 @@ import (
 
 type Collector interface {
 	Start(key string) error   // Setups any internal state required for collection to happen
-	Poll() []error            // Poll for collectables
+	Poll(chan PollResult)     // Poll for collectables
 	CleanUp(key string) error // Cleans up any internal state
 }
 
@@ -20,4 +20,9 @@ type CollectionConstuctor struct {
 	PTPInterface string
 	Msg          string
 	PollRate     float64
+}
+
+type PollResult struct {
+	CollectorName string
+	Errors        []error
 }

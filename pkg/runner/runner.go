@@ -46,15 +46,10 @@ func selectCollectorCallback(outputFile string) (callbacks.Callback, error) {
 	}
 }
 
-type PollResult struct {
-	CollectorName string
-	Errors        []error
-}
-
 type CollectorRunner struct {
 	quit                  chan os.Signal
 	collectorQuitChannel  map[string]chan os.Signal
-	pollResults           chan PollResult
+	pollResults           chan collectors.PollResult
 	collecterInstances    map[string]*collectors.Collector
 	consecutivePollErrors map[string]int
 	collectorNames        []string
@@ -70,7 +65,7 @@ func NewCollectorRunner() *CollectorRunner {
 		collecterInstances:    make(map[string]*collectors.Collector),
 		collectorNames:        collectorNames,
 		quit:                  getQuitChannel(),
-		pollResults:           make(chan PollResult, pollResultsQueueSize),
+		pollResults:           make(chan collectors.PollResult, pollResultsQueueSize),
 		collectorQuitChannel:  make(map[string]chan os.Signal, 1),
 		consecutivePollErrors: make(map[string]int),
 	}
@@ -135,11 +130,7 @@ func (runner *CollectorRunner) poller(collectorName string, collector collectors
 			if lastPoll.IsZero() || time.Since(lastPoll).Seconds() > inversePollRate {
 				lastPoll = time.Now()
 				log.Debugf("poll %s", collectorName)
-				errors := collector.Poll()
-				runner.pollResults <- PollResult{
-					CollectorName: collectorName,
-					Errors:        errors,
-				}
+				collector.Poll(runner.pollResults)
 			}
 			time.Sleep(time.Duration(float64(time.Second.Nanoseconds()) / runner.pollRate))
 		}
