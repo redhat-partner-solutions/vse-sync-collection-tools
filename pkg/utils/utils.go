@@ -2,8 +2,12 @@
 
 package utils
 
+import (
+	log "github.com/sirupsen/logrus"
+)
+
 func IfErrorPanic(err error) {
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 }
