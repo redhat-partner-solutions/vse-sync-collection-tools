@@ -209,9 +209,10 @@ func (runner *CollectorRunner) Run(
 			if len(pollRes.Errors) > 0 {
 				runner.consecutivePollErrors[pollRes.CollectorName] += 1
 				log.Warnf(
-					"Increment failures for %s. Number of consecutive errors %d",
+					"Increment failures for %s. Number of consecutive errors %d %v",
 					pollRes.CollectorName,
 					runner.consecutivePollErrors[pollRes.CollectorName],
+					pollRes.Errors,
 				)
 			} else {
 				runner.consecutivePollErrors[pollRes.CollectorName] = 0
