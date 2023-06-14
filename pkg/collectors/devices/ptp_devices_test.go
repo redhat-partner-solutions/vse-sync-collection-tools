@@ -102,36 +102,6 @@ var _ = Describe("NewContainerContext", func() {
 			Expect(info.PPSOffset).To(Equal(offset))
 		})
 	})
-	When("called ReadGNSSDev", func() {
-		It("should return a valid GNSSLines", func() {
-			line := "definitely a line from a log"
-			nLines := 1
-			timeout := 10
-			devInfo := devices.PTPDeviceInfo{
-				GNSSDev: "/dev/gnss0",
-			}
-
-			expectedInput := "echo '<date>';date --iso-8601=ns;echo '</date>';"
-			expectedInput += fmt.Sprintf(
-				"echo '<lines>';timeout %d head -n %d %s;echo '</lines>';",
-				timeout,
-				nLines,
-				devInfo.GNSSDev,
-			)
-
-			expectedOutput := "<date>\n1234\n</date>\n"
-			expectedOutput += fmt.Sprintf("<lines>\n%s\n</lines>\n", line)
-
-			response[expectedInput] = []byte(expectedOutput)
-
-			ctx, err := clients.NewContainerContext(clientset, "TestNamespace", "Test", "TestContainer")
-			Expect(err).NotTo(HaveOccurred())
-			GNSSLines, err := devices.ReadGNSSDev(ctx, devInfo, nLines, timeout)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(GNSSLines.Dev).To(Equal(devInfo.GNSSDev))
-			Expect(GNSSLines.Lines).To(Equal(line))
-		})
-	})
 })
 
 func TestCommand(t *testing.T) {

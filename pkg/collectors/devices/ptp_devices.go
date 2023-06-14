@@ -24,22 +24,15 @@ type DevDPLLInfo struct {
 	PPSState  string `json:"PPSState" fetcherKey:"dpll_1_state"`
 	PPSOffset string `json:"PPSOffset" fetcherKey:"dpll_1_offset"`
 }
-type GNSSDevLines struct {
-	Timestamp string `json:"date" fetcherKey:"date"`
-	Dev       string `json:"dev"`
-	Lines     string `json:"lines" fetcherKey:"lines"`
-}
 
 var (
 	devFetcher  map[string]*fetcher
-	gnssFetcher map[string]*fetcher
 	dpllFetcher map[string]*fetcher
 	dateCmd     *clients.Cmd
 )
 
 func init() {
 	devFetcher = make(map[string]*fetcher)
-	gnssFetcher = make(map[string]*fetcher)
 	dpllFetcher = make(map[string]*fetcher)
 	dateCmdInst, err := clients.NewCmd("date", "date --iso-8601=ns")
 	if err != nil {
@@ -95,37 +88,6 @@ func GetPTPDeviceInfo(interfaceName string, ctx clients.ContainerContext) (PTPDe
 	}
 	devInfo.GNSSDev = "/dev/" + devInfo.GNSSDev
 	return devInfo, nil
-}
-
-// Read lines from the GNSSDev of the passed devInfo.
-func ReadGNSSDev(ctx clients.ContainerContext, devInfo PTPDeviceInfo, lines, timeoutSeconds int) (GNSSDevLines, error) {
-	fetcherInst, ok := gnssFetcher[devInfo.GNSSDev]
-	if !ok {
-		fetcherInst = NewFetcher()
-		gnssFetcher[devInfo.GNSSDev] = fetcherInst
-
-		fetcherInst.AddCommand(dateCmd)
-
-		err := fetcherInst.AddNewCommand(
-			"lines",
-			fmt.Sprintf("timeout %d head -n %d %s", timeoutSeconds, lines, devInfo.GNSSDev),
-			true,
-		)
-		if err != nil {
-			log.Errorf("failed to add command %s %s", "lines", err.Error())
-			return GNSSDevLines{}, err
-		}
-	}
-
-	gnssInfo := GNSSDevLines{
-		Dev: devInfo.GNSSDev,
-	}
-	err := fetcherInst.Fetch(ctx, &gnssInfo)
-	if err != nil {
-		log.Errorf("failed to fetch gnssInfo %s", err.Error())
-		return GNSSDevLines{}, err
-	}
-	return gnssInfo, nil
 }
 
 // GetDevDPLLInfo returns the device DPLL info for an interface.
