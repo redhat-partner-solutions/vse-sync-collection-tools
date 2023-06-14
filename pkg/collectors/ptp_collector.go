@@ -148,7 +148,16 @@ func (constuctor *CollectionConstuctor) NewPTPCollector() (*PTPCollector, error)
 		return &PTPCollector{}, fmt.Errorf("could not create container context %w", err)
 	}
 
-	running := make(map[string]bool)
+	// Build DPPInfoFetcher ahead of time call to GetPTPDeviceInfo will build the other
+	err = devices.BuildPTPDeviceInfo(constuctor.PTPInterface)
+	if err != nil {
+		return &PTPCollector{}, fmt.Errorf("failed to build fetcher for PTPDeviceInfo %w", err)
+	}
+
+	err = devices.BuildDPLLInfoFetcher(constuctor.PTPInterface)
+	if err != nil {
+		return &PTPCollector{}, fmt.Errorf("failed to build fetcher for DPLLInfo %w", err)
+	}
 
 	ptpDevInfo, err := devices.GetPTPDeviceInfo(constuctor.PTPInterface, ctx)
 	if err != nil {
@@ -162,7 +171,7 @@ func (constuctor *CollectionConstuctor) NewPTPCollector() (*PTPCollector, error)
 		interfaceName: constuctor.PTPInterface,
 		ctx:           ctx,
 		DataTypes:     ptpCollectables,
-		running:       running,
+		running:       make(map[string]bool),
 		callback:      constuctor.Callback,
 	}
 
