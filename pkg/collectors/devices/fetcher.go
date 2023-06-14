@@ -4,7 +4,6 @@ package devices
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -16,7 +15,6 @@ import (
 
 type fetcher struct {
 	cmdGrp        *clients.CmdGroup
-	Result        map[string]string
 	postProcesser func(map[string]string) (map[string]string, error)
 }
 
@@ -46,10 +44,7 @@ func (inst *fetcher) AddCommand(cmdInst *clients.Cmd) {
 	inst.cmdGrp.AddCommand(cmdInst)
 }
 
-func (inst *fetcher) Unmarshall(pack interface{}) error {
-	if inst.Result == nil {
-		return errors.New("result is not populated")
-	}
+func Unmarshall(result map[string]string, pack interface{}) error {
 	val := reflect.ValueOf(pack)
 	typ := reflect.TypeOf(pack)
 
@@ -61,7 +56,7 @@ func (inst *fetcher) Unmarshall(pack interface{}) error {
 			//nolint:exhaustive //we could extend this but its not needed yet
 			switch field.Type.Kind() {
 			case reflect.String:
-				if res, ok := inst.Result[resultName]; ok {
+				if res, ok := result[resultName]; ok {
 					f.SetString(res)
 				}
 			default:
@@ -83,8 +78,7 @@ func (inst *fetcher) Fetch(ctx clients.ContainerContext, pack interface{}) error
 			return fmt.Errorf("feching failed post process the data %w", err)
 		}
 	}
-	inst.Result = result
-	err = inst.Unmarshall(pack)
+	err = Unmarshall(result, pack)
 	if err != nil {
 		return fmt.Errorf("feching failed to unpack data %w", err)
 	}
