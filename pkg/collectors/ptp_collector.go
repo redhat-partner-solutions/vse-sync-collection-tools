@@ -5,7 +5,6 @@ package collectors
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 
@@ -15,13 +14,11 @@ import (
 )
 
 type PTPCollector struct {
-	lastPoll        time.Time
-	callback        callbacks.Callback
-	running         map[string]bool
-	DataTypes       [2]string
-	ctx             clients.ContainerContext
-	interfaceName   string
-	inversePollRate float64
+	callback      callbacks.Callback
+	running       map[string]bool
+	DataTypes     [2]string
+	ctx           clients.ContainerContext
+	interfaceName string
 }
 
 const (
@@ -76,13 +73,6 @@ func (ptpDev *PTPCollector) Start(key string) error {
 	return nil
 }
 
-// ShouldPoll checks if enough time has passed since the last poll
-func (ptpDev *PTPCollector) ShouldPoll() bool {
-	log.Debugf("since: %v", time.Since(ptpDev.lastPoll).Seconds())
-	log.Debugf("wait: %v", ptpDev.inversePollRate)
-	return time.Since(ptpDev.lastPoll).Seconds() >= ptpDev.inversePollRate
-}
-
 // fetchLine will call the requested key's function
 // store the result of that function into the collectors data
 // and returns a json encoded version of that data
@@ -128,7 +118,6 @@ func (ptpDev *PTPCollector) Poll() []error {
 			}
 		}
 	}
-	ptpDev.lastPoll = time.Now()
 	return errorsToReturn
 }
 
@@ -166,17 +155,12 @@ func (constuctor *CollectionConstuctor) NewPTPCollector() (*PTPCollector, error)
 		return &PTPCollector{}, fmt.Errorf("NIC device is not based on E810")
 	}
 
-	inversePollRate := 1.0 / constuctor.PollRate
-	offset := time.Duration(float64(time.Second.Nanoseconds()) * inversePollRate)
-
 	collector := PTPCollector{
-		interfaceName:   constuctor.PTPInterface,
-		ctx:             ctx,
-		DataTypes:       ptpCollectables,
-		running:         running,
-		callback:        constuctor.Callback,
-		inversePollRate: inversePollRate,
-		lastPoll:        time.Now().Add(-offset), // Subtract off a polling time so the first poll hits
+		interfaceName: constuctor.PTPInterface,
+		ctx:           ctx,
+		DataTypes:     ptpCollectables,
+		running:       running,
+		callback:      constuctor.Callback,
 	}
 
 	return &collector, nil
