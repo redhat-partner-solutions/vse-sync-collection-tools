@@ -5,6 +5,7 @@ package collectors
 import (
 	"encoding/json"
 	"fmt"
+	"sync/atomic"
 
 	log "github.com/sirupsen/logrus"
 
@@ -19,6 +20,7 @@ type PTPCollector struct {
 	DataTypes     [2]string
 	ctx           clients.ContainerContext
 	interfaceName string
+	count         uint32
 }
 
 const (
@@ -118,6 +120,9 @@ func (ptpDev *PTPCollector) Poll(resultsChan chan PollResult) {
 			}
 		}
 	}
+	if len(errorsToReturn) == 0 {
+		atomic.AddUint32(&ptpDev.count, 1)
+	}
 	resultsChan <- PollResult{
 		CollectorName: PTPCollectorName,
 		Errors:        errorsToReturn,
@@ -137,6 +142,10 @@ func (ptpDev *PTPCollector) CleanUp(key string) error {
 		delete(ptpDev.running, key)
 	}
 	return nil
+}
+
+func (ptpDev *PTPCollector) GetPollCount() int {
+	return int(atomic.LoadUint32(&ptpDev.count))
 }
 
 // Returns a new PTPCollector from the CollectionConstuctor Factory

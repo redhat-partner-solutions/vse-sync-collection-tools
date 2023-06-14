@@ -5,6 +5,7 @@ package collectors
 import (
 	"encoding/json"
 	"fmt"
+	"sync/atomic"
 
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/callbacks"
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/clients"
@@ -24,6 +25,7 @@ type GPSCollector struct {
 	DataTypes     [1]string
 	interfaceName string
 	running       bool
+	count         uint32
 }
 
 // Start will add the key to the running pieces of data
@@ -67,6 +69,7 @@ func (gps *GPSCollector) Poll(resultsChan chan PollResult) {
 		}
 	}
 
+	atomic.AddUint32(&gps.count, 1)
 	resultsChan <- PollResult{
 		CollectorName: GPSCollectorName,
 		Errors:        []error{},
@@ -82,6 +85,10 @@ func (gps *GPSCollector) CleanUp(key string) error {
 		return fmt.Errorf("key %s is not a colletable of %T", key, gps)
 	}
 	return nil
+}
+
+func (gps *GPSCollector) GetPollCount() int {
+	return int(atomic.LoadUint32(&gps.count))
 }
 
 // Returns a new PTPCollector from the CollectionConstuctor Factory
