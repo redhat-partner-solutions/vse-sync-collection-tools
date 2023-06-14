@@ -19,7 +19,7 @@ type PTPCollector struct {
 	callback        callbacks.Callback
 	data            map[string]interface{}
 	running         map[string]bool
-	DataTypes       [3]string
+	DataTypes       [2]string
 	ctx             clients.ContainerContext
 	interfaceName   string
 	inversePollRate float64
@@ -33,7 +33,6 @@ const (
 
 	DeviceInfo = "device-info"
 	DPLLInfo   = "dpll-info"
-	GNSSDev    = "gnss-dev"
 	All        = "all"
 
 	PTPNamespace  = "openshift-ptp"
@@ -41,10 +40,9 @@ const (
 	PTPContainer  = "linuxptp-daemon-container"
 )
 
-var ptpCollectables = [3]string{
+var ptpCollectables = [2]string{
 	DeviceInfo,
 	DPLLInfo,
-	GNSSDev,
 }
 
 func (ptpDev *PTPCollector) getNotCollectableError(key string) error {
@@ -104,18 +102,6 @@ func (ptpDev *PTPCollector) fetchLine(key string) (line []byte, err error) { //n
 		}
 		ptpDev.data[DPLLInfo] = dpllInfo
 		line, err = json.Marshal(dpllInfo)
-	case GNSSDev:
-		// TODO make lines and timeout configs
-		devInfo, ok := ptpDev.data[DeviceInfo].(devices.PTPDeviceInfo)
-		if !ok {
-			return []byte{}, fmt.Errorf("not able to unpack DeviceInfo %w", err)
-		}
-		gnssDevLine, fetchError := devices.ReadGNSSDev(ptpDev.ctx, devInfo, 1, 1)
-		if fetchError != nil {
-			return []byte{}, fmt.Errorf("failed to fetch gnssDevLine %w", fetchError)
-		}
-		ptpDev.data[GNSSDev] = gnssDevLine
-		line, err = json.Marshal(gnssDevLine)
 	default:
 		return []byte{}, ptpDev.getNotCollectableError(key)
 	}
@@ -178,10 +164,6 @@ func (constuctor *CollectionConstuctor) NewPTPCollector() (*PTPCollector, error)
 	data[DeviceInfo], err = devices.GetPTPDeviceInfo(constuctor.PTPInterface, ctx)
 	if err != nil {
 		return &PTPCollector{}, fmt.Errorf("failed to fetch initial DeviceInfo %w", err)
-	}
-	data[DPLLInfo], err = devices.GetDevDPLLInfo(ctx, constuctor.PTPInterface)
-	if err != nil {
-		return &PTPCollector{}, fmt.Errorf("failed to fetch initial DevDPLLInfo %w", err)
 	}
 	ptpDevInfo, ok := data[DeviceInfo].(devices.PTPDeviceInfo)
 	if !ok {
