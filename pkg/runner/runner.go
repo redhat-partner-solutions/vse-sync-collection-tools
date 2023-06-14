@@ -122,6 +122,9 @@ func (runner *CollectorRunner) initialise(
 
 func (runner *CollectorRunner) poller(collectorName string, collector collectors.Collector, quit chan os.Signal) {
 	defer runner.runningCollectorsWG.Done()
+	var lastPoll time.Time
+	inversePollRate := 1.0 / runner.pollRate
+
 	for numberOfPolls := 1; runner.pollCount < 0 || numberOfPolls <= runner.pollCount; numberOfPolls++ {
 		log.Debugf("Collector GoRoutine: %s", collectorName)
 		select {
@@ -129,7 +132,8 @@ func (runner *CollectorRunner) poller(collectorName string, collector collectors
 			log.Infof("Killed shutting down collector %s", collectorName)
 			return
 		default:
-			if collector.ShouldPoll() {
+			if lastPoll.IsZero() || time.Since(lastPoll).Seconds() > inversePollRate {
+				lastPoll = time.Now()
 				log.Debugf("poll %s", collectorName)
 				errors := collector.Poll()
 				runner.pollResults <- PollResult{
