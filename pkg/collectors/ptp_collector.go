@@ -17,7 +17,6 @@ import (
 type PTPCollector struct {
 	lastPoll        time.Time
 	callback        callbacks.Callback
-	data            map[string]interface{}
 	running         map[string]bool
 	DataTypes       [2]string
 	ctx             clients.ContainerContext
@@ -94,14 +93,12 @@ func (ptpDev *PTPCollector) fetchLine(key string) (line []byte, err error) { //n
 		if fetchError != nil {
 			return []byte{}, fmt.Errorf("failed to fetch ptpDevInfo %w", fetchError)
 		}
-		ptpDev.data[DeviceInfo] = ptpDevInfo
 		line, err = json.Marshal(ptpDevInfo)
 	case DPLLInfo:
 		dpllInfo, fetchError := devices.GetDevDPLLInfo(ptpDev.ctx, ptpDev.interfaceName)
 		if fetchError != nil {
 			return []byte{}, fmt.Errorf("failed to fetch dpllInfo %w", fetchError)
 		}
-		ptpDev.data[DPLLInfo] = dpllInfo
 		line, err = json.Marshal(dpllInfo)
 	default:
 		return []byte{}, ptpDev.getNotCollectableError(key)
@@ -159,16 +156,11 @@ func (constuctor *CollectionConstuctor) NewPTPCollector() (*PTPCollector, error)
 		return &PTPCollector{}, fmt.Errorf("could not create container context %w", err)
 	}
 
-	data := make(map[string]interface{})
 	running := make(map[string]bool)
 
-	data[DeviceInfo], err = devices.GetPTPDeviceInfo(constuctor.PTPInterface, ctx)
+	ptpDevInfo, err := devices.GetPTPDeviceInfo(constuctor.PTPInterface, ctx)
 	if err != nil {
 		return &PTPCollector{}, fmt.Errorf("failed to fetch initial DeviceInfo %w", err)
-	}
-	ptpDevInfo, ok := data[DeviceInfo].(devices.PTPDeviceInfo)
-	if !ok {
-		return &PTPCollector{}, fmt.Errorf("DeviceInfo was not able to be unpacked")
 	}
 	if ptpDevInfo.VendorID != VendorIntel || ptpDevInfo.DeviceID != DeviceE810 {
 		return &PTPCollector{}, fmt.Errorf("NIC device is not based on E810")
@@ -181,7 +173,6 @@ func (constuctor *CollectionConstuctor) NewPTPCollector() (*PTPCollector, error)
 		interfaceName:   constuctor.PTPInterface,
 		ctx:             ctx,
 		DataTypes:       ptpCollectables,
-		data:            data,
 		running:         running,
 		callback:        constuctor.Callback,
 		inversePollRate: inversePollRate,
