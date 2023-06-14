@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"sync"
-	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -55,7 +53,7 @@ type CollectorRunner struct {
 	collectorNames        []string
 	pollCount             int
 	pollRate              float64
-	runningCollectorsWG   WaitGroupCount
+	runningCollectorsWG   utils.WaitGroupCount
 }
 
 func NewCollectorRunner() *CollectorRunner {
@@ -119,22 +117,26 @@ func (runner *CollectorRunner) poller(collectorName string, collector collectors
 	defer runner.runningCollectorsWG.Done()
 	var lastPoll time.Time
 	inversePollRate := 1.0 / runner.pollRate
+	runningPolls := utils.WaitGroupCount{}
 
-	for runner.pollCount < 0 || collector.GetPollCount() <= runner.pollCount {
+	for runner.pollCount < 0 || (collector.GetPollCount()+runningPolls.GetCount()) <= runner.pollCount {
 		log.Debugf("Collector GoRoutine: %s", collectorName)
 		select {
 		case <-quit:
-			log.Infof("Killed shutting down collector %s", collectorName)
+			log.Infof("Killed shutting down collector %s waiting for running polls to finish", collectorName)
+			runningPolls.Wait()
 			return
 		default:
 			if lastPoll.IsZero() || time.Since(lastPoll).Seconds() > inversePollRate {
 				lastPoll = time.Now()
 				log.Debugf("poll %s", collectorName)
-				collector.Poll(runner.pollResults)
+				runningPolls.Add(1)
+				go collector.Poll(runner.pollResults, &runningPolls)
 			}
 			time.Sleep(time.Duration(float64(time.Second.Nanoseconds()) / runner.pollRate))
 		}
 	}
+	runningPolls.Wait()
 	log.Debugf("Collector finished %s", collectorName)
 }
 
@@ -227,23 +229,4 @@ func (runner *CollectorRunner) Run(
 	runner.cleanUpAll()
 	err = callback.CleanUp()
 	utils.IfErrorPanic(err)
-}
-
-type WaitGroupCount struct {
-	sync.WaitGroup
-	count int64
-}
-
-func (wg *WaitGroupCount) Add(delta int) {
-	atomic.AddInt64(&wg.count, int64(delta))
-	wg.WaitGroup.Add(delta)
-}
-
-func (wg *WaitGroupCount) Done() {
-	atomic.AddInt64(&wg.count, -1)
-	wg.WaitGroup.Done()
-}
-
-func (wg *WaitGroupCount) GetCount() int {
-	return int(atomic.LoadInt64(&wg.count))
 }

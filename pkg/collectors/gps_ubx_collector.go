@@ -10,6 +10,7 @@ import (
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/callbacks"
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/clients"
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/collectors/devices"
+	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/utils"
 )
 
 var (
@@ -42,7 +43,11 @@ func (gps *GPSCollector) Start(key string) error {
 
 // Poll collects information from the cluster then
 // calls the callback.Call to allow that to persist it
-func (gps *GPSCollector) Poll(resultsChan chan PollResult) {
+func (gps *GPSCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCount) {
+	defer func() {
+		wg.Done()
+		atomic.AddUint32(&gps.count, 1)
+	}()
 	gpsNav, err := devices.GetGPSNav(gps.ctx)
 	if err != nil {
 		resultsChan <- PollResult{
@@ -69,7 +74,6 @@ func (gps *GPSCollector) Poll(resultsChan chan PollResult) {
 		}
 	}
 
-	atomic.AddUint32(&gps.count, 1)
 	resultsChan <- PollResult{
 		CollectorName: GPSCollectorName,
 		Errors:        []error{},
