@@ -12,6 +12,7 @@ import (
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/callbacks"
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/clients"
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/collectors/devices"
+	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/utils"
 )
 
 type PTPCollector struct {
@@ -103,7 +104,11 @@ func (ptpDev *PTPCollector) fetchLine(key string) (line []byte, err error) { //n
 
 // Poll collects information from the cluster then
 // calls the callback.Call to allow that to persist it
-func (ptpDev *PTPCollector) Poll(resultsChan chan PollResult) {
+func (ptpDev *PTPCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCount) {
+	defer func() {
+		wg.Done()
+		atomic.AddUint32(&ptpDev.count, 1)
+	}()
 	errorsToReturn := make([]error, 0)
 
 	for key, isRunning := range ptpDev.running {
@@ -119,9 +124,6 @@ func (ptpDev *PTPCollector) Poll(resultsChan chan PollResult) {
 				}
 			}
 		}
-	}
-	if len(errorsToReturn) == 0 {
-		atomic.AddUint32(&ptpDev.count, 1)
 	}
 	resultsChan <- PollResult{
 		CollectorName: PTPCollectorName,
