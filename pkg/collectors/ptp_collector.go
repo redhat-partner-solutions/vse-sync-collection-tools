@@ -50,11 +50,12 @@ func (ptpDev *PTPCollector) getNotCollectableError(key string) error {
 }
 
 func (ptpDev *PTPCollector) getErrorIfNotCollectable(key string) error {
-	if _, ok := ptpDev.data[key]; !ok {
-		return ptpDev.getNotCollectableError(key)
-	} else {
-		return nil
+	for _, dataType := range ptpDev.DataTypes[:] {
+		if dataType == key {
+			return nil
+		}
 	}
+	return ptpDev.getNotCollectableError(key)
 }
 
 // Start will add the key to the running pieces of data
