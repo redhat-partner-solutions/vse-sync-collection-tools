@@ -37,7 +37,10 @@ func getQuitChannel() chan os.Signal {
 func selectCollectorCallback(outputFile string) (callbacks.Callback, error) {
 	if outputFile != "" {
 		callback, err := callbacks.NewFileCallback(outputFile)
-		return callback, fmt.Errorf("failed to create callback %w", err)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create callback %w", err)
+		}
+		return callback, nil
 	} else {
 		return callbacks.StdoutCallBack{}, nil
 	}
