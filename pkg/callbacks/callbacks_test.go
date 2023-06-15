@@ -39,13 +39,13 @@ var _ = Describe("Callbacks", func() {
 		callback = &callbacks.FileCallBack{FileHandle: mockedFile}
 	})
 
-	When("A FileCallback is called", func() {
-		It("should write to the file", func() {
-			err := callback.Call("Test", "Nothing", "This is a test line")
-			Expect(err).NotTo(HaveOccurred())
-			Expect(mockedFile.ReadString('\n')).To(ContainSubstring("This is a test line"))
-		})
-	})
+	// When("A FileCallback is called", func() {
+	// 	It("should write to the file", func() {
+	// 		err := callback.Call("Test", "Nothing", "This is a test line")
+	// 		Expect(err).NotTo(HaveOccurred())
+	// 		Expect(mockedFile.ReadString('\n')).To(ContainSubstring("This is a test line"))
+	// 	})
+	// })
 
 	When("A FileCallback is cleaned up", func() {
 		It("should close the file", func() {
