@@ -24,22 +24,34 @@ type OutputFormat int
 
 const (
 	Raw OutputFormat = iota
-	// AnalyserJSON
+	AnalyserJSON
 )
 
-type OutputType interface {
+type AnalyserFormatType struct {
+	ID   string   `json:"id"`
+	Data []string `json:"data"`
 }
 
-func getLine(c Callback, output OutputType, tag string) (string, error) {
+type OutputType interface {
+	AnalyserJSON() ([]byte, error)
+}
+
+func getLine(c Callback, output OutputType, tag string) ([]byte, error) {
 	switch c.getFormat() {
 	case Raw:
 		line, err := json.Marshal(output)
 		if err != nil {
-			return "", fmt.Errorf("failed to mashall %T %w", output, err)
+			return []byte{}, fmt.Errorf("failed to marshal %T %w", output, err)
 		}
-		return fmt.Sprintf("%T:%s, %s", output, tag, line), nil
+		return []byte(fmt.Sprintf("%T:%s, %s", output, tag, line)), nil
+	case AnalyserJSON:
+		line, err := output.AnalyserJSON()
+		if err != nil {
+			return []byte{}, fmt.Errorf("failed to get AnalyserJSON output %w", err)
+		}
+		return line, nil
 	default:
-		return "", errors.New("unknown format")
+		return []byte{}, errors.New("unknown format")
 	}
 }
 
@@ -72,7 +84,8 @@ func (c FileCallBack) Call(output OutputType, tag string) error {
 	if err != nil {
 		return err
 	}
-	_, err = c.FileHandle.Write([]byte(line))
+	line = append(line, []byte("\n")...)
+	_, err = c.FileHandle.Write(line)
 	if err != nil {
 		return fmt.Errorf("failed to write to file in callback: %w", err)
 	}

@@ -3,13 +3,16 @@
 package devices
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/callbacks"
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/clients"
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/utils"
 )
@@ -21,12 +24,54 @@ type PTPDeviceInfo struct {
 	GNSSDev   string `json:"GNSSDev" fetcherKey:"gnss"`
 }
 
+// AnalyserJSON returns the json expected by the analysers
+func (ptpDevInfo *PTPDeviceInfo) AnalyserJSON() ([]byte, error) {
+	line, err := json.Marshal(&callbacks.AnalyserFormatType{
+		ID: "devInfo",
+		Data: []string{
+			ptpDevInfo.Timestamp,
+			ptpDevInfo.VendorID,
+			ptpDevInfo.DeviceID,
+			ptpDevInfo.GNSSDev,
+		},
+	})
+	if err != nil {
+		return []byte{}, fmt.Errorf("failed to marshal Analyser format for ptpDevInfo %w", err)
+	}
+	return line, nil
+}
+
 type DevDPLLInfo struct {
 	Timestamp string `json:"date" fetcherKey:"date"`
 	EECState  string `json:"EECState" fetcherKey:"dpll_0_state"`
 	PPSState  string `json:"PPSState" fetcherKey:"dpll_1_state"`
 	PPSOffset string `json:"PPSOffset" fetcherKey:"dpll_1_offset"`
 }
+
+// AnalyserJSON returns the json expected by the analysers
+func (dpllInfo *DevDPLLInfo) AnalyserJSON() ([]byte, error) {
+	offset, err := strconv.ParseFloat(dpllInfo.PPSOffset, 32)
+	if err != nil {
+		return []byte{}, fmt.Errorf("failed converting PPSOffset %w", err)
+	}
+	line, err := json.Marshal(&callbacks.AnalyserFormatType{
+		ID: "dpll/time-error",
+		Data: []string{
+			dpllInfo.Timestamp,
+			dpllInfo.EECState,
+			dpllInfo.PPSState,
+			fmt.Sprintf("%f", offset/unitConversionFactor),
+		},
+	})
+	if err != nil {
+		return []byte{}, fmt.Errorf("failed to marshal Analyser format for dpllInfo %w", err)
+	}
+	return line, nil
+}
+
+const (
+	unitConversionFactor = 100
+)
 
 var (
 	devFetcher  map[string]*fetcher

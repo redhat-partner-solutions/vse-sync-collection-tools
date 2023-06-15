@@ -3,12 +3,14 @@
 package devices
 
 import (
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/callbacks"
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/clients"
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/utils"
 )
@@ -19,6 +21,21 @@ type GPSNav struct {
 	GPSFix          string `json:"GPSFix" fetcherKey:"gpsFix"`
 	TimeAcc         string `json:"timeAcc" fetcherKey:"timeAcc"`
 	FreqAcc         string `json:"freqAcc" fetcherKey:"freqAcc"`
+}
+
+func (gpsNav *GPSNav) AnalyserJSON() ([]byte, error) {
+	line, err := json.Marshal(&callbacks.AnalyserFormatType{
+		ID: "gnss/time-error",
+		Data: []string{
+			gpsNav.TimestampClock,
+			gpsNav.GPSFix,
+			gpsNav.TimeAcc,
+		},
+	})
+	if err != nil {
+		return []byte{}, fmt.Errorf("failed to marshal Analyser format for gpsNav %w", err)
+	}
+	return line, nil
 }
 
 var (
