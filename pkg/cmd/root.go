@@ -19,12 +19,13 @@ const (
 )
 
 var (
-	kubeConfig   string
-	pollCount    int
-	pollRate     float64
-	ptpInterface string
-	outputFile   string
-	logLevel     string
+	kubeConfig      string
+	pollCount       int
+	pollRate        float64
+	ptpInterface    string
+	outputFile      string
+	logLevel        string
+	useAnalyserJSON bool
 
 	// rootCmd represents the base command when called without any subcommands
 	rootCmd = &cobra.Command{
@@ -34,7 +35,7 @@ var (
 		Run: func(cmd *cobra.Command, args []string) {
 			logging.SetupLogging(logLevel, os.Stdout)
 			collectionRunner := runner.NewCollectorRunner()
-			collectionRunner.Run(kubeConfig, outputFile, pollCount, pollRate, ptpInterface)
+			collectionRunner.Run(kubeConfig, outputFile, pollCount, pollRate, ptpInterface, useAnalyserJSON)
 		},
 	}
 )
@@ -79,4 +80,12 @@ func init() {
 		"Log level (debug, info, warn, error, fatal, panic)",
 	)
 	rootCmd.PersistentFlags().StringVarP(&outputFile, "output", "o", "", "Path to the output file")
+
+	rootCmd.PersistentFlags().BoolVarP(
+		&useAnalyserJSON,
+		"use-analyser-format",
+		"j",
+		false,
+		"Output in a format to be used by analysers from vse-sync-pp",
+	)
 }

@@ -160,9 +160,16 @@ func (runner *CollectorRunner) Run(
 	pollCount int,
 	pollRate float64,
 	ptpInterface string,
+	useAnalyserJSON bool,
 ) {
 	clientset := clients.GetClientset(kubeConfig)
-	callback, err := callbacks.SetupCallback(outputFile, callbacks.Raw)
+
+	outputFormat := callbacks.Raw
+	if useAnalyserJSON {
+		outputFormat = callbacks.AnalyserJSON
+	}
+
+	callback, err := callbacks.SetupCallback(outputFile, outputFormat)
 	utils.IfErrorPanic(err)
 	runner.initialise(callback, ptpInterface, clientset, pollRate, pollCount)
 	runner.start()
