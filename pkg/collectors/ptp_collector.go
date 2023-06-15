@@ -3,7 +3,6 @@
 package collectors
 
 import (
-	"encoding/json"
 	"fmt"
 	"sync/atomic"
 
@@ -79,27 +78,30 @@ func (ptpDev *PTPCollector) Start(key string) error {
 // fetchLine will call the requested key's function
 // store the result of that function into the collectors data
 // and returns a json encoded version of that data
-func (ptpDev *PTPCollector) fetchLine(key string) (line []byte, err error) { //nolint:funlen // allow slightly long function
+func (ptpDev *PTPCollector) fetchLine(key string) (err error) { //nolint:funlen // allow slightly long function
 	switch key {
 	case DeviceInfo:
 		ptpDevInfo, fetchError := devices.GetPTPDeviceInfo(ptpDev.interfaceName, ptpDev.ctx)
 		if fetchError != nil {
-			return []byte{}, fmt.Errorf("failed to fetch ptpDevInfo %w", fetchError)
+			return fmt.Errorf("failed to fetch ptpDevInfo %w", fetchError)
 		}
-		line, err = json.Marshal(ptpDevInfo)
+		err = ptpDev.callback.Call(&ptpDevInfo, DeviceInfo)
+		if err != nil {
+			return fmt.Errorf("callback failed %w", err)
+		}
 	case DPLLInfo:
 		dpllInfo, fetchError := devices.GetDevDPLLInfo(ptpDev.ctx, ptpDev.interfaceName)
 		if fetchError != nil {
-			return []byte{}, fmt.Errorf("failed to fetch dpllInfo %w", fetchError)
+			return fmt.Errorf("failed to fetch dpllInfo %w", fetchError)
 		}
-		line, err = json.Marshal(dpllInfo)
+		err = ptpDev.callback.Call(&dpllInfo, DPLLInfo)
+		if err != nil {
+			return fmt.Errorf("callback failed %w", err)
+		}
 	default:
-		return []byte{}, ptpDev.getNotCollectableError(key)
+		return ptpDev.getNotCollectableError(key)
 	}
-	if err != nil {
-		return []byte{}, fmt.Errorf("failed to marshall line(%v) in PTP collector: %w", key, err)
-	}
-	return line, nil
+	return nil
 }
 
 // Poll collects information from the cluster then
@@ -113,15 +115,9 @@ func (ptpDev *PTPCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGrou
 
 	for key, isRunning := range ptpDev.running {
 		if isRunning {
-			line, err := ptpDev.fetchLine(key)
-			// TODO: handle (better)
+			err := ptpDev.fetchLine(key)
 			if err != nil {
 				errorsToReturn = append(errorsToReturn, err)
-			} else {
-				err = ptpDev.callback.Call(fmt.Sprintf("%T", ptpDev), key, string(line))
-				if err != nil {
-					errorsToReturn = append(errorsToReturn, err)
-				}
 			}
 		}
 	}

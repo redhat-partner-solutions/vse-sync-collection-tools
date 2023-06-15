@@ -3,7 +3,6 @@
 package collectors
 
 import (
-	"encoding/json"
 	"fmt"
 	"sync/atomic"
 
@@ -48,6 +47,7 @@ func (gps *GPSCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCo
 		wg.Done()
 		atomic.AddUint32(&gps.count, 1)
 	}()
+
 	gpsNav, err := devices.GetGPSNav(gps.ctx)
 	if err != nil {
 		resultsChan <- PollResult{
@@ -56,22 +56,14 @@ func (gps *GPSCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCo
 		}
 		return
 	}
-	line, err := json.Marshal(gpsNav)
+	err = gps.callback.Call(&gpsNav, gpsNavKey)
+
 	if err != nil {
 		resultsChan <- PollResult{
 			CollectorName: GPSCollectorName,
 			Errors:        []error{err},
 		}
 		return
-	} else {
-		err = gps.callback.Call(fmt.Sprintf("%T", gps), gpsNavKey, string(line))
-		if err != nil {
-			resultsChan <- PollResult{
-				CollectorName: GPSCollectorName,
-				Errors:        []error{err},
-			}
-			return
-		}
 	}
 
 	resultsChan <- PollResult{

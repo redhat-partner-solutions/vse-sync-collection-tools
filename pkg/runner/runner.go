@@ -3,7 +3,6 @@
 package runner
 
 import (
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -29,19 +28,6 @@ func getQuitChannel() chan os.Signal {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	return quit
-}
-
-//nolint:ireturn // The point of this function is to return a callback but which one is dependant on the input
-func selectCollectorCallback(outputFile string) (callbacks.Callback, error) {
-	if outputFile != "" {
-		callback, err := callbacks.NewFileCallback(outputFile)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create callback %w", err)
-		}
-		return callback, nil
-	} else {
-		return callbacks.StdoutCallBack{}, nil
-	}
 }
 
 type CollectorRunner struct {
@@ -176,7 +162,7 @@ func (runner *CollectorRunner) Run(
 	ptpInterface string,
 ) {
 	clientset := clients.GetClientset(kubeConfig)
-	callback, err := selectCollectorCallback(outputFile)
+	callback, err := callbacks.SetupCallback(outputFile, callbacks.Raw)
 	utils.IfErrorPanic(err)
 	runner.initialise(callback, ptpInterface, clientset, pollRate, pollCount)
 	runner.start()
