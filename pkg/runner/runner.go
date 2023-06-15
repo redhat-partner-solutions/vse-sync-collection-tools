@@ -45,27 +45,25 @@ func selectCollectorCallback(outputFile string) (callbacks.Callback, error) {
 }
 
 type CollectorRunner struct {
-	quit                  chan os.Signal
-	collectorQuitChannel  map[string]chan os.Signal
-	pollResults           chan collectors.PollResult
-	collecterInstances    map[string]*collectors.Collector
-	consecutivePollErrors map[string]int
-	collectorNames        []string
-	pollCount             int
-	pollRate              float64
-	runningCollectorsWG   utils.WaitGroupCount
+	quit                 chan os.Signal
+	collectorQuitChannel map[string]chan os.Signal
+	pollResults          chan collectors.PollResult
+	collecterInstances   map[string]*collectors.Collector
+	collectorNames       []string
+	pollCount            int
+	pollRate             float64
+	runningCollectorsWG  utils.WaitGroupCount
 }
 
 func NewCollectorRunner() *CollectorRunner {
 	collectorNames := make([]string, 0)
 	collectorNames = append(collectorNames, collectors.PTPCollectorName, collectors.GPSCollectorName)
 	return &CollectorRunner{
-		collecterInstances:    make(map[string]*collectors.Collector),
-		collectorNames:        collectorNames,
-		quit:                  getQuitChannel(),
-		pollResults:           make(chan collectors.PollResult, pollResultsQueueSize),
-		collectorQuitChannel:  make(map[string]chan os.Signal, 1),
-		consecutivePollErrors: make(map[string]int),
+		collecterInstances:   make(map[string]*collectors.Collector),
+		collectorNames:       collectorNames,
+		quit:                 getQuitChannel(),
+		pollResults:          make(chan collectors.PollResult, pollResultsQueueSize),
+		collectorQuitChannel: make(map[string]chan os.Signal, 1),
 	}
 }
 
@@ -157,15 +155,6 @@ func (runner *CollectorRunner) start() {
 	}
 }
 
-func (runner *CollectorRunner) stop(collectorName string) {
-	log.Errorf("Stopping collector %s for to manny consecutive polling errors", collectorName)
-	collector := runner.collecterInstances[collectorName]
-	quit := runner.collectorQuitChannel[collectorName]
-	quit <- os.Kill
-	err := (*collector).CleanUp(collectors.All)
-	utils.IfErrorPanic(err)
-}
-
 // cleanup calls cleanup on each collector
 func (runner *CollectorRunner) cleanUpAll() {
 	for collectorName, collector := range runner.collecterInstances {
@@ -207,19 +196,7 @@ func (runner *CollectorRunner) Run(
 		case pollRes := <-runner.pollResults:
 			log.Infof("Received %v", pollRes)
 			if len(pollRes.Errors) > 0 {
-				runner.consecutivePollErrors[pollRes.CollectorName] += 1
-				log.Warnf(
-					"Increment failures for %s. Number of consecutive errors %d %v",
-					pollRes.CollectorName,
-					runner.consecutivePollErrors[pollRes.CollectorName],
-					pollRes.Errors,
-				)
-			} else {
-				runner.consecutivePollErrors[pollRes.CollectorName] = 0
-				log.Debugf("Reset failures for %s", pollRes.CollectorName)
-			}
-			if runner.consecutivePollErrors[pollRes.CollectorName] >= maxConnsecutivePollErrors {
-				runner.stop(pollRes.CollectorName)
+				log.Warnf("Poll %s failed: %v", pollRes.CollectorName, pollRes.Errors)
 			}
 		default:
 			log.Debug("Sleeping main func")
