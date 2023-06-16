@@ -6,7 +6,6 @@ import (
 	"bufio"
 	"net/url"
 	"strings"
-	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -57,19 +56,13 @@ var _ = Describe("GetGPSNav", func() {
 			}, "\n")
 			response[expectedInput] = []byte(expectedOutput)
 
-			expectedTimestampStatus, err := time.Parse(time.RFC3339Nano, "2023-06-16T11:49:47.0584Z")
-			Expect(err).NotTo(HaveOccurred())
-			expectedTimestampClock, err := time.Parse(time.RFC3339Nano, "2023-06-16T11:49:47.0586Z")
-			Expect(err).NotTo(HaveOccurred())
-			local, err := time.LoadLocation("Local")
-			Expect(err).NotTo(HaveOccurred())
 			ctx, err := clients.NewContainerContext(clientset, "TestNamespace", "Test", "TestContainer")
 			Expect(err).NotTo(HaveOccurred())
 
 			gpsInfo, err := devices.GetGPSNav(ctx)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(gpsInfo.TimestampStatus).To(Equal(expectedTimestampStatus.In(local).Format(time.RFC3339Nano)))
-			Expect(gpsInfo.TimestampClock).To(Equal(expectedTimestampClock.In(local).Format(time.RFC3339Nano)))
+			Expect(gpsInfo.TimestampStatus).To(Equal("2023-06-16T11:49:47.0584Z"))
+			Expect(gpsInfo.TimestampClock).To(Equal("2023-06-16T11:49:47.0586Z"))
 			Expect(gpsInfo.GPSFix).To(Equal("3"))
 			Expect(gpsInfo.TimeAcc).To(Equal("5"))
 			Expect(gpsInfo.FreqAcc).To(Equal("164"))

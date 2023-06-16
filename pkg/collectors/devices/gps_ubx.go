@@ -10,6 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/clients"
+	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/utils"
 )
 
 type GPSNav struct {
@@ -21,7 +22,6 @@ type GPSNav struct {
 }
 
 var (
-	Epoch            = time.Unix(0, 0)
 	timeStampPattern = `(\d+.\d+)`
 	ubxNavRegex      = regexp.MustCompile(
 		timeStampPattern +
@@ -57,15 +57,6 @@ func init() {
 	}
 }
 
-// parseTimestamp converts an input number of seconds (including a decimal fraction) into a time.Time
-func parseTimestamp(timestamp string) (time.Time, error) {
-	duration, err := time.ParseDuration(fmt.Sprintf("%ss", timestamp))
-	if err != nil {
-		return time.Time{}, fmt.Errorf("failed to parse timestamp as a duration %w", err)
-	}
-	return Epoch.Add(duration), nil
-}
-
 // processUBXNav parses the output of the ubxtool extracting the required values for gpsNav
 func processUBXNav(result map[string]string) (map[string]string, error) {
 	processedResult := make(map[string]string)
@@ -76,13 +67,13 @@ func processUBXNav(result map[string]string) (map[string]string, error) {
 			result["GPS"],
 		)
 	}
-	timestampSatus, err := parseTimestamp(match[1])
+	timestampSatus, err := utils.ParseTimestamp(match[1])
 	if err != nil {
 		return processedResult, fmt.Errorf("failed to parse navStatusTimestamp %w", err)
 	}
 	processedResult["navStatusTimestamp"] = timestampSatus.Format(time.RFC3339Nano)
 
-	timestampClock, err := parseTimestamp(match[9])
+	timestampClock, err := utils.ParseTimestamp(match[9])
 	if err != nil {
 		return processedResult, fmt.Errorf("failed to parse navClockTimestamp %w", err)
 	}
