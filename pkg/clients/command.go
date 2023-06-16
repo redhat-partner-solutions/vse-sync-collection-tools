@@ -19,7 +19,7 @@ type Cmd struct {
 	prefix      string
 	suffix      string
 	cmd         string
-	cleanupFunc func(string) string
+	cleanupFunc func(string) (string, error)
 	regex       *regexp.Regexp
 	fullCmd     string
 }
@@ -47,7 +47,7 @@ func NewCmd(key, cmd string) (*Cmd, error) {
 	return &cmdInstance, nil
 }
 
-func (c *Cmd) SetCleanupFunc(f func(string) string) {
+func (c *Cmd) SetCleanupFunc(f func(string) (string, error)) {
 	c.cleanupFunc = f
 }
 
@@ -65,7 +65,11 @@ func (c *Cmd) ExtractResult(s string) (map[string]string, error) {
 		value := match[1]
 
 		if c.cleanupFunc != nil {
-			value = c.cleanupFunc(match[1])
+			cleanValue, err := c.cleanupFunc(match[1])
+			if err != nil {
+				return result, fmt.Errorf("failed to cleanup value %s of key %s", match[1], c.key)
+			}
+			value = cleanValue
 		}
 		log.Debugf("r %s", value)
 		result[c.key] = value

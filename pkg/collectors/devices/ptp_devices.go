@@ -5,7 +5,6 @@ package devices
 import (
 	"errors"
 	"fmt"
-	"strings"
 
 	log "github.com/sirupsen/logrus"
 
@@ -35,12 +34,12 @@ var (
 func init() {
 	devFetcher = make(map[string]*fetcher)
 	dpllFetcher = make(map[string]*fetcher)
-	dateCmdInst, err := clients.NewCmd("date", "date --iso-8601=ns")
+	dateCmdInst, err := clients.NewCmd("date", "date +%s.%N")
 	if err != nil {
 		panic(err)
 	}
 	dateCmd = dateCmdInst
-	dateCmd.SetCleanupFunc(strings.TrimSpace)
+	dateCmd.SetCleanupFunc(TrimSpace)
 }
 
 // BuildPTPDeviceInfo popluates the fetcher required for
