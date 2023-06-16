@@ -3,10 +3,16 @@
 package utils
 
 import (
+	"fmt"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	log "github.com/sirupsen/logrus"
+)
+
+var (
+	Epoch = time.Unix(0, 0)
 )
 
 func IfErrorPanic(err error) {
@@ -35,4 +41,13 @@ func (wg *WaitGroupCount) Done() {
 
 func (wg *WaitGroupCount) GetCount() int {
 	return int(atomic.LoadInt64(&wg.count))
+}
+
+// ParseTimestamp converts an input number of seconds (including a decimal fraction) into a time.Time
+func ParseTimestamp(timestamp string) (time.Time, error) {
+	duration, err := time.ParseDuration(fmt.Sprintf("%ss", timestamp))
+	if err != nil {
+		return time.Time{}, fmt.Errorf("failed to parse timestamp as a duration %w", err)
+	}
+	return Epoch.Add(duration).UTC(), nil
 }

@@ -54,12 +54,12 @@ var _ = Describe("NewContainerContext", func() {
 			devID := "0x1593"
 			gnssDev := "gnss0"
 
-			expectedInput := "echo '<date>';date --iso-8601=ns;echo '</date>';"
+			expectedInput := "echo '<date>';date +%s.%N;echo '</date>';"
 			expectedInput += "echo '<gnss>';ls /sys/class/net/aFakeInterface/device/gnss/;echo '</gnss>';"
 			expectedInput += "echo '<devID>';cat /sys/class/net/aFakeInterface/device/device;echo '</devID>';"
 			expectedInput += "echo '<vendorID>';cat /sys/class/net/aFakeInterface/device/vendor;echo '</vendorID>';"
 
-			expectedOutput := "<date>\n1234\n</date>\n"
+			expectedOutput := "<date>\n1686916187.0584\n</date>\n"
 			expectedOutput += fmt.Sprintf("<gnss>\n%s\n</gnss>\n", gnssDev)
 			expectedOutput += fmt.Sprintf("<devID>\n%s\n</devID>\n", devID)
 			expectedOutput += fmt.Sprintf("<vendorID>\n%s\n</vendorID>\n", vendor)
@@ -70,6 +70,7 @@ var _ = Describe("NewContainerContext", func() {
 			Expect(err).NotTo(HaveOccurred())
 			info, err := devices.GetPTPDeviceInfo("aFakeInterface", ctx)
 			Expect(err).NotTo(HaveOccurred())
+			Expect(info.Timestamp).To(Equal("2023-06-16T11:49:47.0584Z"))
 			Expect(info.DeviceID).To(Equal(devID))
 			Expect(info.VendorID).To(Equal(vendor))
 			Expect(info.GNSSDev).To(Equal("/dev/" + gnssDev))
@@ -81,12 +82,12 @@ var _ = Describe("NewContainerContext", func() {
 			pssState := "10"
 			offset := "-34"
 
-			expectedInput := "echo '<date>';date --iso-8601=ns;echo '</date>';"
+			expectedInput := "echo '<date>';date +%s.%N;echo '</date>';"
 			expectedInput += "echo '<dpll_0_state>';cat /sys/class/net/aFakeInterface/device/dpll_0_state;echo '</dpll_0_state>';"
 			expectedInput += "echo '<dpll_1_state>';cat /sys/class/net/aFakeInterface/device/dpll_1_state;echo '</dpll_1_state>';"
 			expectedInput += "echo '<dpll_1_offset>';cat /sys/class/net/aFakeInterface/device/dpll_1_offset;echo '</dpll_1_offset>';"
 
-			expectedOutput := "<date>\n1234\n</date>\n"
+			expectedOutput := "<date>\n1686916187.0584\n</date>\n"
 			expectedOutput += fmt.Sprintf("<dpll_0_state>\n%s\n</dpll_0_state>\n", eecState)
 			expectedOutput += fmt.Sprintf("<dpll_1_state>\n%s\n</dpll_1_state>\n", pssState)
 			expectedOutput += fmt.Sprintf("<dpll_1_offset>\n%s\n</dpll_1_offset>\n", offset)
@@ -97,6 +98,7 @@ var _ = Describe("NewContainerContext", func() {
 			Expect(err).NotTo(HaveOccurred())
 			info, err := devices.GetDevDPLLInfo(ctx, "aFakeInterface")
 			Expect(err).NotTo(HaveOccurred())
+			Expect(info.Timestamp).To(Equal("2023-06-16T11:49:47.0584Z"))
 			Expect(info.EECState).To(Equal(eecState))
 			Expect(info.PPSState).To(Equal(pssState))
 			Expect(info.PPSOffset).To(Equal(offset))
