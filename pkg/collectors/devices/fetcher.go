@@ -24,6 +24,10 @@ func NewFetcher() *fetcher {
 	}
 }
 
+func TrimSpace(s string) (string, error) {
+	return strings.TrimSpace(s), nil
+}
+
 func (inst *fetcher) SetPostProcesser(ppFunc func(map[string]string) (map[string]string, error)) {
 	inst.postProcesser = ppFunc
 }
@@ -36,7 +40,7 @@ func (inst *fetcher) AddNewCommand(key, cmd string, trim bool) error {
 		return fmt.Errorf("add fetcher cmd failed %w", err)
 	}
 	if trim {
-		cmdInst.SetCleanupFunc(strings.TrimSpace)
+		cmdInst.SetCleanupFunc(TrimSpace)
 	}
 	inst.cmdGrp.AddCommand(cmdInst)
 	return nil

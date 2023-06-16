@@ -44,7 +44,7 @@ var _ = Describe("Cmd", func() {
 			part2 := "of the correct answer"
 			key := "TestKey"
 			cmd, _ := clients.NewCmd(key, "Hello This is a test")
-			cmd.SetCleanupFunc(func(p1 string) string { return p1 + part2 })
+			cmd.SetCleanupFunc(func(p1 string) (string, error) { return p1 + part2, nil })
 			result, err := cmd.ExtractResult(fmt.Sprintf("<%s>\n%s\n</%s>\n", key, part1, key))
 			Expect(result[key]).To(Equal(part1 + part2))
 			Expect(err).ToNot(HaveOccurred())
