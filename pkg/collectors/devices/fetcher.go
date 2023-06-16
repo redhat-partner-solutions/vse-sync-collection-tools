@@ -28,6 +28,8 @@ func (inst *fetcher) SetPostProcesser(ppFunc func(map[string]string) (map[string
 	inst.postProcesser = ppFunc
 }
 
+// AddNewCommand creates a new command from a string
+// then adds it to the fetcher
 func (inst *fetcher) AddNewCommand(key, cmd string, trim bool) error {
 	cmdInst, err := clients.NewCmd(key, cmd)
 	if err != nil {
@@ -40,11 +42,13 @@ func (inst *fetcher) AddNewCommand(key, cmd string, trim bool) error {
 	return nil
 }
 
+// AddCommand takes a command instance and adds it the fetcher
 func (inst *fetcher) AddCommand(cmdInst *clients.Cmd) {
 	inst.cmdGrp.AddCommand(cmdInst)
 }
 
-func Unmarshall(result map[string]string, pack interface{}) error {
+// unpack result dict into stuck passed as pack
+func unmarshall(result map[string]string, pack interface{}) error {
 	val := reflect.ValueOf(pack)
 	typ := reflect.TypeOf(pack)
 
@@ -60,13 +64,15 @@ func Unmarshall(result map[string]string, pack interface{}) error {
 					f.SetString(res)
 				}
 			default:
-				panic(fmt.Sprintf("fetcher unmarshal not implmented for type: %s", field.Type.Name()))
+				return fmt.Errorf("fetcher unmarshal not implmented for type: %s", field.Type.Name())
 			}
 		}
 	}
 	return nil
 }
 
+// Fetch executes the commands on the container passed as the ctx and
+// use the results to populate pack
 func (inst *fetcher) Fetch(ctx clients.ContainerContext, pack interface{}) error {
 	result, err := runCommands(ctx, inst.cmdGrp)
 	if err != nil {
@@ -78,13 +84,15 @@ func (inst *fetcher) Fetch(ctx clients.ContainerContext, pack interface{}) error
 			return fmt.Errorf("feching failed post process the data %w", err)
 		}
 	}
-	err = Unmarshall(result, pack)
+	err = unmarshall(result, pack)
 	if err != nil {
 		return fmt.Errorf("feching failed to unpack data %w", err)
 	}
 	return nil
 }
 
+// runCommands executes the commands on the container passed as the ctx
+// and extracts the results from the stdout
 func runCommands(ctx clients.ContainerContext, cmdGrp clients.Cmder) (result map[string]string, err error) { //nolint:lll // allow slightly long function definition
 	clientset := clients.GetClientset()
 	cmd := cmdGrp.GetCommand()
