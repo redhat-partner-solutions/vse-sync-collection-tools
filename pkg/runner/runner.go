@@ -43,7 +43,12 @@ type CollectorRunner struct {
 
 func NewCollectorRunner() *CollectorRunner {
 	collectorNames := make([]string, 0)
-	collectorNames = append(collectorNames, collectors.PTPCollectorName, collectors.GPSCollectorName)
+	collectorNames = append(
+		collectorNames,
+		collectors.DevInfoCollectorName,
+		collectors.DPLLCollectorName,
+		collectors.GPSCollectorName,
+	)
 	return &CollectorRunner{
 		collecterInstances:   make(map[string]*collectors.Collector),
 		collectorNames:       collectorNames,
@@ -55,6 +60,8 @@ func NewCollectorRunner() *CollectorRunner {
 
 // initialise will call theconstructor for each
 // value in collector name, it will panic if a collector name is not known.
+//
+//nolint:funlen // this is going to be a long function
 func (runner *CollectorRunner) initialise(
 	callback callbacks.Callback,
 	ptpInterface string,
@@ -75,16 +82,21 @@ func (runner *CollectorRunner) initialise(
 	for _, constructorName := range runner.collectorNames {
 		var newCollector collectors.Collector
 		switch constructorName {
-		case collectors.PTPCollectorName:
-			NewPTPCollector, err := constructor.NewPTPCollector()
+		case collectors.DPLLCollectorName:
+			NewDPLLCollector, err := constructor.NewDPLLCollector()
 			utils.IfErrorPanic(err)
-			newCollector = NewPTPCollector
-			log.Debug("PTP Collector")
+			newCollector = NewDPLLCollector
+			log.Debug("DPLL Collector")
+		case collectors.DevInfoCollectorName:
+			NewDevInfCollector, err := constructor.NewDevInfoCollector()
+			utils.IfErrorPanic(err)
+			newCollector = NewDevInfCollector
+			log.Debug("DPLL Collector")
 		case collectors.GPSCollectorName:
 			NewGPSCollector, err := constructor.NewGPSCollector()
 			utils.IfErrorPanic(err)
 			newCollector = NewGPSCollector
-			log.Debug("PTP Collector")
+			log.Debug("GPS Collector")
 		default:
 			newCollector = nil
 			panic("Unknown collector")
