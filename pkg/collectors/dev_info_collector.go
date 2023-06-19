@@ -5,6 +5,7 @@ package collectors
 import (
 	"fmt"
 	"os"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -24,6 +25,7 @@ type DevInfoCollector struct {
 	interfaceName string
 	count         uint32
 	running       bool
+	wg            sync.WaitGroup
 }
 
 const (
@@ -47,6 +49,8 @@ func (ptpDev *DevInfoCollector) Start(key string) error {
 }
 
 func (ptpDev *DevInfoCollector) monitorErroredPolls() {
+	ptpDev.wg.Add(1)
+	defer ptpDev.wg.Done()
 	for {
 		select {
 		case <-ptpDev.quit:
@@ -103,6 +107,7 @@ func (ptpDev *DevInfoCollector) CleanUp(key string) error {
 	case All, DeviceInfo:
 		ptpDev.running = false
 		ptpDev.quit <- os.Kill
+		ptpDev.wg.Wait()
 	default:
 		return fmt.Errorf("key %s is not a colletable of %T", key, ptpDev)
 	}
