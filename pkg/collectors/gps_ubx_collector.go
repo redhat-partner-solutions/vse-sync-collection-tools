@@ -15,7 +15,6 @@ import (
 var (
 	GPSCollectorName = "GPS-UBX"
 	gpsNavKey        = "gpsNav"
-	ubxCollectables  = [1]string{gpsNavKey}
 	GPSContainer     = "gpsd"
 )
 
@@ -49,6 +48,18 @@ func (gps *GPSCollector) Start(key string) error {
 	return nil
 }
 
+func (gps *GPSCollector) poll() []error {
+	gpsNav, err := devices.GetGPSNav(gps.ctx)
+	if err != nil {
+		return []error{err}
+	}
+	err = gps.callback.Call(&gpsNav, gpsNavKey)
+	if err != nil {
+		return []error{err}
+	}
+	return []error{}
+}
+
 // Poll collects information from the cluster then
 // calls the callback.Call to allow that to persist it
 func (gps *GPSCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCount) {
@@ -57,27 +68,10 @@ func (gps *GPSCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCo
 		atomic.AddUint32(&gps.count, 1)
 	}()
 
-	gpsNav, err := devices.GetGPSNav(gps.ctx)
-	if err != nil {
-		resultsChan <- PollResult{
-			CollectorName: GPSCollectorName,
-			Errors:        []error{err},
-		}
-		return
-	}
-	err = gps.callback.Call(&gpsNav, gpsNavKey)
-
-	if err != nil {
-		resultsChan <- PollResult{
-			CollectorName: GPSCollectorName,
-			Errors:        []error{err},
-		}
-		return
-	}
-
+	errorsToReturn := gps.poll()
 	resultsChan <- PollResult{
 		CollectorName: GPSCollectorName,
-		Errors:        []error{},
+		Errors:        errorsToReturn,
 	}
 }
 
@@ -108,7 +102,6 @@ func (constructor *CollectionConstructor) NewGPSCollector() (*GPSCollector, erro
 	collector := GPSCollector{
 		interfaceName: constructor.PTPInterface,
 		ctx:           ctx,
-		DataTypes:     ubxCollectables,
 		running:       false,
 		callback:      constructor.Callback,
 		pollRate:      constructor.PollRate,
