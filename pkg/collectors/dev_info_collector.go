@@ -127,6 +127,13 @@ func (ptpDev *DevInfoCollector) GetPollCount() int {
 	return int(atomic.LoadUint32(&ptpDev.count))
 }
 
+func verify(ptpDevInfo *devices.PTPDeviceInfo) error {
+	if ptpDevInfo.VendorID != VendorIntel || ptpDevInfo.DeviceID != DeviceE810 {
+		return fmt.Errorf("NIC device is not based on E810")
+	}
+	return nil
+}
+
 // Returns a new DevInfoCollector from the CollectionConstuctor Factory
 func (constructor *CollectionConstructor) NewDevInfoCollector(erroredPolls chan PollResult) (*DevInfoCollector, error) {
 	ctx, err := clients.NewContainerContext(constructor.Clientset, PTPNamespace, PodNamePrefix, PTPContainer)
@@ -145,13 +152,13 @@ func (constructor *CollectionConstructor) NewDevInfoCollector(erroredPolls chan 
 		return &DevInfoCollector{}, fmt.Errorf("failed to fetch initial DeviceInfo %w", err)
 	}
 
-	err = constructor.Callback.Call(&ptpDevInfo, DeviceInfo)
+	err = verify(&ptpDevInfo)
 	if err != nil {
-		return &DevInfoCollector{}, fmt.Errorf("callback failed %w", err)
-	}
-
-	if ptpDevInfo.VendorID != VendorIntel || ptpDevInfo.DeviceID != DeviceE810 {
-		return &DevInfoCollector{}, fmt.Errorf("NIC device is not based on E810")
+		callbackErr := constructor.Callback.Call(&ptpDevInfo, DeviceInfo)
+		if callbackErr != nil {
+			return &DevInfoCollector{}, fmt.Errorf("callback failed %s %w", callbackErr.Error(), err)
+		}
+		return &DevInfoCollector{}, fmt.Errorf("failed to verify environment %w", err)
 	}
 
 	collector := DevInfoCollector{
