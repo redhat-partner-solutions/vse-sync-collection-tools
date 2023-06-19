@@ -170,7 +170,7 @@ func (constructor *CollectionConstructor) NewDevInfoCollector(erroredPolls chan 
 		quit:          make(chan os.Signal),
 		erroredPolls:  erroredPolls,
 		requiresFetch: make(chan bool, 1),
-		pollRate:      constructor.PollRate,
+		pollRate:      constructor.DevInfoAnnouceRate,
 	}
 
 	return &collector, nil
