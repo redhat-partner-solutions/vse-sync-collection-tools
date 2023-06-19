@@ -17,8 +17,9 @@ import (
 type PTPCollector struct {
 	callback      callbacks.Callback
 	running       map[string]bool
-	DataTypes     [2]string
+	devInfo       *devices.PTPDeviceInfo
 	ctx           clients.ContainerContext
+	DataTypes     [2]string
 	interfaceName string
 	count         uint32
 }
@@ -81,11 +82,7 @@ func (ptpDev *PTPCollector) Start(key string) error {
 func (ptpDev *PTPCollector) fetchLine(key string) (err error) { //nolint:funlen // allow slightly long function
 	switch key {
 	case DeviceInfo:
-		ptpDevInfo, fetchError := devices.GetPTPDeviceInfo(ptpDev.interfaceName, ptpDev.ctx)
-		if fetchError != nil {
-			return fmt.Errorf("failed to fetch ptpDevInfo %w", fetchError)
-		}
-		err = ptpDev.callback.Call(&ptpDevInfo, DeviceInfo)
+		err = ptpDev.callback.Call(ptpDev.devInfo, DeviceInfo)
 		if err != nil {
 			return fmt.Errorf("callback failed %w", err)
 		}
@@ -180,6 +177,7 @@ func (constructor *CollectionConstructor) NewPTPCollector() (*PTPCollector, erro
 		DataTypes:     ptpCollectables,
 		running:       make(map[string]bool),
 		callback:      constructor.Callback,
+		devInfo:       &ptpDevInfo,
 	}
 
 	return &collector, nil
