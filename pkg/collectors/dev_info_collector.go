@@ -4,7 +4,9 @@ package collectors
 
 import (
 	"fmt"
+	"os"
 	"sync/atomic"
+	"time"
 
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/callbacks"
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/clients"
@@ -15,6 +17,9 @@ import (
 type DevInfoCollector struct {
 	callback      callbacks.Callback
 	devInfo       *devices.PTPDeviceInfo
+	quit          chan os.Signal
+	erroredPolls  chan PollResult
+	requiresFetch chan bool
 	ctx           clients.ContainerContext
 	interfaceName string
 	count         uint32
@@ -34,15 +39,42 @@ func (ptpDev *DevInfoCollector) Start(key string) error {
 	switch key {
 	case All, DeviceInfo:
 		ptpDev.running = true
+		go ptpDev.monitorErroredPolls()
 	default:
 		return fmt.Errorf("key %s is not a colletable of %T", key, ptpDev)
 	}
 	return nil
 }
 
+func (ptpDev *DevInfoCollector) monitorErroredPolls() {
+	for {
+		select {
+		case <-ptpDev.quit:
+			return
+		case <-ptpDev.erroredPolls:
+			ptpDev.requiresFetch <- true
+		default:
+			time.Sleep(time.Millisecond)
+		}
+	}
+}
+
 // polls for the device info, stores it then passes it to the callback
 func (ptpDev *DevInfoCollector) poll() []error {
-	err := ptpDev.callback.Call(ptpDev.devInfo, DeviceInfo)
+	var devInfo *devices.PTPDeviceInfo
+	select {
+	case <-ptpDev.requiresFetch:
+		fetchedDevInfo, err := devices.GetPTPDeviceInfo(ptpDev.interfaceName, ptpDev.ctx)
+		if err != nil {
+			return []error{fmt.Errorf("failed to fetch DeviceInfo %w", err)}
+		}
+		ptpDev.devInfo = &fetchedDevInfo
+		devInfo = &fetchedDevInfo
+	default:
+		devInfo = ptpDev.devInfo
+	}
+
+	err := ptpDev.callback.Call(devInfo, DeviceInfo)
 	if err != nil {
 		return []error{fmt.Errorf("callback failed %w", err)}
 	}
@@ -68,6 +100,7 @@ func (ptpDev *DevInfoCollector) CleanUp(key string) error {
 	switch key {
 	case All, DeviceInfo:
 		ptpDev.running = false
+		ptpDev.quit <- os.Kill
 	default:
 		return fmt.Errorf("key %s is not a colletable of %T", key, ptpDev)
 	}
@@ -79,7 +112,7 @@ func (ptpDev *DevInfoCollector) GetPollCount() int {
 }
 
 // Returns a new DevInfoCollector from the CollectionConstuctor Factory
-func (constructor *CollectionConstructor) NewDevInfoCollector() (*DevInfoCollector, error) {
+func (constructor *CollectionConstructor) NewDevInfoCollector(erroredPolls chan PollResult) (*DevInfoCollector, error) {
 	ctx, err := clients.NewContainerContext(constructor.Clientset, PTPNamespace, PodNamePrefix, PTPContainer)
 	if err != nil {
 		return &DevInfoCollector{}, fmt.Errorf("could not create container context %w", err)
@@ -95,6 +128,12 @@ func (constructor *CollectionConstructor) NewDevInfoCollector() (*DevInfoCollect
 	if err != nil {
 		return &DevInfoCollector{}, fmt.Errorf("failed to fetch initial DeviceInfo %w", err)
 	}
+
+	err = constructor.Callback.Call(&ptpDevInfo, DeviceInfo)
+	if err != nil {
+		return &DevInfoCollector{}, fmt.Errorf("callback failed %w", err)
+	}
+
 	if ptpDevInfo.VendorID != VendorIntel || ptpDevInfo.DeviceID != DeviceE810 {
 		return &DevInfoCollector{}, fmt.Errorf("NIC device is not based on E810")
 	}
@@ -105,7 +144,9 @@ func (constructor *CollectionConstructor) NewDevInfoCollector() (*DevInfoCollect
 		running:       false,
 		callback:      constructor.Callback,
 		devInfo:       &ptpDevInfo,
-		// errChannel:    constuctor.errChannel,
+		quit:          make(chan os.Signal),
+		erroredPolls:  erroredPolls,
+		requiresFetch: make(chan bool),
 	}
 
 	return &collector, nil

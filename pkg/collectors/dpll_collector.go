@@ -42,6 +42,7 @@ func (dpll *DPLLCollector) Start(key string) error {
 // polls for the dpll info then passes it to the callback
 func (dpll *DPLLCollector) poll() []error {
 	dpllInfo, err := devices.GetDevDPLLInfo(dpll.ctx, dpll.interfaceName)
+
 	if err != nil {
 		return []error{fmt.Errorf("failed to fetch dpllInfo %w", err)}
 	}

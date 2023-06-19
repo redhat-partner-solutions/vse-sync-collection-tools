@@ -34,6 +34,7 @@ type CollectorRunner struct {
 	quit                 chan os.Signal
 	collectorQuitChannel map[string]chan os.Signal
 	pollResults          chan collectors.PollResult
+	erroredPolls         chan collectors.PollResult
 	collecterInstances   map[string]*collectors.Collector
 	collectorNames       []string
 	pollCount            int
@@ -54,6 +55,7 @@ func NewCollectorRunner() *CollectorRunner {
 		collectorNames:       collectorNames,
 		quit:                 getQuitChannel(),
 		pollResults:          make(chan collectors.PollResult, pollResultsQueueSize),
+		erroredPolls:         make(chan collectors.PollResult, pollResultsQueueSize),
 		collectorQuitChannel: make(map[string]chan os.Signal, 1),
 	}
 }
@@ -88,7 +90,7 @@ func (runner *CollectorRunner) initialise(
 			newCollector = NewDPLLCollector
 			log.Debug("DPLL Collector")
 		case collectors.DevInfoCollectorName:
-			NewDevInfCollector, err := constructor.NewDevInfoCollector()
+			NewDevInfCollector, err := constructor.NewDevInfoCollector(runner.erroredPolls)
 			utils.IfErrorPanic(err)
 			newCollector = NewDevInfCollector
 			log.Debug("DPLL Collector")
@@ -202,6 +204,7 @@ func (runner *CollectorRunner) Run(
 			log.Infof("Received %v", pollRes)
 			if len(pollRes.Errors) > 0 {
 				log.Warnf("Poll %s failed: %v", pollRes.CollectorName, pollRes.Errors)
+				runner.erroredPolls <- pollRes
 			}
 		default:
 			log.Debug("Sleeping main func")
