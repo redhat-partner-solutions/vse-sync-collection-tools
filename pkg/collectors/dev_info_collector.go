@@ -52,9 +52,11 @@ func (ptpDev *DevInfoCollector) monitorErroredPolls() {
 		case <-ptpDev.quit:
 			return
 		case <-ptpDev.erroredPolls:
-			ptpDev.requiresFetch <- true
+			if len(ptpDev.requiresFetch) == 0 {
+				ptpDev.requiresFetch <- true
+			}
 		default:
-			time.Sleep(time.Millisecond)
+			time.Sleep(time.Microsecond)
 		}
 	}
 }
