@@ -114,7 +114,7 @@ func (runner *CollectorRunner) initialise(
 func (runner *CollectorRunner) poller(collectorName string, collector collectors.Collector, quit chan os.Signal) {
 	defer runner.runningCollectorsWG.Done()
 	var lastPoll time.Time
-	inversePollRate := 1.0 / runner.pollRate
+	inversePollRate := 1.0 / collector.GetPollRate()
 	runningPolls := utils.WaitGroupCount{}
 
 	for runner.pollCount < 0 || (collector.GetPollCount()+runningPolls.GetCount()) <= runner.pollCount {

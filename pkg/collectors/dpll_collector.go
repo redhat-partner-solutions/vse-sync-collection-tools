@@ -18,6 +18,7 @@ type DPLLCollector struct {
 	interfaceName string
 	count         uint32
 	running       bool
+	pollRate      float64
 }
 
 const (
@@ -26,6 +27,10 @@ const (
 	DPLLInfo = "dpll-info"
 	All      = "all"
 )
+
+func (dpll *DPLLCollector) GetPollRate() float64 {
+	return dpll.pollRate
+}
 
 // Start will add the key to the running pieces of data
 // to be collects when polled
@@ -98,6 +103,7 @@ func (constructor *CollectionConstructor) NewDPLLCollector() (*DPLLCollector, er
 		ctx:           ctx,
 		running:       false,
 		callback:      constructor.Callback,
+		pollRate:      constructor.PollRate,
 	}
 
 	return &collector, nil

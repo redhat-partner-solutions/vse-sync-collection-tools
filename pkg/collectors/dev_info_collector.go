@@ -26,6 +26,7 @@ type DevInfoCollector struct {
 	count         uint32
 	running       bool
 	wg            sync.WaitGroup
+	pollRate      float64
 }
 
 const (
@@ -34,6 +35,10 @@ const (
 	VendorIntel          = "0x8086"
 	DeviceE810           = "0x1593"
 )
+
+func (ptpDev *DevInfoCollector) GetPollRate() float64 {
+	return ptpDev.pollRate
+}
 
 // Start will add the key to the running pieces of data
 // to be collects when polled
@@ -154,6 +159,7 @@ func (constructor *CollectionConstructor) NewDevInfoCollector(erroredPolls chan 
 		quit:          make(chan os.Signal),
 		erroredPolls:  erroredPolls,
 		requiresFetch: make(chan bool),
+		pollRate:      constructor.PollRate,
 	}
 
 	return &collector, nil
