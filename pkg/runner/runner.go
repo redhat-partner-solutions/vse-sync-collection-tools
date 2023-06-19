@@ -36,7 +36,7 @@ type CollectorRunner struct {
 	collectorQuitChannel map[string]chan os.Signal
 	pollResults          chan collectors.PollResult
 	erroredPolls         chan collectors.PollResult
-	collecterInstances   map[string]*collectors.Collector
+	collecterInstances   map[string]collectors.Collector
 	collectorNames       []string
 	pollCount            int
 	pollRate             float64
@@ -54,7 +54,7 @@ func NewCollectorRunner() *CollectorRunner {
 		collectors.GPSCollectorName,
 	)
 	return &CollectorRunner{
-		collecterInstances:   make(map[string]*collectors.Collector),
+		collecterInstances:   make(map[string]collectors.Collector),
 		collectorNames:       collectorNames,
 		quit:                 getQuitChannel(),
 		pollResults:          make(chan collectors.PollResult, pollResultsQueueSize),
@@ -89,12 +89,14 @@ func (runner *CollectorRunner) initialise(
 
 	for _, constructorName := range runner.collectorNames {
 		var newCollector collectors.Collector
+		newInstance := true
 		switch constructorName {
 		case collectors.DPLLCollectorName:
 			NewDPLLCollector, err := constructor.NewDPLLCollector()
 			utils.IfErrorPanic(err)
 			newCollector = NewDPLLCollector
 			log.Debug("DPLL Collector")
+
 		case collectors.DevInfoCollectorName:
 			NewDevInfCollector, err := constructor.NewDevInfoCollector(runner.erroredPolls)
 			utils.IfErrorPanic(err)
@@ -106,11 +108,11 @@ func (runner *CollectorRunner) initialise(
 			newCollector = NewGPSCollector
 			log.Debug("GPS Collector")
 		default:
-			newCollector = nil
-			panic("Unknown collector")
+			newInstance = false
+			log.Errorf("Unknown collector %s", constructorName)
 		}
-		if newCollector != nil {
-			runner.collecterInstances[constructorName] = &newCollector
+		if newInstance {
+			runner.collecterInstances[constructorName] = newCollector
 			log.Debugf("Added collector %T, %v", newCollector, newCollector)
 		}
 	}
@@ -170,21 +172,21 @@ func (runner *CollectorRunner) poller(
 func (runner *CollectorRunner) start() {
 	for collectorName, collector := range runner.collecterInstances {
 		log.Debugf("start collector %v", collector)
-		err := (*collector).Start()
+		err := collector.Start()
 		utils.IfErrorPanic(err)
 
 		log.Debugf("Spawning  collector: %v", collector)
 		collectorName := collectorName
 		collector := collector
 		quit := make(chan os.Signal, 1)
-		if (*collector).IsAnnouncer() {
+		if collector.IsAnnouncer() {
 			runner.collectorQuitChannel[collectorName] = quit
 			runner.runningAnnouncersWG.Add(1)
-			go runner.poller(collectorName, (*collector), quit, &runner.runningAnnouncersWG)
+			go runner.poller(collectorName, collector, quit, &runner.runningAnnouncersWG)
 		} else {
 			runner.collectorQuitChannel[collectorName] = quit
 			runner.runningCollectorsWG.Add(1)
-			go runner.poller(collectorName, (*collector), quit, &runner.runningCollectorsWG)
+			go runner.poller(collectorName, collector, quit, &runner.runningCollectorsWG)
 		}
 	}
 }
@@ -193,7 +195,7 @@ func (runner *CollectorRunner) start() {
 func (runner *CollectorRunner) cleanUpAll() {
 	for collectorName, collector := range runner.collecterInstances {
 		log.Debugf("cleanup %s", collectorName)
-		err := (*collector).CleanUp()
+		err := collector.CleanUp()
 		utils.IfErrorPanic(err)
 	}
 }
