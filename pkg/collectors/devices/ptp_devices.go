@@ -17,17 +17,24 @@ import (
 )
 
 type PTPDeviceInfo struct {
-	Timestamp string `json:"date" fetcherKey:"date"`
-	VendorID  string `json:"vendorId" fetcherKey:"vendorID"`
-	DeviceID  string `json:"deviceInfo" fetcherKey:"devID"`
-	GNSSDev   string `json:"GNSSDev" fetcherKey:"gnss"`
+	Timestamp  string `json:"date" fetcherKey:"date"`
+	VendorID   string `json:"vendorId" fetcherKey:"vendorID"`
+	DeviceID   string `json:"deviceInfo" fetcherKey:"devID"`
+	GNSSDev    string `json:"GNSSDev" fetcherKey:"gnss"`
+	Timeoffset string `json:"timeOffset" fetcherKey:"timeOffset"`
 }
 
 // AnalyserJSON returns the json expected by the analysers
 func (ptpDevInfo *PTPDeviceInfo) GetAnalyserFormat() (*callbacks.AnalyserFormatType, error) {
+	offset, err := time.ParseDuration(ptpDevInfo.Timeoffset)
+	if err != nil {
+		return &callbacks.AnalyserFormatType{}, fmt.Errorf("failed to parse offset %s %w", ptpDevInfo.Timeoffset, err)
+	}
+
 	formatted := callbacks.AnalyserFormatType{
 		ID: "devInfo",
 		Data: []string{
+			time.Now().Add(offset).UTC().Format(time.RFC3339Nano),
 			ptpDevInfo.Timestamp,
 			ptpDevInfo.VendorID,
 			ptpDevInfo.DeviceID,
@@ -69,20 +76,30 @@ const (
 var (
 	devFetcher  map[string]*fetcher
 	dpllFetcher map[string]*fetcher
-	dateCmd     *clients.Cmd
+	dpplDateCmd *clients.Cmd
+	devDateCmd  *clients.Cmd
 )
 
 func init() {
 	devFetcher = make(map[string]*fetcher)
-	dpllFetcher = make(map[string]*fetcher)
-	dateCmdInst, err := clients.NewCmd("date", "date +%s.%N")
+	devDateCmdInst, err := clients.NewCmd("date", "date +%s.%N")
 	if err != nil {
 		panic(err)
 	}
-	dateCmd = dateCmdInst
-	dateCmd.SetCleanupFunc(FormatTimestampAsRFC3339Nano)
+
+	devDateCmd = devDateCmdInst
+	devDateCmd.SetCleanupFunc(TrimSpace)
+
+	dpllFetcher = make(map[string]*fetcher)
+	dpplDateCmdInst, err := clients.NewCmd("date", "date +%s.%N")
+	if err != nil {
+		panic(err)
+	}
+	dpplDateCmd = dpplDateCmdInst
+	dpplDateCmd.SetCleanupFunc(formatTimestampAsRFC3339Nano)
 }
-func FormatTimestampAsRFC3339Nano(s string) (string, error) {
+
+func formatTimestampAsRFC3339Nano(s string) (string, error) {
 	timestamp, err := utils.ParseTimestamp(strings.TrimSpace(s))
 	if err != nil {
 		return "", fmt.Errorf("failed to parse timestamp %w", err)
@@ -90,13 +107,23 @@ func FormatTimestampAsRFC3339Nano(s string) (string, error) {
 	return timestamp.Format(time.RFC3339Nano), nil
 }
 
+func extractOffsetFromTimestamp(result map[string]string) (map[string]string, error) {
+	timestamp, err := utils.ParseTimestamp(result["date"])
+	if err != nil {
+		return result, fmt.Errorf("failed to parse timestamp  %w", err)
+	}
+	result["date"] = timestamp.Format(time.RFC3339Nano)
+	result["timeOffset"] = fmt.Sprintf("%fs", time.Since(timestamp).Seconds())
+	return result, nil
+}
+
 // BuildPTPDeviceInfo popluates the fetcher required for
 // collecting the PTPDeviceInfo
 func BuildPTPDeviceInfo(interfaceName string) error {
 	fetcherInst := NewFetcher()
 	devFetcher[interfaceName] = fetcherInst
-
-	fetcherInst.AddCommand(dateCmd)
+	fetcherInst.SetPostProcesser(extractOffsetFromTimestamp)
+	fetcherInst.AddCommand(devDateCmd)
 
 	err := fetcherInst.AddNewCommand(
 		"gnss",
@@ -158,8 +185,7 @@ func GetPTPDeviceInfo(interfaceName string, ctx clients.ContainerContext) (PTPDe
 func BuildDPLLInfoFetcher(interfaceName string) error {
 	fetcherInst := NewFetcher()
 	dpllFetcher[interfaceName] = fetcherInst
-
-	fetcherInst.AddCommand(dateCmd)
+	fetcherInst.AddCommand(dpplDateCmd)
 
 	err := fetcherInst.AddNewCommand(
 		"dpll_0_state",
