@@ -14,18 +14,20 @@ import (
 )
 
 const (
-	defaultCount    int     = 10
-	defaultPollRate float64 = 1.0
+	defaultCount              int     = 10
+	defaultPollRate           float64 = 1.0
+	defaultDevInfoAnnouceRate float64 = 0.17
 )
 
 var (
-	kubeConfig      string
-	pollCount       int
-	pollRate        float64
-	ptpInterface    string
-	outputFile      string
-	logLevel        string
-	useAnalyserJSON bool
+	kubeConfig         string
+	pollCount          int
+	pollRate           float64
+	devInfoAnnouceRate float64
+	ptpInterface       string
+	outputFile         string
+	logLevel           string
+	useAnalyserJSON    bool
 
 	// rootCmd represents the base command when called without any subcommands
 	rootCmd = &cobra.Command{
@@ -35,7 +37,15 @@ var (
 		Run: func(cmd *cobra.Command, args []string) {
 			logging.SetupLogging(logLevel, os.Stdout)
 			collectionRunner := runner.NewCollectorRunner()
-			collectionRunner.Run(kubeConfig, outputFile, pollCount, pollRate, ptpInterface, useAnalyserJSON)
+			collectionRunner.Run(
+				kubeConfig,
+				outputFile,
+				pollCount,
+				pollRate,
+				devInfoAnnouceRate,
+				ptpInterface,
+				useAnalyserJSON,
+			)
 		},
 	}
 )
@@ -72,6 +82,14 @@ func init() {
 		defaultPollRate,
 		"Poll rate for querying the cluster",
 	)
+	rootCmd.PersistentFlags().Float64VarP(
+		&devInfoAnnouceRate,
+		"announce",
+		"a",
+		defaultDevInfoAnnouceRate,
+		"Rate announcing the dev info",
+	)
+
 	rootCmd.PersistentFlags().StringVarP(
 		&logLevel,
 		"verbosity",
