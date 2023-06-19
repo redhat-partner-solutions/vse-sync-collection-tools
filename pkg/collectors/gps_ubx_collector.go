@@ -33,6 +33,10 @@ func (gps *GPSCollector) GetPollRate() float64 {
 	return gps.pollRate
 }
 
+func (gps *GPSCollector) IsAnouncer() bool {
+	return false
+}
+
 // Start will add the key to the running pieces of data
 // to be collects when polled
 func (gps *GPSCollector) Start(key string) error {

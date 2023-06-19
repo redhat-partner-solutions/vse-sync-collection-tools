@@ -32,6 +32,10 @@ func (dpll *DPLLCollector) GetPollRate() float64 {
 	return dpll.pollRate
 }
 
+func (dpll *DPLLCollector) IsAnouncer() bool {
+	return false
+}
+
 // Start will add the key to the running pieces of data
 // to be collects when polled
 func (dpll *DPLLCollector) Start(key string) error {
