@@ -23,9 +23,7 @@ type DPLLCollector struct {
 
 const (
 	DPLLCollectorName = "DPLL"
-
-	DPLLInfo = "dpll-info"
-	All      = "all"
+	DPLLInfo          = "dpll-info"
 )
 
 func (dpll *DPLLCollector) GetPollInterval() int {
@@ -43,15 +41,15 @@ func (dpll *DPLLCollector) Start() error {
 }
 
 // polls for the dpll info then passes it to the callback
-func (dpll *DPLLCollector) poll() []error {
+func (dpll *DPLLCollector) poll() error {
 	dpllInfo, err := devices.GetDevDPLLInfo(dpll.ctx, dpll.interfaceName)
 
 	if err != nil {
-		return []error{fmt.Errorf("failed to fetch dpllInfo %w", err)}
+		return fmt.Errorf("failed to fetch %s %w", DPLLInfo, err)
 	}
 	err = dpll.callback.Call(&dpllInfo, DPLLInfo)
 	if err != nil {
-		return []error{fmt.Errorf("callback failed %w", err)}
+		return fmt.Errorf("callback failed %w", err)
 	}
 	return nil
 }
@@ -63,7 +61,11 @@ func (dpll *DPLLCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroup
 		wg.Done()
 		atomic.AddUint32(&dpll.count, 1)
 	}()
-	errorsToReturn := dpll.poll()
+	errorsToReturn := make([]error, 0)
+	err := dpll.poll()
+	if err != nil {
+		errorsToReturn = append(errorsToReturn, err)
+	}
 	resultsChan <- PollResult{
 		CollectorName: DPLLCollectorName,
 		Errors:        errorsToReturn,

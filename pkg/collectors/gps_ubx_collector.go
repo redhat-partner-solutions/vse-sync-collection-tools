@@ -41,6 +41,18 @@ func (gps *GPSCollector) Start() error {
 	return nil
 }
 
+func (gps *GPSCollector) poll() error {
+	gpsNav, err := devices.GetGPSNav(gps.ctx)
+	if err != nil {
+		return fmt.Errorf("failed to fetch  %s %w", gpsNavKey, err)
+	}
+	err = gps.callback.Call(&gpsNav, gpsNavKey)
+	if err != nil {
+		return fmt.Errorf("callback failed %w", err)
+	}
+	return nil
+}
+
 // Poll collects information from the cluster then
 // calls the callback.Call to allow that to persist it
 func (gps *GPSCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCount) {
@@ -49,27 +61,14 @@ func (gps *GPSCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCo
 		atomic.AddUint32(&gps.count, 1)
 	}()
 
-	gpsNav, err := devices.GetGPSNav(gps.ctx)
+	errorsToReturn := make([]error, 0)
+	err := gps.poll()
 	if err != nil {
-		resultsChan <- PollResult{
-			CollectorName: GPSCollectorName,
-			Errors:        []error{err},
-		}
-		return
+		errorsToReturn = append(errorsToReturn, err)
 	}
-	err = gps.callback.Call(&gpsNav, gpsNavKey)
-
-	if err != nil {
-		resultsChan <- PollResult{
-			CollectorName: GPSCollectorName,
-			Errors:        []error{err},
-		}
-		return
-	}
-
 	resultsChan <- PollResult{
 		CollectorName: GPSCollectorName,
-		Errors:        []error{},
+		Errors:        errorsToReturn,
 	}
 }
 
