@@ -13,6 +13,7 @@ type Collector interface {
 	Poll(chan PollResult, *utils.WaitGroupCount) // Poll for collectables
 	CleanUp(key string) error                    // Stops the collector and cleans up any internal state. It should result in a state that can be started again
 	GetPollCount() int                           // Returns the number of completed poll
+	GetPollRate() float64                        // Returns the collectors polling rate
 }
 
 // A union of all values required to be passed into allconstructions

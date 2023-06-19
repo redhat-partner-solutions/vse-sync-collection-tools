@@ -26,6 +26,11 @@ type GPSCollector struct {
 	interfaceName string
 	running       bool
 	count         uint32
+	pollRate      float64
+}
+
+func (gps *GPSCollector) GetPollRate() float64 {
+	return gps.pollRate
 }
 
 // Start will add the key to the running pieces of data
@@ -102,6 +107,7 @@ func (constructor *CollectionConstructor) NewGPSCollector() (*GPSCollector, erro
 		DataTypes:     ubxCollectables,
 		running:       false,
 		callback:      constructor.Callback,
+		pollRate:      constructor.PollRate,
 	}
 
 	return &collector, nil
