@@ -40,6 +40,10 @@ func (ptpDev *DevInfoCollector) GetPollRate() float64 {
 	return ptpDev.pollRate
 }
 
+func (ptpDev *DevInfoCollector) IsAnouncer() bool {
+	return true
+}
+
 // Start will add the key to the running pieces of data
 // to be collects when polled
 func (ptpDev *DevInfoCollector) Start(key string) error {
