@@ -80,13 +80,13 @@ func (ptpDev *DevInfoCollector) monitorErroredPolls() {
 }
 
 // polls for the device info, stores it then passes it to the callback
-func (ptpDev *DevInfoCollector) poll() []error {
+func (ptpDev *DevInfoCollector) poll() error {
 	var devInfo *devices.PTPDeviceInfo
 	select {
 	case <-ptpDev.requiresFetch:
 		fetchedDevInfo, err := devices.GetPTPDeviceInfo(ptpDev.interfaceName, ptpDev.ctx)
 		if err != nil {
-			return []error{fmt.Errorf("failed to fetch DeviceInfo %w", err)}
+			return fmt.Errorf("failed to fetch %s %w", DeviceInfo, err)
 		}
 		ptpDev.devInfo = &fetchedDevInfo
 		devInfo = &fetchedDevInfo
@@ -96,7 +96,7 @@ func (ptpDev *DevInfoCollector) poll() []error {
 
 	err := ptpDev.callback.Call(devInfo, DeviceInfo)
 	if err != nil {
-		return []error{fmt.Errorf("callback failed %w", err)}
+		return fmt.Errorf("callback failed %w", err)
 	}
 	return nil
 }
@@ -108,7 +108,11 @@ func (ptpDev *DevInfoCollector) Poll(resultsChan chan PollResult, wg *utils.Wait
 		wg.Done()
 		atomic.AddUint32(&ptpDev.count, 1)
 	}()
-	errorsToReturn := ptpDev.poll()
+	errorsToReturn := make([]error, 0)
+	err := ptpDev.poll()
+	if err != nil {
+		errorsToReturn = append(errorsToReturn, err)
+	}
 	resultsChan <- PollResult{
 		CollectorName: DPLLCollectorName,
 		Errors:        errorsToReturn,
