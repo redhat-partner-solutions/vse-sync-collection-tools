@@ -39,6 +39,7 @@ type CollectorRunner struct {
 	collectorNames       []string
 	pollCount            int
 	pollRate             float64
+	devInfoAnnouceRate   float64
 	runningCollectorsWG  utils.WaitGroupCount
 }
 
@@ -70,15 +71,18 @@ func (runner *CollectorRunner) initialise(
 	clientset *clients.Clientset,
 	pollRate float64,
 	pollCount int,
+	devInfoAnnouceRate float64,
 ) {
 	runner.pollRate = pollRate
 	runner.pollCount = pollCount
+	runner.devInfoAnnouceRate = devInfoAnnouceRate
 
 	constructor := collectors.CollectionConstructor{
-		Callback:     callback,
-		PTPInterface: ptpInterface,
-		Clientset:    clientset,
-		PollRate:     pollRate,
+		Callback:           callback,
+		PTPInterface:       ptpInterface,
+		Clientset:          clientset,
+		PollRate:           pollRate,
+		DevInfoAnnouceRate: devInfoAnnouceRate,
 	}
 
 	for _, constructorName := range runner.collectorNames {
@@ -114,9 +118,10 @@ func (runner *CollectorRunner) initialise(
 func (runner *CollectorRunner) poller(collectorName string, collector collectors.Collector, quit chan os.Signal) {
 	defer runner.runningCollectorsWG.Done()
 	var lastPoll time.Time
-	inversePollRate := 1.0 / collector.GetPollRate()
+	pollRate := collector.GetPollRate()
+	inversePollRate := 1.0 / pollRate
 	runningPolls := utils.WaitGroupCount{}
-
+	log.Debugf("Collector with poll rate %f wait time %f", pollRate, inversePollRate)
 	for runner.pollCount < 0 || (collector.GetPollCount()+runningPolls.GetCount()) <= runner.pollCount {
 		log.Debugf("Collector GoRoutine: %s", collectorName)
 		select {
@@ -173,6 +178,7 @@ func (runner *CollectorRunner) Run(
 	outputFile string,
 	pollCount int,
 	pollRate float64,
+	devInfoAnnouceRate float64,
 	ptpInterface string,
 	useAnalyserJSON bool,
 ) {
@@ -185,7 +191,7 @@ func (runner *CollectorRunner) Run(
 
 	callback, err := callbacks.SetupCallback(outputFile, outputFormat)
 	utils.IfErrorPanic(err)
-	runner.initialise(callback, ptpInterface, clientset, pollRate, pollCount)
+	runner.initialise(callback, ptpInterface, clientset, pollRate, pollCount, devInfoAnnouceRate)
 	runner.start()
 
 	// Use wg count to know if any collectors are running.

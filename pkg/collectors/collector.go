@@ -16,13 +16,14 @@ type Collector interface {
 	GetPollRate() float64                        // Returns the collectors polling rate
 }
 
-// A union of all values required to be passed into allconstructions
+// A union of all values required to be passed into all constuctions
 type CollectionConstructor struct {
-	Callback     callbacks.Callback
-	Clientset    *clients.Clientset
-	PTPInterface string
-	Msg          string
-	PollRate     float64
+	Callback           callbacks.Callback
+	Clientset          *clients.Clientset
+	PTPInterface       string
+	Msg                string
+	PollRate           float64
+	DevInfoAnnouceRate float64
 }
 
 type PollResult struct {
