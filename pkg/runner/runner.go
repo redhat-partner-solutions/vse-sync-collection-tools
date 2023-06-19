@@ -204,6 +204,8 @@ func (runner *CollectorRunner) Run(
 			log.Infof("Received %v", pollRes)
 			if len(pollRes.Errors) > 0 {
 				log.Warnf("Poll %s failed: %v", pollRes.CollectorName, pollRes.Errors)
+				// If erroredPolls blocks it could cause pollResults to fill and
+				// block the execution of the collectors.
 				runner.erroredPolls <- pollRes
 			}
 		default:

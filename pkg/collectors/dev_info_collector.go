@@ -46,15 +46,28 @@ func (ptpDev *DevInfoCollector) Start(key string) error {
 	return nil
 }
 
+// monitorErrored Polls will process errors placed on
+// the erredPolls and if required will populate requiresFetch
+//
+//	if it recives an error:
+//		if requiresFetch is empty a value will be inserted.
+//		if requiresFetch is not empty it will process errors in an attempt to clear any backlog.
+//			We do not want a backlog because if erroredPolls becomes full will block the main
+//			loop in runner.Run
 func (ptpDev *DevInfoCollector) monitorErroredPolls() {
 	for {
 		select {
 		case <-ptpDev.quit:
 			return
 		case <-ptpDev.erroredPolls:
-			ptpDev.requiresFetch <- true
+			// Without this there is a potental deadlock as blocking erroredPolls
+			// would eventually cause pollResults to block with would stop the collectors
+			// and the consumer of requiresFetch  is a collector.
+			if len(ptpDev.requiresFetch) == 0 {
+				ptpDev.requiresFetch <- true
+			}
 		default:
-			time.Sleep(time.Millisecond)
+			time.Sleep(time.Microsecond)
 		}
 	}
 }
@@ -146,7 +159,7 @@ func (constructor *CollectionConstructor) NewDevInfoCollector(erroredPolls chan 
 		devInfo:       &ptpDevInfo,
 		quit:          make(chan os.Signal),
 		erroredPolls:  erroredPolls,
-		requiresFetch: make(chan bool),
+		requiresFetch: make(chan bool, 1),
 	}
 
 	return &collector, nil
