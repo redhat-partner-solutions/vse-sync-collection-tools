@@ -65,7 +65,7 @@ func unmarshall(result map[string]string, pack interface{}) error {
 					f.SetString(res)
 				}
 			default:
-				return fmt.Errorf("fetcher unmarshal not implmented for type: %s", field.Type.Name())
+				return fmt.Errorf("fetcher unmarshal not implemented for type: %s", field.Type.Name())
 			}
 		}
 	}

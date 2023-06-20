@@ -150,27 +150,27 @@ func (ptpDev *PTPCollector) GetPollCount() int {
 	return int(atomic.LoadUint32(&ptpDev.count))
 }
 
-// Returns a new PTPCollector from the CollectionConstuctor Factory
+// Returns a new PTPCollector from the CollectionConstructor Factory
 // It will set the lastPoll one polling time in the past such that the initial
 // request to ShouldPoll should return True
-func (constuctor *CollectionConstuctor) NewPTPCollector() (*PTPCollector, error) {
-	ctx, err := clients.NewContainerContext(constuctor.Clientset, PTPNamespace, PodNamePrefix, PTPContainer)
+func (constructor *CollectionConstructor) NewPTPCollector() (*PTPCollector, error) {
+	ctx, err := clients.NewContainerContext(constructor.Clientset, PTPNamespace, PodNamePrefix, PTPContainer)
 	if err != nil {
 		return &PTPCollector{}, fmt.Errorf("could not create container context %w", err)
 	}
 
 	// Build DPPInfoFetcher ahead of time call to GetPTPDeviceInfo will build the other
-	err = devices.BuildPTPDeviceInfo(constuctor.PTPInterface)
+	err = devices.BuildPTPDeviceInfo(constructor.PTPInterface)
 	if err != nil {
 		return &PTPCollector{}, fmt.Errorf("failed to build fetcher for PTPDeviceInfo %w", err)
 	}
 
-	err = devices.BuildDPLLInfoFetcher(constuctor.PTPInterface)
+	err = devices.BuildDPLLInfoFetcher(constructor.PTPInterface)
 	if err != nil {
 		return &PTPCollector{}, fmt.Errorf("failed to build fetcher for DPLLInfo %w", err)
 	}
 
-	ptpDevInfo, err := devices.GetPTPDeviceInfo(constuctor.PTPInterface, ctx)
+	ptpDevInfo, err := devices.GetPTPDeviceInfo(constructor.PTPInterface, ctx)
 	if err != nil {
 		return &PTPCollector{}, fmt.Errorf("failed to fetch initial DeviceInfo %w", err)
 	}
@@ -179,11 +179,11 @@ func (constuctor *CollectionConstuctor) NewPTPCollector() (*PTPCollector, error)
 	}
 
 	collector := PTPCollector{
-		interfaceName: constuctor.PTPInterface,
+		interfaceName: constructor.PTPInterface,
 		ctx:           ctx,
 		DataTypes:     ptpCollectables,
 		running:       make(map[string]bool),
-		callback:      constuctor.Callback,
+		callback:      constructor.Callback,
 	}
 
 	return &collector, nil

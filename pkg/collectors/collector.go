@@ -15,8 +15,8 @@ type Collector interface {
 	GetPollCount() int                           // Returns the number of completed poll
 }
 
-// A union of all values required to be passed into all constuctions
-type CollectionConstuctor struct {
+// A union of all values required to be passed into allconstructions
+type CollectionConstructor struct {
 	Callback     callbacks.Callback
 	Clientset    *clients.Clientset
 	PTPInterface string

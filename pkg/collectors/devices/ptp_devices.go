@@ -85,14 +85,14 @@ func BuildPTPDeviceInfo(interfaceName string) error {
 func GetPTPDeviceInfo(interfaceName string, ctx clients.ContainerContext) (PTPDeviceInfo, error) {
 	devInfo := PTPDeviceInfo{}
 	// Find the dev for the GNSS for this interface
-	fetcherInst, fetchedInstaceOk := devFetcher[interfaceName]
-	if !fetchedInstaceOk {
+	fetcherInst, fetchedInstanceOk := devFetcher[interfaceName]
+	if !fetchedInstanceOk {
 		err := BuildPTPDeviceInfo(interfaceName)
 		if err != nil {
 			return devInfo, err
 		}
-		fetcherInst, fetchedInstaceOk = devFetcher[interfaceName]
-		if !fetchedInstaceOk {
+		fetcherInst, fetchedInstanceOk = devFetcher[interfaceName]
+		if !fetchedInstanceOk {
 			return devInfo, errors.New("failed to create fetcher for PTPDeviceInfo")
 		}
 	}
@@ -149,14 +149,14 @@ func BuildDPLLInfoFetcher(interfaceName string) error {
 // GetDevDPLLInfo returns the device DPLL info for an interface.
 func GetDevDPLLInfo(ctx clients.ContainerContext, interfaceName string) (DevDPLLInfo, error) {
 	dpllInfo := DevDPLLInfo{}
-	fetcherInst, fetchedInstaceOk := dpllFetcher[interfaceName]
-	if !fetchedInstaceOk {
+	fetcherInst, fetchedInstanceOk := dpllFetcher[interfaceName]
+	if !fetchedInstanceOk {
 		err := BuildDPLLInfoFetcher(interfaceName)
 		if err != nil {
 			return dpllInfo, err
 		}
-		fetcherInst, fetchedInstaceOk = dpllFetcher[interfaceName]
-		if !fetchedInstaceOk {
+		fetcherInst, fetchedInstanceOk = dpllFetcher[interfaceName]
+		if !fetchedInstanceOk {
 			return dpllInfo, errors.New("failed to create fetcher for DPLLInfo")
 		}
 	}

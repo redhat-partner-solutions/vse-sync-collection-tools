@@ -67,7 +67,7 @@ func NewCollectorRunner() *CollectorRunner {
 	}
 }
 
-// initialise will call the constuctor for each
+// initialise will call theconstructor for each
 // value in collector name, it will panic if a collector name is not known.
 func (runner *CollectorRunner) initialise(
 	callback callbacks.Callback,
@@ -79,23 +79,23 @@ func (runner *CollectorRunner) initialise(
 	runner.pollRate = pollRate
 	runner.pollCount = pollCount
 
-	constuctor := collectors.CollectionConstuctor{
+	constructor := collectors.CollectionConstructor{
 		Callback:     callback,
 		PTPInterface: ptpInterface,
 		Clientset:    clientset,
 		PollRate:     pollRate,
 	}
 
-	for _, constuctorName := range runner.collectorNames {
+	for _, constructorName := range runner.collectorNames {
 		var newCollector collectors.Collector
-		switch constuctorName {
+		switch constructorName {
 		case collectors.PTPCollectorName:
-			NewPTPCollector, err := constuctor.NewPTPCollector()
+			NewPTPCollector, err := constructor.NewPTPCollector()
 			utils.IfErrorPanic(err)
 			newCollector = NewPTPCollector
 			log.Debug("PTP Collector")
 		case collectors.GPSCollectorName:
-			NewGPSCollector, err := constuctor.NewGPSCollector()
+			NewGPSCollector, err := constructor.NewGPSCollector()
 			utils.IfErrorPanic(err)
 			newCollector = NewGPSCollector
 			log.Debug("PTP Collector")
@@ -104,7 +104,7 @@ func (runner *CollectorRunner) initialise(
 			panic("Unknown collector")
 		}
 		if newCollector != nil {
-			runner.collecterInstances[constuctorName] = &newCollector
+			runner.collecterInstances[constructorName] = &newCollector
 			log.Debugf("Added collector %T, %v", newCollector, newCollector)
 		}
 	}
