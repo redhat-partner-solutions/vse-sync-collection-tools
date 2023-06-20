@@ -43,6 +43,7 @@ type CollectorRunner struct {
 	devInfoAnnouceRate   float64
 	runningCollectorsWG  utils.WaitGroupCount
 	runningAnnouncersWG  utils.WaitGroupCount
+	onlyAnnouncers       bool
 }
 
 func NewCollectorRunner(selectedCollectors []string) *CollectorRunner {
@@ -53,6 +54,7 @@ func NewCollectorRunner(selectedCollectors []string) *CollectorRunner {
 		pollResults:          make(chan collectors.PollResult, pollResultsQueueSize),
 		erroredPolls:         make(chan collectors.PollResult, pollResultsQueueSize),
 		collectorQuitChannel: make(map[string]chan os.Signal, 1),
+		onlyAnnouncers:       false,
 	}
 }
 
@@ -110,13 +112,25 @@ func (runner *CollectorRunner) initialise(
 		}
 	}
 	log.Debugf("Collectors %v", runner.collectorInstances)
+	runner.setOnlyAnnouncers()
+}
+
+func (runner *CollectorRunner) setOnlyAnnouncers() {
+	onlyAnnouncers := true
+	for _, collector := range runner.collectorInstances {
+		if !collector.IsAnnouncer() {
+			onlyAnnouncers = false
+			break
+		}
+	}
+	runner.onlyAnnouncers = onlyAnnouncers
 }
 
 func (runner *CollectorRunner) shouldKeepPolling(
 	collector collectors.Collector,
 	runningPolls *utils.WaitGroupCount,
 ) bool {
-	if collector.IsAnnouncer() {
+	if collector.IsAnnouncer() && !runner.onlyAnnouncers {
 		return runner.runningCollectorsWG.GetCount() > 0
 	} else {
 		return runner.pollCount < 0 || (collector.GetPollCount()+runningPolls.GetCount()) <= runner.pollCount
@@ -219,7 +233,7 @@ func (runner *CollectorRunner) Run(
 	runner.start()
 
 	// Use wg count to know if any collectors are running.
-	for runner.runningCollectorsWG.GetCount() > 0 {
+	for (runner.runningCollectorsWG.GetCount() + runner.runningAnnouncersWG.GetCount()) > 0 {
 		log.Debugf("Main Loop ")
 		select {
 		case sig := <-runner.quit:
