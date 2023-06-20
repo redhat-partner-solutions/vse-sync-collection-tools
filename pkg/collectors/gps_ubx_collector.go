@@ -95,21 +95,21 @@ func (gps *GPSCollector) GetPollCount() int {
 	return int(atomic.LoadUint32(&gps.count))
 }
 
-// Returns a new PTPCollector from the CollectionConstuctor Factory
+// Returns a new PTPCollector from the CollectionConstructor Factory
 // It will set the lastPoll one polling time in the past such that the initial
 // request to ShouldPoll should return True
-func (constuctor *CollectionConstuctor) NewGPSCollector() (*GPSCollector, error) {
-	ctx, err := clients.NewContainerContext(constuctor.Clientset, PTPNamespace, PodNamePrefix, GPSContainer)
+func (constructor *CollectionConstructor) NewGPSCollector() (*GPSCollector, error) {
+	ctx, err := clients.NewContainerContext(constructor.Clientset, PTPNamespace, PodNamePrefix, GPSContainer)
 	if err != nil {
 		return &GPSCollector{}, fmt.Errorf("could not create container context %w", err)
 	}
 
 	collector := GPSCollector{
-		interfaceName: constuctor.PTPInterface,
+		interfaceName: constructor.PTPInterface,
 		ctx:           ctx,
 		DataTypes:     ubxCollectables,
 		running:       false,
-		callback:      constuctor.Callback,
+		callback:      constructor.Callback,
 	}
 
 	return &collector, nil

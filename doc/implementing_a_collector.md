@@ -19,7 +19,7 @@ type CollectionConstuctor struct {
 ...
 ```
 
-In `collectors/anouncement_collector.go` you should define your collector and a constuctor method on `CollectionConstuctor`
+In `collectors/anouncement_collector.go` you should define your collector and aconstructor method on `CollectionConstuctor`
 ```go
 package collectors
 
@@ -63,12 +63,12 @@ func (anouncer *AnouncementCollector) CleanUp(key string) error {
 }
 
 func (constuctor *CollectionConstuctor) NewAnouncementCollector() (*AnouncementCollector, error) {
-	anouncer := AnouncementCollector{callback: constuctor.Callback, msg: constuctor.Msg}
+	anouncer := AnouncementCollector{callback:constructor.Callback, msg:constructor.Msg}
 	return &anouncer, nil
 }
 
 ```
-In runner/runner.go Call the `NewAnouncementCollector` constuctor in the `initialise` method of CollectorRunner and append `"Anouncer"` to `collectorNames` in the `NewCollectorRunner` function.
+In runner/runner.go Call the `NewAnouncementCollector`constructor in the `initialise` method of CollectorRunner and append `"Anouncer"` to `collectorNames` in the `NewCollectorRunner` function.
 ```go
 func NewCollectorRunner() CollectorRunner {
 	...
@@ -78,12 +78,12 @@ func NewCollectorRunner() CollectorRunner {
 
 func (runner *CollectorRunner) initialise(...){
 	...
-	for _, constuctorName := range runner.collectorNames {
+	for _,constructorName := range runner.collectorNames {
 		var newCollector collectors.Collector
-		switch constuctorName {
+		switchconstructorName {
             ...
 		case "Anouncer": //nolint: goconst // This is just for ilustrative purposes
-			NewAnouncerCollector, err := constuctor.NewAnouncementCollector()
+			NewAnouncerCollector, err :=constructor.NewAnouncementCollector()
 			// Handle error...
             utils.IfErrorPanic(err)
 			newCollector = NewAnouncerCollector
