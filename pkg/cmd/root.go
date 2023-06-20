@@ -28,6 +28,7 @@ var (
 	outputFile         string
 	logLevel           string
 	useAnalyserJSON    bool
+	collectorNames     []string
 
 	// rootCmd represents the base command when called without any subcommands
 	rootCmd = &cobra.Command{
@@ -36,7 +37,7 @@ var (
 		Long:  `A monitoring tool for PTP related metrics.`,
 		Run: func(cmd *cobra.Command, args []string) {
 			logging.SetupLogging(logLevel, os.Stdout)
-			collectionRunner := runner.NewCollectorRunner()
+			collectionRunner := runner.NewCollectorRunner(collectorNames)
 			collectionRunner.Run(
 				kubeConfig,
 				outputFile,
@@ -59,7 +60,7 @@ func Execute() {
 	}
 }
 
-func init() {
+func init() { //nolint:funlen // Allow this to get a little long
 	rootCmd.PersistentFlags().StringVarP(&kubeConfig, "kubeconfig", "k", "", "Path to the kubeconfig file")
 	err := rootCmd.MarkPersistentFlagRequired("kubeconfig")
 	utils.IfErrorPanic(err)
@@ -105,5 +106,15 @@ func init() {
 		"j",
 		false,
 		"Output in a format to be used by analysers from vse-sync-pp",
+	)
+
+	defaultCollectorNames := make([]string, 0)
+	defaultCollectorNames = append(defaultCollectorNames, runner.All)
+	rootCmd.PersistentFlags().StringSliceVarP(
+		&collectorNames,
+		"collector",
+		"s",
+		defaultCollectorNames,
+		"the collectors you wish to run default is all",
 	)
 }
