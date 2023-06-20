@@ -3,7 +3,9 @@
 package utils
 
 import (
+	"errors"
 	"fmt"
+	"os"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -11,12 +13,41 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const (
+	// Exitcodes
+	Success int = iota
+	InvalidEnv
+)
+
 var (
 	Epoch = time.Unix(0, 0)
 )
 
-func IfErrorPanic(err error) {
-	if err != nil {
+type InvalidEnvError struct {
+	err error
+}
+
+func (err InvalidEnvError) Error() string {
+	return err.err.Error()
+}
+func (err InvalidEnvError) Unwrap() error {
+	return err.err
+}
+
+func NewInvalidEnvError(err error) *InvalidEnvError {
+	return &InvalidEnvError{err: err}
+}
+
+func IfErrorExitOrPanic(err error) {
+	if err == nil {
+		return
+	}
+
+	var invalidEnv *InvalidEnvError
+	if errors.As(err, &invalidEnv) {
+		log.Error(invalidEnv)
+		os.Exit(InvalidEnv)
+	} else {
 		log.Panic(err)
 	}
 }
