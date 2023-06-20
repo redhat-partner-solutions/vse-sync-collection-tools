@@ -15,6 +15,6 @@ import (
 func SetupLogging(logLevel string, out io.Writer) {
 	log.SetOutput(out)
 	level, err := log.ParseLevel(logLevel)
-	utils.IfErrorPanic(err)
+	utils.IfErrorExitOrPanic(err)
 	log.SetLevel(level)
 }
