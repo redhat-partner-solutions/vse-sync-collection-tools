@@ -47,7 +47,8 @@ func (inst *fetcher) AddCommand(cmdInst *clients.Cmd) {
 	inst.cmdGrp.AddCommand(cmdInst)
 }
 
-// unpack result dict into stuck passed as pack
+// unmarshall will populate the fields in `pack` with the values from `result` according to the fields`fetcherKey` tag.
+// fields with no `fetcherKey` tag will not be touched, and elements in `result` without a matched field will be ignored.
 func unmarshall(result map[string]string, pack interface{}) error {
 	val := reflect.ValueOf(pack)
 	typ := reflect.TypeOf(pack)
