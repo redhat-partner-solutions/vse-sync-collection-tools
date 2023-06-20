@@ -60,14 +60,12 @@ func GetCollectorsToRun(selectedCollectors []string) []string {
 			log.Errorf("Unknown collector %s. Ignored", name)
 		}
 	}
-
 	missingCollectors := make([]string, 0)
 	for _, requiredName := range requiredCollectorNames {
 		if !isIn(requiredName, collectorNames) {
 			missingCollectors = append(missingCollectors, requiredName)
 		}
 	}
-
 	if len(missingCollectors) > 0 {
 		log.Warnf(
 			"The following required collectors were missing %s. They will be added",
