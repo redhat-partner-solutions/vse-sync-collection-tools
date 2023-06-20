@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	GPSCollectorName = "GPS-UBX"
+	GPSCollectorName = "GNSS"
 	gpsNavKey        = "gpsNav"
 	GPSContainer     = "gpsd"
 )
