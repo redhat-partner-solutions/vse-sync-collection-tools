@@ -129,9 +129,17 @@ func (ptpDev *DevInfoCollector) GetPollCount() int {
 
 func verify(ptpDevInfo *devices.PTPDeviceInfo) error {
 	if ptpDevInfo.VendorID != VendorIntel || ptpDevInfo.DeviceID != DeviceE810 {
-		return fmt.Errorf("NIC device is not based on E810")
+		return &InvalidEnvError{msg: fmt.Errorf("NIC device is not based on E810").Error()}
 	}
 	return nil
+}
+
+type InvalidEnvError struct {
+	msg string
+}
+
+func (err InvalidEnvError) Error() string {
+	return err.msg
 }
 
 // Returns a new DevInfoCollector from the CollectionConstuctor Factory
@@ -156,9 +164,13 @@ func (constructor *CollectionConstructor) NewDevInfoCollector(erroredPolls chan 
 	if err != nil {
 		callbackErr := constructor.Callback.Call(&ptpDevInfo, DeviceInfo)
 		if callbackErr != nil {
-			return &DevInfoCollector{}, fmt.Errorf("callback failed %s %w", callbackErr.Error(), err)
+			return &DevInfoCollector{}, &InvalidEnvError{
+				msg: fmt.Errorf("callback failed %s %w", callbackErr.Error(), err).Error(),
+			}
 		}
-		return &DevInfoCollector{}, fmt.Errorf("failed to verify environment %w", err)
+		return &DevInfoCollector{}, &InvalidEnvError{
+			msg: fmt.Errorf("failed to verify environment %w", err).Error(),
+		}
 	}
 
 	collector := DevInfoCollector{

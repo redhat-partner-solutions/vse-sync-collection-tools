@@ -3,6 +3,7 @@
 package runner
 
 import (
+	"errors"
 	"os"
 	"os/signal"
 	"syscall"
@@ -17,6 +18,7 @@ import (
 )
 
 const (
+	invalidEnvExitCode        = 2
 	maxConnsecutivePollErrors = 1800
 	pollResultsQueueSize      = 10
 )
@@ -98,6 +100,13 @@ func (runner *CollectorRunner) initialise(
 
 		case collectors.DevInfoCollectorName:
 			NewDevInfCollector, err := constructor.NewDevInfoCollector(runner.erroredPolls)
+			var invalidEnv *collectors.InvalidEnvError
+			log.Debugf("is env invalid %v, %v", errors.As(err, &invalidEnv), err)
+			if errors.As(err, &invalidEnv) {
+				log.Error(invalidEnv)
+				os.Exit(invalidEnvExitCode)
+				return
+			}
 			utils.IfErrorPanic(err)
 			newCollector = NewDevInfCollector
 			log.Debug("DPLL Collector")
