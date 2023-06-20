@@ -3,7 +3,6 @@
 package runner
 
 import (
-	"errors"
 	"os"
 	"os/signal"
 	"syscall"
@@ -18,9 +17,7 @@ import (
 )
 
 const (
-	invalidEnvExitCode        = 2
-	maxConnsecutivePollErrors = 1800
-	pollResultsQueueSize      = 10
+	pollResultsQueueSize = 10
 )
 
 // getQuitChannel creates and returns a channel for notifying
@@ -94,25 +91,18 @@ func (runner *CollectorRunner) initialise(
 		switch constructorName {
 		case collectors.DPLLCollectorName:
 			NewDPLLCollector, err := constructor.NewDPLLCollector()
-			utils.IfErrorPanic(err)
+			utils.IfErrorExitOrPanic(err)
 			newCollector = NewDPLLCollector
 			log.Debug("DPLL Collector")
 
 		case collectors.DevInfoCollectorName:
 			NewDevInfCollector, err := constructor.NewDevInfoCollector(runner.erroredPolls)
-			var invalidEnv *collectors.InvalidEnvError
-			log.Debugf("is env invalid %v, %v", errors.As(err, &invalidEnv), err)
-			if errors.As(err, &invalidEnv) {
-				log.Error(invalidEnv)
-				os.Exit(invalidEnvExitCode)
-				return
-			}
-			utils.IfErrorPanic(err)
+			utils.IfErrorExitOrPanic(err)
 			newCollector = NewDevInfCollector
 			log.Debug("DPLL Collector")
 		case collectors.GPSCollectorName:
 			NewGPSCollector, err := constructor.NewGPSCollector()
-			utils.IfErrorPanic(err)
+			utils.IfErrorExitOrPanic(err)
 			newCollector = NewGPSCollector
 			log.Debug("GPS Collector")
 		default:
@@ -176,7 +166,7 @@ func (runner *CollectorRunner) start() {
 	for collectorName, collector := range runner.collecterInstances {
 		log.Debugf("start collector %v", collector)
 		err := collector.Start(collectors.All)
-		utils.IfErrorPanic(err)
+		utils.IfErrorExitOrPanic(err)
 
 		log.Debugf("Spawning  collector: %v", collector)
 		collectorName := collectorName
@@ -199,7 +189,7 @@ func (runner *CollectorRunner) cleanUpAll() {
 	for collectorName, collector := range runner.collecterInstances {
 		log.Debugf("cleanup %s", collectorName)
 		err := collector.CleanUp(collectors.All)
-		utils.IfErrorPanic(err)
+		utils.IfErrorExitOrPanic(err)
 	}
 }
 
@@ -224,7 +214,7 @@ func (runner *CollectorRunner) Run(
 	}
 
 	callback, err := callbacks.SetupCallback(outputFile, outputFormat)
-	utils.IfErrorPanic(err)
+	utils.IfErrorExitOrPanic(err)
 	runner.initialise(callback, ptpInterface, clientset, pollRate, pollCount, devInfoAnnouceRate)
 	runner.start()
 
@@ -255,5 +245,5 @@ func (runner *CollectorRunner) Run(
 	log.Info("Doing Cleanup")
 	runner.cleanUpAll()
 	err = callback.CleanUp()
-	utils.IfErrorPanic(err)
+	utils.IfErrorExitOrPanic(err)
 }

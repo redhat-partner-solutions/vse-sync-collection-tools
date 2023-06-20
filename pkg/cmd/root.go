@@ -62,11 +62,11 @@ func Execute() {
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&kubeConfig, "kubeconfig", "k", "", "Path to the kubeconfig file")
 	err := rootCmd.MarkPersistentFlagRequired("kubeconfig")
-	utils.IfErrorPanic(err)
+	utils.IfErrorExitOrPanic(err)
 
 	rootCmd.PersistentFlags().StringVarP(&ptpInterface, "interface", "i", "", "Name of the PTP interface")
 	err = rootCmd.MarkPersistentFlagRequired("interface")
-	utils.IfErrorPanic(err)
+	utils.IfErrorExitOrPanic(err)
 
 	rootCmd.PersistentFlags().IntVarP(
 		&pollCount,
