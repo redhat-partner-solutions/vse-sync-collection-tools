@@ -45,17 +45,10 @@ type CollectorRunner struct {
 	runningAnnouncersWG  utils.WaitGroupCount
 }
 
-func NewCollectorRunner() *CollectorRunner {
-	collectorNames := make([]string, 0)
-	collectorNames = append(
-		collectorNames,
-		collectors.DevInfoCollectorName,
-		collectors.DPLLCollectorName,
-		collectors.GPSCollectorName,
-	)
+func NewCollectorRunner(selectedCollectors []string) *CollectorRunner {
 	return &CollectorRunner{
 		collectorInstances:   make(map[string]collectors.Collector),
-		collectorNames:       collectorNames,
+		collectorNames:       GetCollectorsToRun(selectedCollectors),
 		quit:                 getQuitChannel(),
 		pollResults:          make(chan collectors.PollResult, pollResultsQueueSize),
 		erroredPolls:         make(chan collectors.PollResult, pollResultsQueueSize),
