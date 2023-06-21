@@ -43,7 +43,7 @@ func (dpll *DPLLCollector) Start(key string) error {
 	case All, DPLLInfo:
 		dpll.running = true
 	default:
-		return fmt.Errorf("key %s is not a colletable of %T", key, dpll)
+		return fmt.Errorf("key %s is not a collectable of %T", key, dpll)
 	}
 	return nil
 }
@@ -82,7 +82,7 @@ func (dpll *DPLLCollector) CleanUp(key string) error {
 	case All, DPLLInfo:
 		dpll.running = false
 	default:
-		return fmt.Errorf("key %s is not a colletable of %T", key, dpll)
+		return fmt.Errorf("key %s is not a collectable of %T", key, dpll)
 	}
 	return nil
 }

@@ -44,7 +44,7 @@ func (gps *GPSCollector) Start(key string) error {
 	case All, gpsNavKey:
 		gps.running = true
 	default:
-		return fmt.Errorf("key %s is not a colletable of %T", key, gps)
+		return fmt.Errorf("key %s is not a collectable of %T", key, gps)
 	}
 	return nil
 }
@@ -87,7 +87,7 @@ func (gps *GPSCollector) CleanUp(key string) error {
 	case All, gpsNavKey:
 		gps.running = false
 	default:
-		return fmt.Errorf("key %s is not a colletable of %T", key, gps)
+		return fmt.Errorf("key %s is not a collectable of %T", key, gps)
 	}
 	return nil
 }

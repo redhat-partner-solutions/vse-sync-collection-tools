@@ -52,7 +52,7 @@ func (ptpDev *DevInfoCollector) Start(key string) error {
 		ptpDev.running = true
 		go ptpDev.monitorErroredPolls()
 	default:
-		return fmt.Errorf("key %s is not a colletable of %T", key, ptpDev)
+		return fmt.Errorf("key %s is not a collectable of %T", key, ptpDev)
 	}
 	return nil
 }
@@ -129,7 +129,7 @@ func (ptpDev *DevInfoCollector) CleanUp(key string) error {
 		ptpDev.quit <- os.Kill
 		ptpDev.wg.Wait()
 	default:
-		return fmt.Errorf("key %s is not a colletable of %T", key, ptpDev)
+		return fmt.Errorf("key %s is not a collectable of %T", key, ptpDev)
 	}
 	return nil
 }
