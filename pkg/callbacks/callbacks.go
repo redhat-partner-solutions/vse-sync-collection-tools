@@ -59,27 +59,41 @@ func getLine(c Callback, output OutputType, tag string) ([]byte, error) {
 	}
 }
 
-// SetupCallback if filename is empty or "-" it will output to stdout otherwise it will
+// Returns the filehandle for callback
+// if filename is empty or "-" it will output to stdout otherwise it will
 // write to a file of the given name
-func SetupCallback(filename string, format OutputFormat) (FileCallBack, error) {
+func GetFileHandle(filename string) (io.WriteCloser, error) {
 	var (
 		fileHandle io.WriteCloser
-		err        error
 	)
-
 	if filename == "-" || filename == "" {
 		fileHandle = os.Stdout
 	} else {
-		fileHandle, err = os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, logFilePermissions)
+		fileHandle, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, logFilePermissions)
 		if err != nil {
-			return FileCallBack{}, fmt.Errorf("failed to open file: %w", err)
+			return fileHandle, fmt.Errorf("failed to open file: %w", err)
 		}
 	}
-	return FileCallBack{FileHandle: fileHandle, format: format}, nil
+	return fileHandle, nil
+}
+
+func NewFileCallback(fileHandle io.WriteCloser, format OutputFormat) FileCallBack {
+	return FileCallBack{fileHandle: fileHandle, format: format}
+}
+
+// SetupCallback returns a FileCallback
+// if filename is empty or "-" it will output to stdout otherwise it will
+// write to a file of the given name
+func SetupCallback(filename string, format OutputFormat) (FileCallBack, error) {
+	fileHandle, err := GetFileHandle(filename)
+	if err != nil {
+		return FileCallBack{}, err
+	}
+	return NewFileCallback(fileHandle, format), nil
 }
 
 type FileCallBack struct {
-	FileHandle io.WriteCloser
+	fileHandle io.WriteCloser
 	format     OutputFormat
 }
 
@@ -89,7 +103,7 @@ func (c FileCallBack) Call(output OutputType, tag string) error {
 		return err
 	}
 	line = append(line, []byte("\n")...)
-	_, err = c.FileHandle.Write(line)
+	_, err = c.fileHandle.Write(line)
 	if err != nil {
 		return fmt.Errorf("failed to write to file in callback: %w", err)
 	}
@@ -101,7 +115,7 @@ func (c FileCallBack) getFormat() OutputFormat {
 }
 
 func (c FileCallBack) CleanUp() error {
-	err := c.FileHandle.Close()
+	err := c.fileHandle.Close()
 	if err != nil {
 		return fmt.Errorf("failed to close file handle in callback: %w", err)
 	}
