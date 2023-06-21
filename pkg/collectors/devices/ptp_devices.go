@@ -3,7 +3,6 @@
 package devices
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -25,8 +24,8 @@ type PTPDeviceInfo struct {
 }
 
 // AnalyserJSON returns the json expected by the analysers
-func (ptpDevInfo *PTPDeviceInfo) AnalyserJSON() ([]byte, error) {
-	line, err := json.Marshal(&callbacks.AnalyserFormatType{
+func (ptpDevInfo *PTPDeviceInfo) GetAnalyserFormat() (*callbacks.AnalyserFormatType, error) {
+	formatted := callbacks.AnalyserFormatType{
 		ID: "devInfo",
 		Data: []string{
 			ptpDevInfo.Timestamp,
@@ -34,11 +33,8 @@ func (ptpDevInfo *PTPDeviceInfo) AnalyserJSON() ([]byte, error) {
 			ptpDevInfo.DeviceID,
 			ptpDevInfo.GNSSDev,
 		},
-	})
-	if err != nil {
-		return []byte{}, fmt.Errorf("failed to marshal Analyser format for ptpDevInfo %w", err)
 	}
-	return line, nil
+	return &formatted, nil
 }
 
 type DevDPLLInfo struct {
@@ -49,12 +45,12 @@ type DevDPLLInfo struct {
 }
 
 // AnalyserJSON returns the json expected by the analysers
-func (dpllInfo *DevDPLLInfo) AnalyserJSON() ([]byte, error) {
+func (dpllInfo *DevDPLLInfo) GetAnalyserFormat() (*callbacks.AnalyserFormatType, error) {
 	offset, err := strconv.ParseFloat(dpllInfo.PPSOffset, 32)
 	if err != nil {
-		return []byte{}, fmt.Errorf("failed converting PPSOffset %w", err)
+		return &callbacks.AnalyserFormatType{}, fmt.Errorf("failed converting PPSOffset %w", err)
 	}
-	line, err := json.Marshal(&callbacks.AnalyserFormatType{
+	formatted := callbacks.AnalyserFormatType{
 		ID: "dpll/time-error",
 		Data: []string{
 			dpllInfo.Timestamp,
@@ -62,11 +58,8 @@ func (dpllInfo *DevDPLLInfo) AnalyserJSON() ([]byte, error) {
 			dpllInfo.PPSState,
 			fmt.Sprintf("%f", offset/unitConversionFactor),
 		},
-	})
-	if err != nil {
-		return []byte{}, fmt.Errorf("failed to marshal Analyser format for dpllInfo %w", err)
 	}
-	return line, nil
+	return &formatted, nil
 }
 
 const (

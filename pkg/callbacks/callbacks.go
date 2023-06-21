@@ -33,7 +33,7 @@ type AnalyserFormatType struct {
 }
 
 type OutputType interface {
-	AnalyserJSON() ([]byte, error)
+	GetAnalyserFormat() (*AnalyserFormatType, error)
 }
 
 func getLine(c Callback, output OutputType, tag string) ([]byte, error) {
@@ -45,9 +45,13 @@ func getLine(c Callback, output OutputType, tag string) ([]byte, error) {
 		}
 		return []byte(fmt.Sprintf("%T:%s, %s", output, tag, line)), nil
 	case AnalyserJSON:
-		line, err := output.AnalyserJSON()
+		analyserFormat, err := output.GetAnalyserFormat()
 		if err != nil {
-			return []byte{}, fmt.Errorf("failed to get AnalyserJSON output %w", err)
+			return []byte{}, fmt.Errorf("failed to get AnalyserFormat %w", err)
+		}
+		line, err := json.Marshal(analyserFormat)
+		if err != nil {
+			return []byte{}, fmt.Errorf("failed to marshal AnalyserFormat for %s %w", tag, err)
 		}
 		return line, nil
 	default:
