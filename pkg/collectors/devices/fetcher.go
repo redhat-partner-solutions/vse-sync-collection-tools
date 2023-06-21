@@ -40,7 +40,7 @@ func (inst *fetcher) AddNewCommand(key, cmd string, trim bool) error {
 		return fmt.Errorf("add fetcher cmd failed %w", err)
 	}
 	if trim {
-		cmdInst.SetCleanupFunc(TrimSpace)
+		cmdInst.SetOutputProcessor(TrimSpace)
 	}
 	inst.cmdGrp.AddCommand(cmdInst)
 	return nil

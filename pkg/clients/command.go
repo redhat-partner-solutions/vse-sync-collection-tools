@@ -15,13 +15,13 @@ type Cmder interface {
 }
 
 type Cmd struct {
-	key         string
-	prefix      string
-	suffix      string
-	cmd         string
-	cleanupFunc func(string) (string, error)
-	regex       *regexp.Regexp
-	fullCmd     string
+	key             string
+	prefix          string
+	suffix          string
+	cmd             string
+	outputProcessor func(string) (string, error)
+	regex           *regexp.Regexp
+	fullCmd         string
 }
 
 func NewCmd(key, cmd string) (*Cmd, error) {
@@ -47,8 +47,8 @@ func NewCmd(key, cmd string) (*Cmd, error) {
 	return &cmdInstance, nil
 }
 
-func (c *Cmd) SetCleanupFunc(f func(string) (string, error)) {
-	c.cleanupFunc = f
+func (c *Cmd) SetOutputProcessor(f func(string) (string, error)) {
+	c.outputProcessor = f
 }
 
 func (c *Cmd) GetCommand() string {
@@ -64,8 +64,8 @@ func (c *Cmd) ExtractResult(s string) (map[string]string, error) {
 	if len(match) > 0 {
 		value := match[1]
 
-		if c.cleanupFunc != nil {
-			cleanValue, err := c.cleanupFunc(match[1])
+		if c.outputProcessor != nil {
+			cleanValue, err := c.outputProcessor(match[1])
 			if err != nil {
 				return result, fmt.Errorf("failed to cleanup value %s of key %s", match[1], c.key)
 			}

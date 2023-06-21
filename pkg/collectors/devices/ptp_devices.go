@@ -88,7 +88,7 @@ func init() {
 	}
 
 	devDateCmd = devDateCmdInst
-	devDateCmd.SetCleanupFunc(TrimSpace)
+	devDateCmd.SetOutputProcessor(TrimSpace)
 
 	dpllFetcher = make(map[string]*fetcher)
 	dpplDateCmdInst, err := clients.NewCmd("date", "date +%s.%N")
@@ -96,7 +96,7 @@ func init() {
 		panic(err)
 	}
 	dpplDateCmd = dpplDateCmdInst
-	dpplDateCmd.SetCleanupFunc(formatTimestampAsRFC3339Nano)
+	dpplDateCmd.SetOutputProcessor(formatTimestampAsRFC3339Nano)
 }
 
 func formatTimestampAsRFC3339Nano(s string) (string, error) {
