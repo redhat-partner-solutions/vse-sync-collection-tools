@@ -44,16 +44,10 @@ func (ptpDev *DevInfoCollector) IsAnnouncer() bool {
 	return true
 }
 
-// Start will add the key to the running pieces of data
-// to be collects when polled
-func (ptpDev *DevInfoCollector) Start(key string) error {
-	switch key {
-	case All, DeviceInfo:
-		ptpDev.running = true
-		go ptpDev.monitorErroredPolls()
-	default:
-		return fmt.Errorf("key %s is not a collectable of %T", key, ptpDev)
-	}
+// Start sets up the collector so it is ready to be polled
+func (ptpDev *DevInfoCollector) Start() error {
+	ptpDev.running = true
+	go ptpDev.monitorErroredPolls()
 	return nil
 }
 
@@ -122,15 +116,10 @@ func (ptpDev *DevInfoCollector) Poll(resultsChan chan PollResult, wg *utils.Wait
 }
 
 // CleanUp stops a running collector
-func (ptpDev *DevInfoCollector) CleanUp(key string) error {
-	switch key {
-	case All, DeviceInfo:
-		ptpDev.running = false
-		ptpDev.quit <- os.Kill
-		ptpDev.wg.Wait()
-	default:
-		return fmt.Errorf("key %s is not a collectable of %T", key, ptpDev)
-	}
+func (ptpDev *DevInfoCollector) CleanUp() error {
+	ptpDev.running = false
+	ptpDev.quit <- os.Kill
+	ptpDev.wg.Wait()
 	return nil
 }
 

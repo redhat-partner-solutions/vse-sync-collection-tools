@@ -15,14 +15,12 @@ import (
 var (
 	GPSCollectorName = "GPS-UBX"
 	gpsNavKey        = "gpsNav"
-	ubxCollectables  = [1]string{gpsNavKey}
 	GPSContainer     = "gpsd"
 )
 
 type GPSCollector struct {
 	callback      callbacks.Callback
 	ctx           clients.ContainerContext
-	DataTypes     [1]string
 	interfaceName string
 	running       bool
 	count         uint32
@@ -37,15 +35,9 @@ func (gps *GPSCollector) IsAnnouncer() bool {
 	return false
 }
 
-// Start will add the key to the running pieces of data
-// to be collects when polled
-func (gps *GPSCollector) Start(key string) error {
-	switch key {
-	case All, gpsNavKey:
-		gps.running = true
-	default:
-		return fmt.Errorf("key %s is not a collectable of %T", key, gps)
-	}
+// Start sets up the collector so it is ready to be polled
+func (gps *GPSCollector) Start() error {
+	gps.running = true
 	return nil
 }
 
@@ -82,13 +74,8 @@ func (gps *GPSCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCo
 }
 
 // CleanUp stops a running collector
-func (gps *GPSCollector) CleanUp(key string) error {
-	switch key {
-	case All, gpsNavKey:
-		gps.running = false
-	default:
-		return fmt.Errorf("key %s is not a collectable of %T", key, gps)
-	}
+func (gps *GPSCollector) CleanUp() error {
+	gps.running = false
 	return nil
 }
 
@@ -108,7 +95,6 @@ func (constructor *CollectionConstructor) NewGPSCollector() (*GPSCollector, erro
 	collector := GPSCollector{
 		interfaceName: constructor.PTPInterface,
 		ctx:           ctx,
-		DataTypes:     ubxCollectables,
 		running:       false,
 		callback:      constructor.Callback,
 		pollRate:      constructor.PollRate,

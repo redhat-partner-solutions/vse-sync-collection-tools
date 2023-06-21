@@ -36,15 +36,9 @@ func (dpll *DPLLCollector) IsAnnouncer() bool {
 	return false
 }
 
-// Start will add the key to the running pieces of data
-// to be collects when polled
-func (dpll *DPLLCollector) Start(key string) error {
-	switch key {
-	case All, DPLLInfo:
-		dpll.running = true
-	default:
-		return fmt.Errorf("key %s is not a collectable of %T", key, dpll)
-	}
+// Start sets up the collector so it is ready to be polled
+func (dpll *DPLLCollector) Start() error {
+	dpll.running = true
 	return nil
 }
 
@@ -77,13 +71,8 @@ func (dpll *DPLLCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroup
 }
 
 // CleanUp stops a running collector
-func (dpll *DPLLCollector) CleanUp(key string) error {
-	switch key {
-	case All, DPLLInfo:
-		dpll.running = false
-	default:
-		return fmt.Errorf("key %s is not a collectable of %T", key, dpll)
-	}
+func (dpll *DPLLCollector) CleanUp() error {
+	dpll.running = false
 	return nil
 }
 
