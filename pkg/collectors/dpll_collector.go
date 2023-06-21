@@ -32,7 +32,7 @@ func (dpll *DPLLCollector) GetPollRate() float64 {
 	return dpll.pollRate
 }
 
-func (dpll *DPLLCollector) IsAnouncer() bool {
+func (dpll *DPLLCollector) IsAnnouncer() bool {
 	return false
 }
 
