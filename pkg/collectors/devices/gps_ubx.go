@@ -3,7 +3,6 @@
 package devices
 
 import (
-	"encoding/json"
 	"fmt"
 	"regexp"
 	"time"
@@ -23,19 +22,16 @@ type GPSNav struct {
 	FreqAcc         string `json:"freqAcc" fetcherKey:"freqAcc"`
 }
 
-func (gpsNav *GPSNav) AnalyserJSON() ([]byte, error) {
-	line, err := json.Marshal(&callbacks.AnalyserFormatType{
+func (gpsNav *GPSNav) GetAnalyserFormat() (*callbacks.AnalyserFormatType, error) {
+	formatted := callbacks.AnalyserFormatType{
 		ID: "gnss/time-error",
 		Data: []string{
 			gpsNav.TimestampClock,
 			gpsNav.GPSFix,
 			gpsNav.TimeAcc,
 		},
-	})
-	if err != nil {
-		return []byte{}, fmt.Errorf("failed to marshal Analyser format for gpsNav %w", err)
 	}
-	return line, nil
+	return &formatted, nil
 }
 
 var (
