@@ -164,7 +164,7 @@ func (runner *CollectorRunner) poller(
 func (runner *CollectorRunner) start() {
 	for collectorName, collector := range runner.collecterInstances {
 		log.Debugf("start collector %v", collector)
-		err := (*collector).Start(collectors.All)
+		err := (*collector).Start()
 		utils.IfErrorPanic(err)
 
 		log.Debugf("Spawning  collector: %v", collector)
@@ -187,7 +187,7 @@ func (runner *CollectorRunner) start() {
 func (runner *CollectorRunner) cleanUpAll() {
 	for collectorName, collector := range runner.collecterInstances {
 		log.Debugf("cleanup %s", collectorName)
-		err := (*collector).CleanUp(collectors.All)
+		err := (*collector).CleanUp()
 		utils.IfErrorPanic(err)
 	}
 }
