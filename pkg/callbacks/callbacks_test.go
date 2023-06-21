@@ -30,25 +30,51 @@ func (t *testFile) Close() error {
 	return errors.New("File is already closed") // TODO look up actual errors
 }
 
+type testOutputType struct {
+	Msg string `json:"msg"`
+	// responder func() (*callbacks.AnalyserFormatType, error)
+}
+
+func (t *testOutputType) GetAnalyserFormat() (*callbacks.AnalyserFormatType, error) {
+	fomatted := callbacks.AnalyserFormatType{
+		ID:   "testOutput",
+		Data: []string{"Hello"},
+	}
+	return &fomatted, nil
+}
+
 var _ = Describe("Callbacks", func() {
 	var mockedFile *testFile
-	var callback *callbacks.FileCallBack
 
 	BeforeEach(func() {
 		mockedFile = NewTestFile()
-		callback = &callbacks.FileCallBack{FileHandle: mockedFile}
 	})
 
-	// When("A FileCallback is called", func() {
-	// 	It("should write to the file", func() {
-	// 		err := callback.Call("Test", "Nothing", "This is a test line")
-	// 		Expect(err).NotTo(HaveOccurred())
-	// 		Expect(mockedFile.ReadString('\n')).To(ContainSubstring("This is a test line"))
-	// 	})
-	// })
-
+	When("Raw FileCallback is called", func() {
+		It("should write to the file", func() {
+			callback := callbacks.NewFileCallback(mockedFile, callbacks.Raw)
+			out := testOutputType{
+				Msg: "This is a test line",
+			}
+			err := callback.Call(&out, "testOut")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(mockedFile.ReadString('\n')).To(ContainSubstring("This is a test line"))
+		})
+	})
+	When("JSON FileCallback is called", func() {
+		It("should write to the file", func() {
+			callback := callbacks.NewFileCallback(mockedFile, callbacks.AnalyserJSON)
+			out := testOutputType{
+				Msg: "This is a test line",
+			}
+			err := callback.Call(&out, "testOut")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(mockedFile.ReadString('\n')).To(Equal("{\"id\":\"testOutput\",\"data\":[\"Hello\"]}\n"))
+		})
+	})
 	When("A FileCallback is cleaned up", func() {
 		It("should close the file", func() {
+			callback := callbacks.NewFileCallback(mockedFile, callbacks.Raw)
 			err := callback.CleanUp()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(mockedFile.open).To(BeFalse())
