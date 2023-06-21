@@ -40,7 +40,7 @@ func (ptpDev *DevInfoCollector) GetPollRate() float64 {
 	return ptpDev.pollRate
 }
 
-func (ptpDev *DevInfoCollector) IsAnouncer() bool {
+func (ptpDev *DevInfoCollector) IsAnnouncer() bool {
 	return true
 }
 

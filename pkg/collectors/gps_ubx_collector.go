@@ -33,7 +33,7 @@ func (gps *GPSCollector) GetPollRate() float64 {
 	return gps.pollRate
 }
 
-func (gps *GPSCollector) IsAnouncer() bool {
+func (gps *GPSCollector) IsAnnouncer() bool {
 	return false
 }
 

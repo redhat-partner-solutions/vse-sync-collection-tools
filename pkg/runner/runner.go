@@ -41,7 +41,7 @@ type CollectorRunner struct {
 	pollRate             float64
 	devInfoAnnouceRate   float64
 	runningCollectorsWG  utils.WaitGroupCount
-	runningAnouncersWG   utils.WaitGroupCount
+	runningAnnouncersWG  utils.WaitGroupCount
 }
 
 func NewCollectorRunner() *CollectorRunner {
@@ -120,7 +120,7 @@ func (runner *CollectorRunner) shouldKeepPolling(
 	collector collectors.Collector,
 	runningPolls *utils.WaitGroupCount,
 ) bool {
-	if collector.IsAnouncer() {
+	if collector.IsAnnouncer() {
 		return runner.runningCollectorsWG.GetCount() > 0
 	} else {
 		return runner.pollCount < 0 || (collector.GetPollCount()+runningPolls.GetCount()) <= runner.pollCount
@@ -171,10 +171,10 @@ func (runner *CollectorRunner) start() {
 		collectorName := collectorName
 		collector := collector
 		quit := make(chan os.Signal, 1)
-		if (*collector).IsAnouncer() {
+		if (*collector).IsAnnouncer() {
 			runner.collectorQuitChannel[collectorName] = quit
-			runner.runningAnouncersWG.Add(1)
-			go runner.poller(collectorName, (*collector), quit, &runner.runningAnouncersWG)
+			runner.runningAnnouncersWG.Add(1)
+			go runner.poller(collectorName, (*collector), quit, &runner.runningAnnouncersWG)
 		} else {
 			runner.collectorQuitChannel[collectorName] = quit
 			runner.runningCollectorsWG.Add(1)
@@ -229,7 +229,7 @@ func (runner *CollectorRunner) Run(
 				quit <- sig
 			}
 			runner.runningCollectorsWG.Wait()
-			runner.runningAnouncersWG.Wait()
+			runner.runningAnnouncersWG.Wait()
 		case pollRes := <-runner.pollResults:
 			log.Infof("Received %v", pollRes)
 			if len(pollRes.Errors) > 0 {
