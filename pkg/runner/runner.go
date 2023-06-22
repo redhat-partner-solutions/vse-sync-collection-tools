@@ -17,6 +17,7 @@ import (
 )
 
 const (
+	maxRunningPolls           = 3
 	maxConnsecutivePollErrors = 1800
 	pollResultsQueueSize      = 10
 )
@@ -140,6 +141,11 @@ func (runner *CollectorRunner) poller(
 	runningPolls := utils.WaitGroupCount{}
 	log.Debugf("Collector with poll rate %f wait time %f", pollRate, inversePollRate)
 	for runner.shouldKeepPolling(collector, &runningPolls) {
+		// If pollResults were to block we do not want to keep spawning polls
+		// so we shouldn't allow too many polls to be running simultaneously
+		if runningPolls.GetCount() >= maxRunningPolls {
+			runningPolls.Wait()
+		}
 		log.Debugf("Collector GoRoutine: %s", collectorName)
 		select {
 		case <-quit:
