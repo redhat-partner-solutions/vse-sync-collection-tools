@@ -17,7 +17,11 @@ var (
 )
 
 func init() {
-	OptionalCollectorNames = []string{collectors.DPLLCollectorName, collectors.GPSCollectorName}
+	OptionalCollectorNames = []string{
+		collectors.DPLLCollectorName,
+		collectors.GPSCollectorName,
+		collectors.PMCCollectorName,
+	}
 	RequiredCollectorNames = []string{collectors.DevInfoCollectorName}
 }
 
