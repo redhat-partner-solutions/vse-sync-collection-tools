@@ -36,7 +36,7 @@ type CollectorRunner struct {
 	collectorQuitChannel map[string]chan os.Signal
 	pollResults          chan collectors.PollResult
 	erroredPolls         chan collectors.PollResult
-	collecterInstances   map[string]collectors.Collector
+	collectorInstances   map[string]collectors.Collector
 	collectorNames       []string
 	pollCount            int
 	pollRate             float64
@@ -54,7 +54,7 @@ func NewCollectorRunner() *CollectorRunner {
 		collectors.GPSCollectorName,
 	)
 	return &CollectorRunner{
-		collecterInstances:   make(map[string]collectors.Collector),
+		collectorInstances:   make(map[string]collectors.Collector),
 		collectorNames:       collectorNames,
 		quit:                 getQuitChannel(),
 		pollResults:          make(chan collectors.PollResult, pollResultsQueueSize),
@@ -112,11 +112,11 @@ func (runner *CollectorRunner) initialise(
 			log.Errorf("Unknown collector %s", constructorName)
 		}
 		if newInstance {
-			runner.collecterInstances[constructorName] = newCollector
+			runner.collectorInstances[constructorName] = newCollector
 			log.Debugf("Added collector %T, %v", newCollector, newCollector)
 		}
 	}
-	log.Debugf("Collectors %v", runner.collecterInstances)
+	log.Debugf("Collectors %v", runner.collectorInstances)
 }
 
 func (runner *CollectorRunner) shouldKeepPolling(
@@ -170,7 +170,7 @@ func (runner *CollectorRunner) poller(
 
 // start configures all collectors to start collecting all their data keys
 func (runner *CollectorRunner) start() {
-	for collectorName, collector := range runner.collecterInstances {
+	for collectorName, collector := range runner.collectorInstances {
 		log.Debugf("start collector %v", collector)
 		err := collector.Start()
 		utils.IfErrorPanic(err)
@@ -193,7 +193,7 @@ func (runner *CollectorRunner) start() {
 
 // cleanup calls cleanup on each collector
 func (runner *CollectorRunner) cleanUpAll() {
-	for collectorName, collector := range runner.collecterInstances {
+	for collectorName, collector := range runner.collectorInstances {
 		log.Debugf("cleanup %s", collectorName)
 		err := collector.CleanUp()
 		utils.IfErrorPanic(err)
