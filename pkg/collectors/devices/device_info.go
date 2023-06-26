@@ -65,6 +65,11 @@ func extractOffsetFromTimestamp(result map[string]string) (map[string]any, error
 	return processedResult, nil
 }
 
+func failedToAddError(cmdKey string, err error) error {
+	log.Errorf("failed to add command %s %s", cmdKey, err.Error())
+	return fmt.Errorf("failed to fetch devInfo %w", err)
+}
+
 // BuildPTPDeviceInfo popluates the fetcher required for
 // collecting the PTPDeviceInfo
 func BuildPTPDeviceInfo(interfaceName string) error {
@@ -79,8 +84,7 @@ func BuildPTPDeviceInfo(interfaceName string) error {
 		true,
 	)
 	if err != nil {
-		log.Errorf("failed to add command %s %s", "gnss", err.Error())
-		return fmt.Errorf("failed to fetch devInfo %w", err)
+		return failedToAddError("gnss", err)
 	}
 
 	err = fetcherInst.AddNewCommand(
@@ -89,16 +93,23 @@ func BuildPTPDeviceInfo(interfaceName string) error {
 		true,
 	)
 	if err != nil {
-		log.Errorf("failed to add command %s %s", "devId", err.Error())
-		return fmt.Errorf("failed to fetch devInfo %w", err)
+		return failedToAddError("devID", err)
 	}
+
 	err = fetcherInst.AddNewCommand("vendorID",
 		fmt.Sprintf("cat /sys/class/net/%s/device/vendor", interfaceName),
 		true,
 	)
 	if err != nil {
-		log.Errorf("failed to add command %s %s", "vendorID", err.Error())
-		return fmt.Errorf("failed to fetch devInfo %w", err)
+		return failedToAddError("vendorID", err)
+	}
+
+	err = fetcherInst.AddNewCommand("firmwareVersion",
+		fmt.Sprintf("ethtool -i %s | grep firmware --color=never", interfaceName),
+		true,
+	)
+	if err != nil {
+		return failedToAddError("firmwareVersion", err)
 	}
 	return nil
 }
