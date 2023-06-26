@@ -11,14 +11,14 @@ import (
 )
 
 var (
-	optionalCollectorNames []string
-	requiredCollectorNames []string
+	OptionalCollectorNames []string
+	RequiredCollectorNames []string
 	All                    string = "all"
 )
 
 func init() {
-	optionalCollectorNames = []string{collectors.DPLLCollectorName, collectors.GPSCollectorName}
-	requiredCollectorNames = []string{collectors.DevInfoCollectorName}
+	OptionalCollectorNames = []string{collectors.DPLLCollectorName, collectors.GPSCollectorName}
+	RequiredCollectorNames = []string{collectors.DevInfoCollectorName}
 }
 
 func isIn(name string, arr []string) bool {
@@ -45,16 +45,16 @@ func removeDuplicates(arr []string) []string {
 // are returned
 func GetCollectorsToRun(selectedCollectors []string) []string {
 	collectorNames := make([]string, 0)
-	collectorNames = append(collectorNames, requiredCollectorNames...)
+	collectorNames = append(collectorNames, RequiredCollectorNames...)
 	for _, name := range selectedCollectors {
 		switch {
 		case strings.EqualFold(name, "all"):
-			collectorNames = append(collectorNames, optionalCollectorNames...)
+			collectorNames = append(collectorNames, OptionalCollectorNames...)
 			collectorNames = removeDuplicates(collectorNames)
 			return collectorNames
 		case isIn(name, collectorNames):
 			continue
-		case isIn(name, optionalCollectorNames):
+		case isIn(name, OptionalCollectorNames):
 			collectorNames = append(collectorNames, name)
 		default:
 			log.Errorf("Unknown collector %s. Ignored", name)

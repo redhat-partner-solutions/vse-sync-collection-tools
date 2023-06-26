@@ -3,7 +3,9 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -115,6 +117,12 @@ func init() { //nolint:funlen // Allow this to get a little long
 		"collector",
 		"s",
 		defaultCollectorNames,
-		"the collectors you wish to run default is all",
+		fmt.Sprintf(
+			"the collectors you wish to run (case-insensitive):\n"+
+				"\trequired collectors: %s (will be automatically added)\n"+
+				"\toptional collectors: %s",
+			strings.Join(runner.RequiredCollectorNames, ", "),
+			strings.Join(runner.OptionalCollectorNames, ", "),
+		),
 	)
 }
