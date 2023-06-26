@@ -5,6 +5,7 @@ package devices
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -16,11 +17,12 @@ import (
 )
 
 type PTPDeviceInfo struct {
-	Timestamp  string        `json:"date" fetcherKey:"date"`
-	VendorID   string        `json:"vendorId" fetcherKey:"vendorID"`
-	DeviceID   string        `json:"deviceInfo" fetcherKey:"devID"`
-	GNSSDev    string        `json:"GNSSDev" fetcherKey:"gnss"`
-	Timeoffset time.Duration `json:"timeOffset" fetcherKey:"timeOffset"`
+	Timestamp       string        `json:"date" fetcherKey:"date"`
+	VendorID        string        `json:"vendorId" fetcherKey:"vendorID"`
+	DeviceID        string        `json:"deviceInfo" fetcherKey:"devID"`
+	GNSSDev         string        `json:"GNSSDev" fetcherKey:"gnss"`
+	Timeoffset      time.Duration `json:"timeOffset" fetcherKey:"timeOffset"`
+	FirmwareVersion string        `json:"firmwareVersion" fetcherKey:"firmwareVersion"`
 }
 
 // AnalyserJSON returns the json expected by the analysers
@@ -65,6 +67,10 @@ func extractOffsetFromTimestamp(result map[string]string) (map[string]any, error
 	return processedResult, nil
 }
 
+func processGNSSPath(s string) (string, error) {
+	return "/dev/" + strings.TrimSpace(s), nil
+}
+
 func failedToAddError(cmdKey string, err error) error {
 	log.Errorf("failed to add command %s %s", cmdKey, err.Error())
 	return fmt.Errorf("failed to fetch devInfo %w", err)
@@ -78,14 +84,12 @@ func BuildPTPDeviceInfo(interfaceName string) error {
 	fetcherInst.SetPostProcesser(extractOffsetFromTimestamp)
 	fetcherInst.AddCommand(devDateCmd)
 
-	err := fetcherInst.AddNewCommand(
-		"gnss",
-		fmt.Sprintf("ls /sys/class/net/%s/device/gnss/", interfaceName),
-		true,
-	)
+	gnssCmd, err := clients.NewCmd("gnss", fmt.Sprintf("ls /sys/class/net/%s/device/gnss/", interfaceName))
 	if err != nil {
 		return failedToAddError("gnss", err)
 	}
+	gnssCmd.SetOutputProcessor(processGNSSPath)
+	fetcherInst.AddCommand(gnssCmd)
 
 	err = fetcherInst.AddNewCommand(
 		"devID",
@@ -135,6 +139,5 @@ func GetPTPDeviceInfo(interfaceName string, ctx clients.ContainerContext) (PTPDe
 		log.Debugf("failed to fetch devInfo %s", err.Error())
 		return devInfo, fmt.Errorf("failed to fetch devInfo %w", err)
 	}
-	devInfo.GNSSDev = "/dev/" + devInfo.GNSSDev
 	return devInfo, nil
 }
