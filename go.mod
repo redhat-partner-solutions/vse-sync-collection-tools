@@ -8,6 +8,7 @@ require (
 	github.com/openshift/client-go v0.0.0-20230120202327-72f107311084
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.6.0
+	golang.org/x/mod v0.8.0
 	k8s.io/api v0.26.1
 	k8s.io/apimachinery v0.26.1
 	k8s.io/client-go v0.26.1
