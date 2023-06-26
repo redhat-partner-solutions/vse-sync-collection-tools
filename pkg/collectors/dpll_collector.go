@@ -81,7 +81,7 @@ func (dpll *DPLLCollector) GetPollCount() int {
 }
 
 // Returns a new DPLLCollector from the CollectionConstuctor Factory
-func (constructor *CollectionConstructor) NewDPLLCollector() (*DPLLCollector, error) {
+func NewDPLLCollector(constructor *CollectionConstructor) (Collector, error) {
 	ctx, err := clients.NewContainerContext(constructor.Clientset, PTPNamespace, PodNamePrefix, PTPContainer)
 	if err != nil {
 		return &DPLLCollector{}, fmt.Errorf("could not create container context %w", err)
@@ -100,4 +100,8 @@ func (constructor *CollectionConstructor) NewDPLLCollector() (*DPLLCollector, er
 	}
 
 	return &collector, nil
+}
+
+func init() {
+	registry.register(DPLLCollectorName, NewDPLLCollector)
 }

@@ -59,8 +59,6 @@ func NewCollectorRunner(selectedCollectors []string) *CollectorRunner {
 
 // initialise will call theconstructor for each
 // value in collector name, it will panic if a collector name is not known.
-//
-//nolint:funlen // this is going to be a long function
 func (runner *CollectorRunner) initialise(
 	callback callbacks.Callback,
 	ptpInterface string,
@@ -73,42 +71,28 @@ func (runner *CollectorRunner) initialise(
 	runner.pollCount = pollCount
 	runner.devInfoAnnouceRate = devInfoAnnouceRate
 
-	constructor := collectors.CollectionConstructor{
+	constructor := &collectors.CollectionConstructor{
 		Callback:           callback,
 		PTPInterface:       ptpInterface,
 		Clientset:          clientset,
 		PollRate:           pollRate,
 		DevInfoAnnouceRate: devInfoAnnouceRate,
+		ErroredPolls:       runner.erroredPolls,
 	}
 
-	for _, constructorName := range runner.collectorNames {
-		var newCollector collectors.Collector
-		newInstance := true
-		switch constructorName {
-		case collectors.DPLLCollectorName:
-			NewDPLLCollector, err := constructor.NewDPLLCollector()
-			utils.IfErrorExitOrPanic(err)
-			newCollector = NewDPLLCollector
-			log.Debug("DPLL Collector")
+	registry := collectors.GetRegistry()
 
-		case collectors.DevInfoCollectorName:
-			NewDevInfCollector, err := constructor.NewDevInfoCollector(runner.erroredPolls)
-			utils.IfErrorExitOrPanic(err)
-			newCollector = NewDevInfCollector
-			log.Debug("DPLL Collector")
-		case collectors.GPSCollectorName:
-			NewGPSCollector, err := constructor.NewGPSCollector()
-			utils.IfErrorExitOrPanic(err)
-			newCollector = NewGPSCollector
-			log.Debug("GPS Collector")
-		default:
-			newInstance = false
-			log.Errorf("Unknown collector %s", constructorName)
+	for _, collectorName := range runner.collectorNames {
+		builderFunc, err := registry.GetBuilderFunc(collectorName)
+		if err != nil {
+			log.Error(err)
+			continue
 		}
-		if newInstance {
-			runner.collectorInstances[constructorName] = newCollector
-			log.Debugf("Added collector %T, %v", newCollector, newCollector)
-		}
+
+		newCollector, err := builderFunc(constructor)
+		utils.IfErrorExitOrPanic(err)
+		runner.collectorInstances[collectorName] = newCollector
+		log.Debugf("Added collector %T, %v", newCollector, newCollector)
 	}
 	log.Debugf("Collectors %v", runner.collectorInstances)
 	runner.setOnlyAnnouncers()
