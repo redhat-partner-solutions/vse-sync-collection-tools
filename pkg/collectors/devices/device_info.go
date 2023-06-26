@@ -5,6 +5,7 @@ package devices
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -35,14 +36,16 @@ func (ptpDevInfo *PTPDeviceInfo) GetAnalyserFormat() ([]*callbacks.AnalyserForma
 			ptpDevInfo.VendorID,
 			ptpDevInfo.DeviceID,
 			ptpDevInfo.GNSSDev,
+			ptpDevInfo.FirmwareVersion,
 		},
 	}
 	return []*callbacks.AnalyserFormatType{&formatted}, nil
 }
 
 var (
-	devFetcher map[string]*fetcher.Fetcher
-	devDateCmd *clients.Cmd
+	devFetcher           map[string]*fetcher.Fetcher
+	devDateCmd           *clients.Cmd
+	firmwareVersionRegex = regexp.MustCompile(`firmware-version:\s+(.*)`)
 )
 
 func init() {
@@ -67,6 +70,35 @@ func extractOffsetFromTimestamp(result map[string]string) (map[string]any, error
 	return processedResult, nil
 }
 
+func extractFirmware(result map[string]string) (map[string]any, error) {
+	processedResult := make(map[string]any, 0)
+	match := firmwareVersionRegex.FindStringSubmatch(result["firmwareVersion"])
+	if len(match) == 0 {
+		return processedResult, fmt.Errorf(
+			"failed to extract firmwareVersion from %s",
+			result["firmwareVersion"],
+		)
+	}
+	processedResult["firmwareVersion"] = match[1]
+	return processedResult, nil
+}
+
+func devInfoPostProcesser(result map[string]string) (map[string]any, error) {
+	processedResult, err := extractOffsetFromTimestamp(result)
+	if err != nil {
+		return processedResult, err
+	}
+	firmwareResult, err := extractFirmware(result)
+	if err != nil {
+		return processedResult, err
+	}
+
+	for key, value := range firmwareResult {
+		processedResult[key] = value
+	}
+	return firmwareResult, nil
+}
+
 func processGNSSPath(s string) (string, error) {
 	return "/dev/" + strings.TrimSpace(s), nil
 }
@@ -81,7 +113,7 @@ func failedToAddError(cmdKey string, err error) error {
 func BuildPTPDeviceInfo(interfaceName string) error {
 	fetcherInst := fetcher.NewFetcher()
 	devFetcher[interfaceName] = fetcherInst
-	fetcherInst.SetPostProcesser(extractOffsetFromTimestamp)
+	fetcherInst.SetPostProcesser(devInfoPostProcesser)
 	fetcherInst.AddCommand(devDateCmd)
 
 	gnssCmd, err := clients.NewCmd("gnss", fmt.Sprintf("ls /sys/class/net/%s/device/gnss/", interfaceName))

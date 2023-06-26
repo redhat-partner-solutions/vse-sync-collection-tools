@@ -53,16 +53,19 @@ var _ = Describe("NewContainerContext", func() {
 			vendor := "0x8086"
 			devID := "0x1593"
 			gnssDev := "gnss0"
+			ethVersion := "4.20 0x8001778b 1.3346.0"
 
 			expectedInput := "echo '<date>';date +%s.%N;echo '</date>';"
 			expectedInput += "echo '<gnss>';ls /sys/class/net/aFakeInterface/device/gnss/;echo '</gnss>';"
 			expectedInput += "echo '<devID>';cat /sys/class/net/aFakeInterface/device/device;echo '</devID>';"
 			expectedInput += "echo '<vendorID>';cat /sys/class/net/aFakeInterface/device/vendor;echo '</vendorID>';"
+			expectedInput += "echo '<firmwareVersion>';ethtool -i aFakeInterface | grep firmware --color=never;echo '</firmwareVersion>';"
 
 			expectedOutput := "<date>\n1686916187.0584\n</date>\n"
 			expectedOutput += fmt.Sprintf("<gnss>\n%s\n</gnss>\n", gnssDev)
 			expectedOutput += fmt.Sprintf("<devID>\n%s\n</devID>\n", devID)
 			expectedOutput += fmt.Sprintf("<vendorID>\n%s\n</vendorID>\n", vendor)
+			expectedOutput += fmt.Sprintf("<firmwareVersion>\nfirmware-version: %s\n</firmwareVersion>\n", ethVersion)
 
 			response[expectedInput] = []byte(expectedOutput)
 
@@ -74,6 +77,7 @@ var _ = Describe("NewContainerContext", func() {
 			Expect(info.DeviceID).To(Equal(devID))
 			Expect(info.VendorID).To(Equal(vendor))
 			Expect(info.GNSSDev).To(Equal("/dev/" + gnssDev))
+			Expect(info.FirmwareVersion).To(Equal(ethVersion))
 		})
 	})
 })
