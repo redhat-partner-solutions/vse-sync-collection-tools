@@ -77,7 +77,7 @@ func postProcessDPLL(result map[string]string) (map[string]any, error) {
 
 // BuildDPLLInfoFetcher popluates the fetcher required for
 // collecting the DPLLInfo
-func BuildDPLLInfoFetcher(interfaceName string) error {
+func BuildDPLLInfoFetcher(interfaceName string) error { //nolint:dupl //no need to dedup these
 	fetcherInst := fetcher.NewFetcher()
 	dpllFetcher[interfaceName] = fetcherInst
 	fetcherInst.SetPostProcesser(postProcessDPLL)
@@ -89,8 +89,7 @@ func BuildDPLLInfoFetcher(interfaceName string) error {
 		true,
 	)
 	if err != nil {
-		log.Errorf("failed to add command %s %s", "dpll_0_state", err.Error())
-		return fmt.Errorf("failed to add command %s %w", "dpll_0_state", err)
+		return failedToAddCommand("dpll", "dpll_0_state", err)
 	}
 
 	err = fetcherInst.AddNewCommand(
@@ -99,8 +98,7 @@ func BuildDPLLInfoFetcher(interfaceName string) error {
 		true,
 	)
 	if err != nil {
-		log.Errorf("failed to add command %s %s", "dpll_1_state", err.Error())
-		return fmt.Errorf("failed to add command %s %w", "dpll_1_state", err)
+		return failedToAddCommand("dpll", "dpll_1_state", err)
 	}
 
 	err = fetcherInst.AddNewCommand(
@@ -109,8 +107,7 @@ func BuildDPLLInfoFetcher(interfaceName string) error {
 		true,
 	)
 	if err != nil {
-		log.Errorf("failed to add command %s %s", "dpll_1_offset", err.Error())
-		return fmt.Errorf("failed to add command %s %w", "dpll_1_offset", err)
+		return failedToAddCommand("dpll", "dpll_1_offset", err)
 	}
 	return nil
 }
