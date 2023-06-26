@@ -103,5 +103,5 @@ func NewDPLLCollector(constructor *CollectionConstructor) (Collector, error) {
 }
 
 func init() {
-	registry.register(DPLLCollectorName, NewDPLLCollector)
+	RegisterCollector(DPLLCollectorName, NewDPLLCollector)
 }

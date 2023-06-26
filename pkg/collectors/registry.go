@@ -33,8 +33,11 @@ func (reg *CollectorRegistry) GetBuilderFunc(collectorName string) (collectonBui
 	return builderFunc, nil
 }
 
-func init() {
-	registry = &CollectorRegistry{
-		registry: make(map[string]collectonBuilderFunc, 0),
+func RegisterCollector(collectorName string, builderFunc collectonBuilderFunc) {
+	if registry == nil {
+		registry = &CollectorRegistry{
+			registry: make(map[string]collectonBuilderFunc, 0),
+		}
 	}
+	registry.register(collectorName, builderFunc)
 }
