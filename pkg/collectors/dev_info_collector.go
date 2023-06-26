@@ -135,7 +135,7 @@ func verify(ptpDevInfo *devices.PTPDeviceInfo) error {
 }
 
 // Returns a new DevInfoCollector from the CollectionConstuctor Factory
-func (constructor *CollectionConstructor) NewDevInfoCollector(erroredPolls chan PollResult) (*DevInfoCollector, error) {
+func NewDevInfoCollector(constructor *CollectionConstructor) (Collector, error) {
 	ctx, err := clients.NewContainerContext(constructor.Clientset, PTPNamespace, PodNamePrefix, PTPContainer)
 	if err != nil {
 		return &DevInfoCollector{}, fmt.Errorf("could not create container context %w", err)
@@ -170,10 +170,14 @@ func (constructor *CollectionConstructor) NewDevInfoCollector(erroredPolls chan 
 		callback:      constructor.Callback,
 		devInfo:       &ptpDevInfo,
 		quit:          make(chan os.Signal),
-		erroredPolls:  erroredPolls,
+		erroredPolls:  constructor.ErroredPolls,
 		requiresFetch: make(chan bool, 1),
 		pollRate:      constructor.DevInfoAnnouceRate,
 	}
 
 	return &collector, nil
+}
+
+func init() {
+	registry.register(DevInfoCollectorName, NewDevInfoCollector)
 }

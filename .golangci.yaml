@@ -104,6 +104,10 @@ issues:
     - linters:
         - tagliatelle
       source: "^.*(PPS|EEC|GNSS|GPS).*$"
+    - linters:
+        - ireturn
+      source: "func.*New.*Collector.*$"
+
 
 
 # golangci.com configuration

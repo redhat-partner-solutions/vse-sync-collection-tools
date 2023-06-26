@@ -86,7 +86,7 @@ func (gps *GPSCollector) GetPollCount() int {
 // Returns a new PTPCollector from the CollectionConstructor Factory
 // It will set the lastPoll one polling time in the past such that the initial
 // request to ShouldPoll should return True
-func (constructor *CollectionConstructor) NewGPSCollector() (*GPSCollector, error) {
+func NewGPSCollector(constructor *CollectionConstructor) (Collector, error) {
 	ctx, err := clients.NewContainerContext(constructor.Clientset, PTPNamespace, PodNamePrefix, GPSContainer)
 	if err != nil {
 		return &GPSCollector{}, fmt.Errorf("could not create container context %w", err)
@@ -101,4 +101,8 @@ func (constructor *CollectionConstructor) NewGPSCollector() (*GPSCollector, erro
 	}
 
 	return &collector, nil
+}
+
+func init() {
+	registry.register(GPSCollectorName, NewGPSCollector)
 }

@@ -21,6 +21,7 @@ type Collector interface {
 type CollectionConstructor struct {
 	Callback           callbacks.Callback
 	Clientset          *clients.Clientset
+	ErroredPolls       chan PollResult
 	PTPInterface       string
 	Msg                string
 	PollRate           float64
