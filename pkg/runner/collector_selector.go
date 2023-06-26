@@ -45,33 +45,20 @@ func removeDuplicates(arr []string) []string {
 // are returned
 func GetCollectorsToRun(selectedCollectors []string) []string {
 	collectorNames := make([]string, 0)
+	collectorNames = append(collectorNames, requiredCollectorNames...)
 	for _, name := range selectedCollectors {
 		switch {
 		case strings.EqualFold(name, "all"):
-			collectorNames = append(collectorNames, requiredCollectorNames...)
 			collectorNames = append(collectorNames, optionalCollectorNames...)
 			collectorNames = removeDuplicates(collectorNames)
 			return collectorNames
 		case isIn(name, collectorNames):
 			continue
-		case isIn(name, requiredCollectorNames), isIn(name, optionalCollectorNames):
+		case isIn(name, optionalCollectorNames):
 			collectorNames = append(collectorNames, name)
 		default:
 			log.Errorf("Unknown collector %s. Ignored", name)
 		}
-	}
-	missingCollectors := make([]string, 0)
-	for _, requiredName := range requiredCollectorNames {
-		if !isIn(requiredName, collectorNames) {
-			missingCollectors = append(missingCollectors, requiredName)
-		}
-	}
-	if len(missingCollectors) > 0 {
-		log.Warnf(
-			"The following required collectors were missing %s. They will be added",
-			strings.Join(missingCollectors, ","),
-		)
-		collectorNames = append(collectorNames, missingCollectors...)
 	}
 	return collectorNames
 }
