@@ -67,7 +67,7 @@ func extractOffsetFromTimestamp(result map[string]string) (map[string]any, error
 
 // BuildPTPDeviceInfo popluates the fetcher required for
 // collecting the PTPDeviceInfo
-func BuildPTPDeviceInfo(interfaceName string) error {
+func BuildPTPDeviceInfo(interfaceName string) error { //nolint:dupl //no need to dedup these
 	fetcherInst := fetcher.NewFetcher()
 	devFetcher[interfaceName] = fetcherInst
 	fetcherInst.SetPostProcesser(extractOffsetFromTimestamp)
@@ -79,8 +79,7 @@ func BuildPTPDeviceInfo(interfaceName string) error {
 		true,
 	)
 	if err != nil {
-		log.Errorf("failed to add command %s %s", "gnss", err.Error())
-		return fmt.Errorf("failed to fetch devInfo %w", err)
+		return failedToAddCommand("devInfo", "gnss", err)
 	}
 
 	err = fetcherInst.AddNewCommand(
@@ -89,16 +88,15 @@ func BuildPTPDeviceInfo(interfaceName string) error {
 		true,
 	)
 	if err != nil {
-		log.Errorf("failed to add command %s %s", "devId", err.Error())
-		return fmt.Errorf("failed to fetch devInfo %w", err)
+		return failedToAddCommand("devInfo", "devID", err)
 	}
+
 	err = fetcherInst.AddNewCommand("vendorID",
 		fmt.Sprintf("cat /sys/class/net/%s/device/vendor", interfaceName),
 		true,
 	)
 	if err != nil {
-		log.Errorf("failed to add command %s %s", "vendorID", err.Error())
-		return fmt.Errorf("failed to fetch devInfo %w", err)
+		return failedToAddCommand("devInfo", "vendorID", err)
 	}
 	return nil
 }
