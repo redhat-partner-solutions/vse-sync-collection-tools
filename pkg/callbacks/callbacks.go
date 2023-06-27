@@ -65,11 +65,12 @@ func getLine(c Callback, output OutputType, tag string) ([]byte, error) {
 func GetFileHandle(filename string) (io.WriteCloser, error) {
 	var (
 		fileHandle io.WriteCloser
+		err        error
 	)
 	if filename == "-" || filename == "" {
 		fileHandle = os.Stdout
 	} else {
-		fileHandle, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, logFilePermissions)
+		fileHandle, err = os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, logFilePermissions)
 		if err != nil {
 			return fileHandle, fmt.Errorf("failed to open file: %w", err)
 		}
