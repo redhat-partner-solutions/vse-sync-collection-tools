@@ -31,18 +31,18 @@ func getQuitChannel() chan os.Signal {
 }
 
 type CollectorRunner struct {
-	quit                 chan os.Signal
-	collectorQuitChannel map[string]chan os.Signal
-	pollResults          chan collectors.PollResult
-	erroredPolls         chan collectors.PollResult
-	collectorInstances   map[string]collectors.Collector
-	collectorNames       []string
-	pollCount            int
-	pollRate             float64
-	devInfoAnnouceRate   float64
-	runningCollectorsWG  utils.WaitGroupCount
-	runningAnnouncersWG  utils.WaitGroupCount
-	onlyAnnouncers       bool
+	quit                   chan os.Signal
+	collectorQuitChannel   map[string]chan os.Signal
+	pollResults            chan collectors.PollResult
+	erroredPolls           chan collectors.PollResult
+	collectorInstances     map[string]collectors.Collector
+	collectorNames         []string
+	pollCount              int
+	pollInterval           int
+	devInfoAnnouceInterval int
+	runningCollectorsWG    utils.WaitGroupCount
+	runningAnnouncersWG    utils.WaitGroupCount
+	onlyAnnouncers         bool
 }
 
 func NewCollectorRunner(selectedCollectors []string) *CollectorRunner {
@@ -63,21 +63,21 @@ func (runner *CollectorRunner) initialise(
 	callback callbacks.Callback,
 	ptpInterface string,
 	clientset *clients.Clientset,
-	pollRate float64,
+	pollInterval int,
 	pollCount int,
-	devInfoAnnouceRate float64,
+	devInfoAnnouceInterval int,
 ) {
-	runner.pollRate = pollRate
+	runner.pollInterval = pollInterval
 	runner.pollCount = pollCount
-	runner.devInfoAnnouceRate = devInfoAnnouceRate
+	runner.devInfoAnnouceInterval = devInfoAnnouceInterval
 
 	constructor := &collectors.CollectionConstructor{
-		Callback:           callback,
-		PTPInterface:       ptpInterface,
-		Clientset:          clientset,
-		PollRate:           pollRate,
-		DevInfoAnnouceRate: devInfoAnnouceRate,
-		ErroredPolls:       runner.erroredPolls,
+		Callback:               callback,
+		PTPInterface:           ptpInterface,
+		Clientset:              clientset,
+		PollInterval:           pollInterval,
+		DevInfoAnnouceInterval: devInfoAnnouceInterval,
+		ErroredPolls:           runner.erroredPolls,
 	}
 
 	registry := collectors.GetRegistry()
@@ -128,10 +128,9 @@ func (runner *CollectorRunner) poller(
 ) {
 	defer wg.Done()
 	var lastPoll time.Time
-	pollRate := collector.GetPollRate()
-	inversePollRate := 1.0 / pollRate
+	pollInterval := time.Duration(collector.GetPollInterval()) * time.Second
 	runningPolls := utils.WaitGroupCount{}
-	log.Debugf("Collector with poll rate %f wait time %f", pollRate, inversePollRate)
+	log.Debugf("Collector with poll interval %f ", pollInterval.Seconds())
 	for runner.shouldKeepPolling(collector, &runningPolls) {
 		// If pollResults were to block we do not want to keep spawning polls
 		// so we shouldn't allow too many polls to be running simultaneously
@@ -145,7 +144,7 @@ func (runner *CollectorRunner) poller(
 			runningPolls.Wait()
 			return
 		default:
-			if lastPoll.IsZero() || time.Since(lastPoll).Seconds() > inversePollRate {
+			if lastPoll.IsZero() || time.Since(lastPoll) > pollInterval {
 				lastPoll = time.Now()
 				log.Debugf("poll %s", collectorName)
 				runningPolls.Add(1)
@@ -198,8 +197,8 @@ func (runner *CollectorRunner) Run(
 	kubeConfig string,
 	outputFile string,
 	pollCount int,
-	pollRate float64,
-	devInfoAnnouceRate float64,
+	pollInterval int,
+	devInfoAnnouceInterval int,
 	ptpInterface string,
 	useAnalyserJSON bool,
 ) {
@@ -212,7 +211,7 @@ func (runner *CollectorRunner) Run(
 
 	callback, err := callbacks.SetupCallback(outputFile, outputFormat)
 	utils.IfErrorExitOrPanic(err)
-	runner.initialise(callback, ptpInterface, clientset, pollRate, pollCount, devInfoAnnouceRate)
+	runner.initialise(callback, ptpInterface, clientset, pollInterval, pollCount, devInfoAnnouceInterval)
 	runner.start()
 
 	// Use wg count to know if any collectors are running.

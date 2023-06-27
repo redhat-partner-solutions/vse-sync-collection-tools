@@ -18,7 +18,7 @@ type DPLLCollector struct {
 	interfaceName string
 	count         uint32
 	running       bool
-	pollRate      float64
+	pollInterval  int
 }
 
 const (
@@ -28,8 +28,8 @@ const (
 	All      = "all"
 )
 
-func (dpll *DPLLCollector) GetPollRate() float64 {
-	return dpll.pollRate
+func (dpll *DPLLCollector) GetPollInterval() int {
+	return dpll.pollInterval
 }
 
 func (dpll *DPLLCollector) IsAnnouncer() bool {
@@ -96,7 +96,7 @@ func NewDPLLCollector(constructor *CollectionConstructor) (Collector, error) {
 		ctx:           ctx,
 		running:       false,
 		callback:      constructor.Callback,
-		pollRate:      constructor.PollRate,
+		pollInterval:  constructor.PollInterval,
 	}
 
 	return &collector, nil

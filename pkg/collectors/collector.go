@@ -13,19 +13,19 @@ type Collector interface {
 	Poll(chan PollResult, *utils.WaitGroupCount) // Poll for collectables
 	CleanUp() error                              // Stops the collector and cleans up any internal state. It should result in a state that can be started again
 	GetPollCount() int                           // Returns the number of completed poll
-	GetPollRate() float64                        // Returns the collectors polling rate
+	GetPollInterval() int                        // Returns the collectors polling interval
 	IsAnnouncer() bool
 }
 
 // A union of all values required to be passed into all constructions
 type CollectionConstructor struct {
-	Callback           callbacks.Callback
-	Clientset          *clients.Clientset
-	ErroredPolls       chan PollResult
-	PTPInterface       string
-	Msg                string
-	PollRate           float64
-	DevInfoAnnouceRate float64
+	Callback               callbacks.Callback
+	Clientset              *clients.Clientset
+	ErroredPolls           chan PollResult
+	PTPInterface           string
+	Msg                    string
+	PollInterval           int
+	DevInfoAnnouceInterval int
 }
 
 type PollResult struct {

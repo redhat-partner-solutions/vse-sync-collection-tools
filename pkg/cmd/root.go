@@ -16,21 +16,21 @@ import (
 )
 
 const (
-	defaultCount              int     = 10
-	defaultPollRate           float64 = 1.0
-	defaultDevInfoAnnouceRate float64 = 0.17
+	defaultCount           int = 10
+	defaultPollInterval    int = 1
+	defaultDevInfoInterval int = 60
 )
 
 var (
-	kubeConfig         string
-	pollCount          int
-	pollRate           float64
-	devInfoAnnouceRate float64
-	ptpInterface       string
-	outputFile         string
-	logLevel           string
-	useAnalyserJSON    bool
-	collectorNames     []string
+	kubeConfig             string
+	pollCount              int
+	pollInterval           int
+	devInfoAnnouceInterval int
+	ptpInterface           string
+	outputFile             string
+	logLevel               string
+	useAnalyserJSON        bool
+	collectorNames         []string
 
 	// rootCmd represents the base command when called without any subcommands
 	rootCmd = &cobra.Command{
@@ -44,8 +44,8 @@ var (
 				kubeConfig,
 				outputFile,
 				pollCount,
-				pollRate,
-				devInfoAnnouceRate,
+				pollInterval,
+				devInfoAnnouceInterval,
 				ptpInterface,
 				useAnalyserJSON,
 			)
@@ -78,19 +78,20 @@ func init() { //nolint:funlen // Allow this to get a little long
 		defaultCount,
 		"Number of queries the cluster (-1) means infinite",
 	)
-	rootCmd.PersistentFlags().Float64VarP(
-		&pollRate,
+	rootCmd.PersistentFlags().IntVarP(
+		&pollInterval,
 		"rate",
 		"r",
-		defaultPollRate,
-		"Poll rate for querying the cluster",
+		defaultPollInterval,
+		"Poll interval for querying the cluster. The value will be polled once ever interval. "+
+			"Using --rate 10 will cause the value to be polled once every 10 seconds",
 	)
-	rootCmd.PersistentFlags().Float64VarP(
-		&devInfoAnnouceRate,
+	rootCmd.PersistentFlags().IntVarP(
+		&devInfoAnnouceInterval,
 		"announce",
 		"a",
-		defaultDevInfoAnnouceRate,
-		"Rate announcing the dev info",
+		defaultDevInfoInterval,
+		"interval for announcing the dev info",
 	)
 
 	rootCmd.PersistentFlags().StringVarP(
