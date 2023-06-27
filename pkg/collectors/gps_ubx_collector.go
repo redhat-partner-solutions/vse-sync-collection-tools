@@ -24,11 +24,11 @@ type GPSCollector struct {
 	interfaceName string
 	running       bool
 	count         uint32
-	pollRate      float64
+	pollInterval  int
 }
 
-func (gps *GPSCollector) GetPollRate() float64 {
-	return gps.pollRate
+func (gps *GPSCollector) GetPollInterval() int {
+	return gps.pollInterval
 }
 
 func (gps *GPSCollector) IsAnnouncer() bool {
@@ -83,9 +83,7 @@ func (gps *GPSCollector) GetPollCount() int {
 	return int(atomic.LoadUint32(&gps.count))
 }
 
-// Returns a new PTPCollector from the CollectionConstructor Factory
-// It will set the lastPoll one polling time in the past such that the initial
-// request to ShouldPoll should return True
+// Returns a new GPSCollector based on values in the CollectionConstructor
 func NewGPSCollector(constructor *CollectionConstructor) (Collector, error) {
 	ctx, err := clients.NewContainerContext(constructor.Clientset, PTPNamespace, PodNamePrefix, GPSContainer)
 	if err != nil {
@@ -97,7 +95,7 @@ func NewGPSCollector(constructor *CollectionConstructor) (Collector, error) {
 		ctx:           ctx,
 		running:       false,
 		callback:      constructor.Callback,
-		pollRate:      constructor.PollRate,
+		pollInterval:  constructor.PollInterval,
 	}
 
 	return &collector, nil

@@ -26,7 +26,7 @@ type DevInfoCollector struct {
 	count         uint32
 	running       bool
 	wg            sync.WaitGroup
-	pollRate      float64
+	pollInterval  int
 }
 
 const (
@@ -36,8 +36,8 @@ const (
 	DeviceE810           = "0x1593"
 )
 
-func (ptpDev *DevInfoCollector) GetPollRate() float64 {
-	return ptpDev.pollRate
+func (ptpDev *DevInfoCollector) GetPollInterval() int {
+	return ptpDev.pollInterval
 }
 
 func (ptpDev *DevInfoCollector) IsAnnouncer() bool {
@@ -172,7 +172,7 @@ func NewDevInfoCollector(constructor *CollectionConstructor) (Collector, error) 
 		quit:          make(chan os.Signal),
 		erroredPolls:  constructor.ErroredPolls,
 		requiresFetch: make(chan bool, 1),
-		pollRate:      constructor.DevInfoAnnouceRate,
+		pollInterval:  constructor.DevInfoAnnouceInterval,
 	}
 
 	return &collector, nil
