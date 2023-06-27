@@ -1,9 +1,10 @@
 # Implementing Collectors
 
-Any collector must conform to the collector interface (TODO: link to collector interface). It should use the callback to expose collected information to the user.
-Once you have filled out your collector. Any arguments should be added to the `CollectionConstuctor` and method should also be defined on the `CollectionConstuctor`.
-You will then need to add a call to the new method in the `setupCollectors` function in the runner package.
-As well as implementing your custom collector you will also need to extend `CollectionConstructor`, `setupCollectors()` and `collectorNames` to integrate it into the tool and allow the tool to use your new collector.
+You will first need to create a stuct for reporting the collected values to the user. It needs to conform to the `callbacks.OutputType` interface and any fields which you wish to show the user will require a json tag.
+
+Any collector must conform to the collector interface It should use the callback to expose collected information to the user.
+
+Once you have filled out your collector. Any arguments should be added to the `CollectionConstuctor` and function which takes the `CollectionConstuctor` should also be defined and added to the `registry`.
 
 An example of a very simple collector:
 
@@ -19,7 +20,8 @@ type CollectionConstuctor struct {
 ...
 ```
 
-In `collectors/anouncement_collector.go` you should define your collector and aconstructor method on `CollectionConstuctor`
+In `collectors/announcement_collector.go` you will first need to create your reporting stuct then
+you should define your collector and a constructor function which takes `CollectionConstuctor` as an argument.
 ```go
 package collectors
 
@@ -28,71 +30,74 @@ import (
 
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/callbacks"
 )
+const (
+	AnnouncementCollectorName = "MyCustomerAnouncer"
+	AnnouncementMsg = "custom-anouncement"
+)
 
-type AnouncementCollector struct {
+type AnnouncementMessage struct {
+	Msg string `json:"msg"`
+}
+
+func  (annMsg *AnnouncementMessage)  GetAnalyserFormat() (*callbacks.AnalyserFormatType, error) {
+	formatted := callbacks.AnalyserFormatType{
+		ID: "customAnoucner",
+		Data: []string{
+			annMsg.Msg,
+		},
+	}
+	return &formatted, nil
+}
+
+type AnnouncementCollector struct {
 	callback callbacks.Callback
-	key      string
-	msg      string
+	count        int
+	msg          string
+	pollInterval int
 }
 
-func (anouncer *AnouncementCollector) Start(key string) error {
-	anouncer.key = key
-	return nil
+func (announcer *AnnouncementCollector) GetPollInterval() int {
+	return announcer.pollInterval
 }
 
-func (anouncer *AnouncementCollector) ShouldPoll() bool {
-	// We always want to annouce ourselves
+func (announcer *AnnouncementCollector) IsAnnouncer() bool {
 	return true
 }
 
-func (anouncer *AnouncementCollector) Poll() []error {
-	errs := make([]error, 0)
-	err := anouncer.callback.Call(
-		fmt.Sprintf("%T", anouncer),
-		anouncer.key,
-		anouncer.msg,
-	)
-	if err != nil {
-		errs = append(errs, err)
-	}
-	return errs
-}
-
-func (anouncer *AnouncementCollector) CleanUp(key string) error {
+func (announcer *AnnouncementCollector) Start() error {
 	return nil
 }
 
-func (constuctor *CollectionConstuctor) NewAnouncementCollector() (*AnouncementCollector, error) {
-	anouncer := AnouncementCollector{callback:constructor.Callback, msg:constructor.Msg}
-	return &anouncer, nil
+func (announcer *AnnouncementCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCount) {
+	defer func() {
+		wg.Done()
+		atomic.AddUint32(&announcer.count, 1)
+	}()
+
+	msg := &AnnouncementMessage{Msg: announcer.msg}
+
+	errs := make([]error, 0)
+	err := announcer.callback.Call(&msg, AnnouncementMsg)
+	if err != nil {
+		errs = append(errs, fmt.Errorf("callback failed %w", err))
+	}
+	resultsChan <- PollResult{
+		CollectorName: AnnouncementCollectorName,
+		Errors:        errorsToReturn,
+	}
 }
 
-```
-In runner/runner.go Call the `NewAnouncementCollector`constructor in the `initialise` method of CollectorRunner and append `"Anouncer"` to `collectorNames` in the `NewCollectorRunner` function.
-```go
-func NewCollectorRunner() CollectorRunner {
-	...
-    collectorNames = append(collectorNames, "PTP", "Anouncer")
-	...
+func (announcer *AnnouncementCollector) CleanUp() error {
+	return nil
 }
 
-func (runner *CollectorRunner) initialise(...){
-	...
-	for _,constructorName := range runner.collectorNames {
-		var newCollector collectors.Collector
-		switchconstructorName {
-            ...
-		case "Anouncer": //nolint: goconst // This is just for ilustrative purposes
-			NewAnouncerCollector, err :=constructor.NewAnouncementCollector()
-			// Handle error...
-            utils.IfErrorPanic(err)
-			newCollector = NewAnouncerCollector
-			log.Debug("Anouncer Collector")
-		...
-        }
-        ...
-    }
-    ...
+func NewAnnouncementCollector(constuctor *CollectionConstuctor) (Collector, error) {
+	announcer := AnnouncementCollector{callback:constructor.Callback, msg:constructor.Msg}
+	return &announcer, nil
+}
+
+func init(){
+	registry.register(AnnouncementCollectorName, NewAnnouncementCollector)
 }
 
 ```
