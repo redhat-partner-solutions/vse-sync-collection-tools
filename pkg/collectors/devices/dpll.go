@@ -13,6 +13,7 @@ import (
 
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/callbacks"
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/clients"
+	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/fetcher"
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/utils"
 )
 
@@ -46,7 +47,7 @@ func (dpllInfo *DevDPLLInfo) GetAnalyserFormat() (*callbacks.AnalyserFormatType,
 }
 
 var (
-	dpllFetcher map[string]*fetcher
+	dpllFetcher map[string]*fetcher.Fetcher
 	dpplDateCmd *clients.Cmd
 )
 
@@ -59,7 +60,7 @@ func formatTimestampAsRFC3339Nano(s string) (string, error) {
 }
 
 func init() {
-	dpllFetcher = make(map[string]*fetcher)
+	dpllFetcher = make(map[string]*fetcher.Fetcher)
 	dpplDateCmdInst, err := clients.NewCmd("date", "date +%s.%N")
 	if err != nil {
 		panic(err)
@@ -71,7 +72,7 @@ func init() {
 // BuildDPLLInfoFetcher popluates the fetcher required for
 // collecting the DPLLInfo
 func BuildDPLLInfoFetcher(interfaceName string) error {
-	fetcherInst := NewFetcher()
+	fetcherInst := fetcher.NewFetcher()
 	dpllFetcher[interfaceName] = fetcherInst
 	fetcherInst.AddCommand(dpplDateCmd)
 
@@ -82,7 +83,7 @@ func BuildDPLLInfoFetcher(interfaceName string) error {
 	)
 	if err != nil {
 		log.Errorf("failed to add command %s %s", "dpll_0_state", err.Error())
-		return err
+		return fmt.Errorf("failed to add command %s %w", "dpll_0_state", err)
 	}
 
 	err = fetcherInst.AddNewCommand(
@@ -92,7 +93,7 @@ func BuildDPLLInfoFetcher(interfaceName string) error {
 	)
 	if err != nil {
 		log.Errorf("failed to add command %s %s", "dpll_1_state", err.Error())
-		return err
+		return fmt.Errorf("failed to add command %s %w", "dpll_1_state", err)
 	}
 
 	err = fetcherInst.AddNewCommand(
@@ -102,7 +103,7 @@ func BuildDPLLInfoFetcher(interfaceName string) error {
 	)
 	if err != nil {
 		log.Errorf("failed to add command %s %s", "dpll_1_offset", err.Error())
-		return err
+		return fmt.Errorf("failed to add command %s %w", "dpll_1_offset", err)
 	}
 	return nil
 }
@@ -124,7 +125,7 @@ func GetDevDPLLInfo(ctx clients.ContainerContext, interfaceName string) (DevDPLL
 	err := fetcherInst.Fetch(ctx, &dpllInfo)
 	if err != nil {
 		log.Errorf("failed to fetch dpllInfo %s", err.Error())
-		return dpllInfo, err
+		return dpllInfo, fmt.Errorf("failed to fetch dpllInfo %w", err)
 	}
 	return dpllInfo, nil
 }

@@ -11,6 +11,7 @@ import (
 
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/callbacks"
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/clients"
+	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/fetcher"
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/utils"
 )
 
@@ -53,11 +54,11 @@ var (
 		//   iTOW 474605000 clkB 61594 clkD 56 tAcc 5 fAcc 164
 		//
 	)
-	gpsFetcher *fetcher
+	gpsFetcher *fetcher.Fetcher
 )
 
 func init() {
-	gpsFetcher = NewFetcher()
+	gpsFetcher = fetcher.NewFetcher()
 	gpsFetcher.SetPostProcesser(processUBXNav)
 	err := gpsFetcher.AddNewCommand(
 		"GPS",
@@ -71,8 +72,8 @@ func init() {
 }
 
 // processUBXNav parses the output of the ubxtool extracting the required values for gpsNav
-func processUBXNav(result map[string]string) (map[string]string, error) {
-	processedResult := make(map[string]string)
+func processUBXNav(result map[string]string) (map[string]any, error) {
+	processedResult := make(map[string]any)
 	match := ubxNavRegex.FindStringSubmatch(result["GPS"])
 	if len(match) == 0 {
 		return processedResult, fmt.Errorf(
@@ -105,7 +106,7 @@ func GetGPSNav(ctx clients.ContainerContext) (GPSNav, error) {
 	err := gpsFetcher.Fetch(ctx, &gpsNav)
 	if err != nil {
 		log.Errorf("failed to fetch gpsNav %s", err.Error())
-		return gpsNav, err
+		return gpsNav, fmt.Errorf("failed to fetch gpsNav %w", err)
 	}
 	return gpsNav, nil
 }

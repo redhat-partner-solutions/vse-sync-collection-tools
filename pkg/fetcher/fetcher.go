@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-package devices
+package fetcher
 
 import (
 	"bytes"
@@ -13,13 +13,13 @@ import (
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/clients"
 )
 
-type fetcher struct {
+type Fetcher struct {
 	cmdGrp        *clients.CmdGroup
-	postProcesser func(map[string]string) (map[string]string, error)
+	postProcesser func(map[string]string) (map[string]any, error)
 }
 
-func NewFetcher() *fetcher {
-	return &fetcher{
+func NewFetcher() *Fetcher {
+	return &Fetcher{
 		cmdGrp: &clients.CmdGroup{},
 	}
 }
@@ -28,13 +28,13 @@ func TrimSpace(s string) (string, error) {
 	return strings.TrimSpace(s), nil
 }
 
-func (inst *fetcher) SetPostProcesser(ppFunc func(map[string]string) (map[string]string, error)) {
+func (inst *Fetcher) SetPostProcesser(ppFunc func(map[string]string) (map[string]any, error)) {
 	inst.postProcesser = ppFunc
 }
 
 // AddNewCommand creates a new command from a string
 // then adds it to the fetcher
-func (inst *fetcher) AddNewCommand(key, cmd string, trim bool) error {
+func (inst *Fetcher) AddNewCommand(key, cmd string, trim bool) error {
 	cmdInst, err := clients.NewCmd(key, cmd)
 	if err != nil {
 		return fmt.Errorf("add fetcher cmd failed %w", err)
@@ -47,29 +47,51 @@ func (inst *fetcher) AddNewCommand(key, cmd string, trim bool) error {
 }
 
 // AddCommand takes a command instance and adds it the fetcher
-func (inst *fetcher) AddCommand(cmdInst *clients.Cmd) {
+func (inst *Fetcher) AddCommand(cmdInst *clients.Cmd) {
 	inst.cmdGrp.AddCommand(cmdInst)
 }
 
-// unmarshall will populate the fields in `pack` with the values from `result` according to the fields`fetcherKey` tag.
+func setValue(field *reflect.StructField, fieldVal reflect.Value, value any) error {
+	//nolint:exhaustive //we could extend this but its not needed yet
+	switch field.Type.Kind() {
+	case reflect.String:
+		stringRes, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("failed to convert %v into string", value)
+		}
+		fieldVal.SetString(stringRes)
+	case reflect.Slice:
+		resType := reflect.TypeOf(value)
+		if field.Type != resType {
+			return fmt.Errorf(
+				"type of %v does not match field type %v",
+				resType,
+				field.Type,
+			)
+		}
+		fieldVal.Set(reflect.ValueOf(value))
+	default:
+		return fmt.Errorf("fetcher unmarshal not implemented for type: %s", field.Type.Name())
+	}
+	return nil
+}
+
+// unmarshal will populate the fields in `target` with the values from `result` according to the fields`fetcherKey` tag.
 // fields with no `fetcherKey` tag will not be touched, and elements in `result` without a matched field will be ignored.
-func unmarshall(result map[string]string, pack interface{}) error {
-	val := reflect.ValueOf(pack)
-	typ := reflect.TypeOf(pack)
+func unmarshal(result map[string]any, target any) error {
+	val := reflect.ValueOf(target)
+	typ := reflect.TypeOf(target)
 
 	for i := 0; i < val.Elem().NumField(); i++ {
 		field := typ.Elem().Field(i)
 		resultName := field.Tag.Get("fetcherKey")
 		if resultName != "" {
 			f := val.Elem().FieldByIndex(field.Index)
-			//nolint:exhaustive //we could extend this but its not needed yet
-			switch field.Type.Kind() {
-			case reflect.String:
-				if res, ok := result[resultName]; ok {
-					f.SetString(res)
+			if res, ok := result[resultName]; ok {
+				err := setValue(&field, f, res)
+				if err != nil {
+					return fmt.Errorf("failed to set value on feild %s: %w", resultName, err)
 				}
-			default:
-				return fmt.Errorf("fetcher unmarshal not implemented for type: %s", field.Type.Name())
 			}
 		}
 	}
@@ -78,18 +100,25 @@ func unmarshall(result map[string]string, pack interface{}) error {
 
 // Fetch executes the commands on the container passed as the ctx and
 // use the results to populate pack
-func (inst *fetcher) Fetch(ctx clients.ContainerContext, pack interface{}) error {
-	result, err := runCommands(ctx, inst.cmdGrp)
+func (inst *Fetcher) Fetch(ctx clients.ContainerContext, pack any) error {
+	runResult, err := runCommands(ctx, inst.cmdGrp)
 	if err != nil {
 		return err
 	}
+	result := make(map[string]any)
+	for key, value := range runResult {
+		result[key] = value
+	}
 	if inst.postProcesser != nil {
-		result, err = inst.postProcesser(result)
-		if err != nil {
+		updatedResults, ppErr := inst.postProcesser(runResult)
+		if ppErr != nil {
 			return fmt.Errorf("feching failed post process the data %w", err)
 		}
+		for key, value := range updatedResults {
+			result[key] = value
+		}
 	}
-	err = unmarshall(result, pack)
+	err = unmarshal(result, pack)
 	if err != nil {
 		return fmt.Errorf("feching failed to unpack data %w", err)
 	}
