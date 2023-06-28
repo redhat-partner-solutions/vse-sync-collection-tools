@@ -38,7 +38,7 @@ type testOutputType struct {
 func (t *testOutputType) GetAnalyserFormat() (*callbacks.AnalyserFormatType, error) {
 	fomatted := callbacks.AnalyserFormatType{
 		ID:   "testOutput",
-		Data: []string{"Hello"},
+		Data: []any{"Hello"},
 	}
 	return &fomatted, nil
 }

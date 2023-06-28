@@ -36,7 +36,7 @@ func (dpllInfo *DevDPLLInfo) GetAnalyserFormat() (*callbacks.AnalyserFormatType,
 	}
 	formatted := callbacks.AnalyserFormatType{
 		ID: "dpll/time-error",
-		Data: []string{
+		Data: []any{
 			dpllInfo.Timestamp,
 			dpllInfo.EECState,
 			dpllInfo.PPSState,

@@ -26,10 +26,11 @@ type GPSNav struct {
 func (gpsNav *GPSNav) GetAnalyserFormat() (*callbacks.AnalyserFormatType, error) {
 	formatted := callbacks.AnalyserFormatType{
 		ID: "gnss/time-error",
-		Data: []string{
+		Data: []any{
 			gpsNav.TimestampClock,
 			gpsNav.GPSFix,
 			gpsNav.TimeAcc,
+			gpsNav.FreqAcc,
 		},
 	}
 	return &formatted, nil
