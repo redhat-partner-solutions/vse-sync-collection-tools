@@ -32,7 +32,7 @@ func (ptpDevInfo *PTPDeviceInfo) GetAnalyserFormat() (*callbacks.AnalyserFormatT
 
 	formatted := callbacks.AnalyserFormatType{
 		ID: "devInfo",
-		Data: []string{
+		Data: []any{
 			time.Now().Add(offset).UTC().Format(time.RFC3339Nano),
 			ptpDevInfo.Timestamp,
 			ptpDevInfo.VendorID,
