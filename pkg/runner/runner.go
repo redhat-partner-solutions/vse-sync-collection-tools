@@ -193,7 +193,7 @@ func (runner *CollectorRunner) cleanUpAll() {
 // It first initialises them,
 // then polls them on the correct cadence and
 // finally cleans up the collectors when exiting
-func (runner *CollectorRunner) Run(
+func (runner *CollectorRunner) Run( //nolint:funlen // allow a slightly long function
 	kubeConfig string,
 	outputFile string,
 	pollCount int,
@@ -202,7 +202,8 @@ func (runner *CollectorRunner) Run(
 	ptpInterface string,
 	useAnalyserJSON bool,
 ) {
-	clientset := clients.GetClientset(kubeConfig)
+	clientset, err := clients.GetClientset(kubeConfig)
+	utils.IfErrorExitOrPanic(err)
 
 	outputFormat := callbacks.Raw
 	if useAnalyserJSON {

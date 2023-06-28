@@ -99,7 +99,10 @@ func (inst *fetcher) Fetch(ctx clients.ContainerContext, pack interface{}) error
 // runCommands executes the commands on the container passed as the ctx
 // and extracts the results from the stdout
 func runCommands(ctx clients.ContainerContext, cmdGrp clients.Cmder) (result map[string]string, err error) { //nolint:lll // allow slightly long function definition
-	clientset := clients.GetClientset()
+	clientset, err := clients.GetClientset()
+	if err != nil {
+		return result, fmt.Errorf("failed to get clientset %w", err)
+	}
 	cmd := cmdGrp.GetCommand()
 	command := []string{"/usr/bin/sh"}
 	var buffIn bytes.Buffer

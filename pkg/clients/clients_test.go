@@ -26,17 +26,21 @@ var _ = Describe("Client", func() {
 	})
 
 	When("A clientset is requested with no kubeconfig", func() {
-		It("should panic", func() {
+		It("should return an error", func() {
 			var clientset *clients.Clientset
-			Expect(func() { clientset = clients.GetClientset(notAKubeconfigPath) }).To(Panic())
+			clientset, err := clients.GetClientset(notAKubeconfigPath)
+			Expect(err).To(HaveOccurred())
 			Expect(clientset).To(BeNil())
-			Expect(func() { clientset = clients.GetClientset(emptyKubeconfigList...) }).To(Panic())
+
+			clientset, err = clients.GetClientset(emptyKubeconfigList...)
+			Expect(err).To(HaveOccurred())
 			Expect(clientset).To(BeNil())
 		})
 	})
 	When("A clientset is requested using a valid kubeconfig", func() {
 		It("should be returned", func() {
-			clientset := clients.GetClientset(kubeconfigPath)
+			clientset, err := clients.GetClientset(kubeconfigPath)
+			Expect(err).NotTo(HaveOccurred())
 			Expect(clientset).NotTo(BeNil())
 		})
 	})
