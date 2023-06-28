@@ -37,7 +37,11 @@ var _ = Describe("NewContainerContext", func() {
 	var clientset *clients.Clientset
 	BeforeEach(func() {
 		clients.ClearClientSet()
-		clientset = clients.GetClientset(kubeconfigPath)
+		var err error
+		clientset, err = clients.GetClientset(kubeconfigPath)
+		if err != nil {
+			panic("failed to get clientset")
+		}
 	})
 
 	When("A ContainerContext is requested for a pod which DOES NOT exist", func() {

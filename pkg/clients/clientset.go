@@ -12,6 +12,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+
+	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/utils"
 )
 
 // A Clientset contains clients for the different k8s API groups in one place
@@ -27,19 +29,23 @@ type Clientset struct {
 var clientset = Clientset{}
 
 // GetClientset returns the singleton clientset object.
-func GetClientset(kubeconfigPaths ...string) *Clientset {
+func GetClientset(kubeconfigPaths ...string) (*Clientset, error) {
 	if clientset.ready {
-		return &clientset
+		return &clientset, nil
 	}
 
 	if len(kubeconfigPaths) == 0 {
-		log.Panic("must have at least one kubeconfig to initialise a new Clientset")
+		return nil, utils.NewMissingInputError(
+			fmt.Errorf("must have at least one kubeconfig to initialise a new Clientset"),
+		)
 	}
 	clientset, err := newClientset(kubeconfigPaths...)
 	if err != nil {
-		log.Panic("Failed to create k8s clients holder: ", err)
+		return nil, utils.NewMissingInputError(
+			fmt.Errorf("failed to create k8s clients holder: %w", err),
+		)
 	}
-	return clientset
+	return clientset, nil
 }
 
 // newClientset will initialise the singleton clientset using provided kubeconfigPath
