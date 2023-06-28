@@ -33,10 +33,11 @@ type AnalyserFormatType struct {
 }
 
 type OutputType interface {
-	GetAnalyserFormat() (*AnalyserFormatType, error)
+	GetAnalyserFormat() ([]*AnalyserFormatType, error)
 }
 
-func getLine(c Callback, output OutputType, tag string) ([]byte, error) {
+// getFormattedOutput returns the output in the format configured by on the callback
+func getFormattedOutput(c Callback, output OutputType, tag string) ([]byte, error) {
 	switch c.getFormat() {
 	case Raw:
 		line, err := json.Marshal(output)
@@ -45,15 +46,24 @@ func getLine(c Callback, output OutputType, tag string) ([]byte, error) {
 		}
 		return []byte(fmt.Sprintf("%T:%s, %s", output, tag, line)), nil
 	case AnalyserJSON:
-		analyserFormat, err := output.GetAnalyserFormat()
+		outputs, err := output.GetAnalyserFormat()
 		if err != nil {
 			return []byte{}, fmt.Errorf("failed to get AnalyserFormat %w", err)
 		}
-		line, err := json.Marshal(analyserFormat)
-		if err != nil {
-			return []byte{}, fmt.Errorf("failed to marshal AnalyserFormat for %s %w", tag, err)
+		newline := []byte("\n")
+		lines := make([]byte, 0)
+		for count, obj := range outputs {
+			line, err := json.Marshal(obj)
+			if err != nil {
+				return []byte{}, fmt.Errorf("failed to marshal AnalyserFormat for %s %w", tag, err)
+			}
+			lines = append(lines, line...)
+			// Append a new line between the entries but not a trailing one
+			if count < len(outputs)-1 {
+				lines = append(lines, newline...)
+			}
 		}
-		return line, nil
+		return lines, nil
 	default:
 		return []byte{}, errors.New("unknown format")
 	}
@@ -99,12 +109,12 @@ type FileCallBack struct {
 }
 
 func (c FileCallBack) Call(output OutputType, tag string) error {
-	line, err := getLine(c, output, tag)
+	formattedOutput, err := getFormattedOutput(c, output, tag)
 	if err != nil {
 		return err
 	}
-	line = append(line, []byte("\n")...)
-	_, err = c.fileHandle.Write(line)
+	formattedOutput = append(formattedOutput, []byte("\n")...)
+	_, err = c.fileHandle.Write(formattedOutput)
 	if err != nil {
 		return fmt.Errorf("failed to write to file in callback: %w", err)
 	}
