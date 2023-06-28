@@ -24,7 +24,7 @@ type GPSNav struct {
 	FreqAcc         int    `json:"freqAcc" fetcherKey:"freqAcc"`
 }
 
-func (gpsNav *GPSNav) GetAnalyserFormat() (*callbacks.AnalyserFormatType, error) {
+func (gpsNav *GPSNav) GetAnalyserFormat() ([]*callbacks.AnalyserFormatType, error) {
 	formatted := callbacks.AnalyserFormatType{
 		ID: "gnss/time-error",
 		Data: []any{
@@ -34,7 +34,7 @@ func (gpsNav *GPSNav) GetAnalyserFormat() (*callbacks.AnalyserFormatType, error)
 			gpsNav.FreqAcc,
 		},
 	}
-	return &formatted, nil
+	return []*callbacks.AnalyserFormatType{&formatted}, nil
 }
 
 var (

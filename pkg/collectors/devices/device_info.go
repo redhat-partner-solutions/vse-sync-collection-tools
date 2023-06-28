@@ -24,7 +24,7 @@ type PTPDeviceInfo struct {
 }
 
 // AnalyserJSON returns the json expected by the analysers
-func (ptpDevInfo *PTPDeviceInfo) GetAnalyserFormat() (*callbacks.AnalyserFormatType, error) {
+func (ptpDevInfo *PTPDeviceInfo) GetAnalyserFormat() ([]*callbacks.AnalyserFormatType, error) {
 	formatted := callbacks.AnalyserFormatType{
 		ID: "devInfo",
 		Data: []any{
@@ -35,7 +35,7 @@ func (ptpDevInfo *PTPDeviceInfo) GetAnalyserFormat() (*callbacks.AnalyserFormatT
 			ptpDevInfo.GNSSDev,
 		},
 	}
-	return &formatted, nil
+	return []*callbacks.AnalyserFormatType{&formatted}, nil
 }
 
 var (

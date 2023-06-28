@@ -35,12 +35,12 @@ type testOutputType struct {
 	// responder func() (*callbacks.AnalyserFormatType, error)
 }
 
-func (t *testOutputType) GetAnalyserFormat() (*callbacks.AnalyserFormatType, error) {
+func (t *testOutputType) GetAnalyserFormat() ([]*callbacks.AnalyserFormatType, error) {
 	fomatted := callbacks.AnalyserFormatType{
 		ID:   "testOutput",
 		Data: []any{"Hello"},
 	}
-	return &fomatted, nil
+	return []*callbacks.AnalyserFormatType{&fomatted}, nil
 }
 
 var _ = Describe("Callbacks", func() {

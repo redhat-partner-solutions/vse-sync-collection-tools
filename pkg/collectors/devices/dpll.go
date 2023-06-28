@@ -29,7 +29,7 @@ type DevDPLLInfo struct {
 }
 
 // AnalyserJSON returns the json expected by the analysers
-func (dpllInfo *DevDPLLInfo) GetAnalyserFormat() (*callbacks.AnalyserFormatType, error) {
+func (dpllInfo *DevDPLLInfo) GetAnalyserFormat() ([]*callbacks.AnalyserFormatType, error) {
 	formatted := callbacks.AnalyserFormatType{
 		ID: "dpll/time-error",
 		Data: []any{
@@ -39,7 +39,7 @@ func (dpllInfo *DevDPLLInfo) GetAnalyserFormat() (*callbacks.AnalyserFormatType,
 			dpllInfo.PPSOffset / unitConversionFactor,
 		},
 	}
-	return &formatted, nil
+	return []*callbacks.AnalyserFormatType{&formatted}, nil
 }
 
 var (
