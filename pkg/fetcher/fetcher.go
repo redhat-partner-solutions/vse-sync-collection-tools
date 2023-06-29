@@ -64,7 +64,7 @@ func (inst *Fetcher) Fetch(ctx clients.ContainerContext, pack any) error {
 	if inst.postProcesser != nil {
 		updatedResults, ppErr := inst.postProcesser(runResult)
 		if ppErr != nil {
-			return fmt.Errorf("feching failed post process the data %w", err)
+			return fmt.Errorf("feching failed post process the data %w", ppErr)
 		}
 		for key, value := range updatedResults {
 			result[key] = value
