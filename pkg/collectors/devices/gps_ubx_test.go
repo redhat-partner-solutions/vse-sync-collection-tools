@@ -39,10 +39,20 @@ var _ = Describe("GetGPSNav", func() {
 
 	When("called GetGPSNav", func() {
 		It("should return a valid GPSNav", func() {
-			expectedInput := "echo '<GPS>';ubxtool -t -p NAV-STATUS -p NAV-CLOCK -P 29.20;echo '</GPS>';"
+			expectedInput := "echo '<GPS>';ubxtool -t -p NAV-STATUS -p NAV-CLOCK -p MON-RF -P 29.20;echo '</GPS>';"
 
 			expectedOutput := strings.Join([]string{
 				"<GPS>",
+				"1686916187.0584",
+				"UBX-MON-RF:",
+				" version 0 nBlocks 2 reserved1 0 0",
+				"   blockId 0 flags x0 antStatus 2 antPower 1 postStatus 0 reserved2 0 0 0 0",
+				"    noisePerMS 82 agcCnt 6318 jamInd 3 ofsI 15 magI 154 ofsQ 2 magQ 145",
+				"    reserved3 0 0 0",
+				"   blockId 1 flags x0 antStatus 2 antPower 1 postStatus 0 reserved2 0 0 0 0",
+				"    noisePerMS 49 agcCnt 6669 jamInd 2 ofsI 11 magI 146 ofsQ 1 magQ 139",
+				"    reserved3 0 0 0",
+				"",
 				"1686916187.0584",
 				"UBX-NAV-STATUS:",
 				"  iTOW 474605000 gpsFix 3 flags 0xdd fixStat 0x0 flags2 0x8",
@@ -66,6 +76,10 @@ var _ = Describe("GetGPSNav", func() {
 			Expect(gpsInfo.GPSFix).To(Equal("3"))
 			Expect(gpsInfo.TimeAcc).To(Equal(5))
 			Expect(gpsInfo.FreqAcc).To(Equal(164))
+			Expect(gpsInfo.TimestampMon).To(Equal("2023-06-16T11:49:47.0584Z"))
+			Expect(gpsInfo.AntBlockID).To(Equal([]int{0, 1}))
+			Expect(gpsInfo.AntStatus).To(Equal([]int{2, 2}))
+			Expect(gpsInfo.AntPower).To(Equal([]int{1, 1}))
 		})
 	})
 })
