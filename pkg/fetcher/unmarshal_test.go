@@ -5,52 +5,85 @@ package fetcher //nolint:testpackage // testing internal functions
 import (
 	"reflect"
 	"testing"
+	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
-type testStruct struct {
-	TestString string `fetcherKey:"str"`
-	TestSlice  []int  `fetcherKey:"slice"`
+type testStruct struct { //nolint:govet // changing the order would break the tests as it relies on the ordering
+	TestString   string        `fetcherKey:"str"`
+	TestSlice    []int         `fetcherKey:"slice"`
+	TestDuration time.Duration `fetcherKey:"duration"`
+	TestStuct    nestedStuct   `fetcherKey:"struct"`
 }
 
-var _ = Describe("unmarshal", func() {
-	When("calling setValue with the correct type", func() {
+type nestedStuct struct {
+	Value string
+}
+
+var _ = Describe("setValueOnField", func() {
+	When("calling setValueOnField with the correct type", func() {
 		It("should populate the field", func() {
 			target := &testStruct{}
 			testStrValue := "I am a test string"
 			strField := reflect.TypeOf(target).Elem().Field(0)
 			strFieldVal := reflect.ValueOf(target).Elem().FieldByIndex(strField.Index)
-			err := setValue(&strField, strFieldVal, testStrValue)
+			err := setValueOnField(strFieldVal, testStrValue)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(target.TestString).To(Equal(testStrValue))
 
 			testSliceValue := []int{12, 15, 18}
 			sliceField := reflect.TypeOf(target).Elem().Field(1)
 			sliceFieldVal := reflect.ValueOf(target).Elem().FieldByIndex(sliceField.Index)
-			err = setValue(&sliceField, sliceFieldVal, testSliceValue)
+			err = setValueOnField(sliceFieldVal, testSliceValue)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(target.TestSlice).To(Equal(testSliceValue))
 
 		})
 	})
-	When("calling setValue with the incorrect type", func() {
+	When("calling setValueOnField with a non trivial type", func() {
+		It("should populate the field", func() {
+			target := &testStruct{}
+			testDuration := 10 * time.Second
+			sliceField := reflect.TypeOf(target).Elem().Field(2)
+			sliceFieldVal := reflect.ValueOf(target).Elem().FieldByIndex(sliceField.Index)
+			err := setValueOnField(sliceFieldVal, testDuration)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(target.TestDuration).To(Equal(testDuration))
+
+		})
+	})
+	When("calling setValueOnField with a struct type", func() {
+		It("should populate the field", func() {
+			target := &testStruct{}
+			toNest := nestedStuct{Value: "I am nested"}
+			sliceField := reflect.TypeOf(target).Elem().Field(3)
+			sliceFieldVal := reflect.ValueOf(target).Elem().FieldByIndex(sliceField.Index)
+			err := setValueOnField(sliceFieldVal, toNest)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(target.TestStuct).To(Equal(toNest))
+		})
+	})
+	When("calling setValueOnField with the incorrect type", func() {
 		It("should return an error", func() {
 			target := &testStruct{}
 			testNonStrValue := 12
 			strField := reflect.TypeOf(target).Elem().Field(0)
 			strFieldVal := reflect.ValueOf(target).Elem().FieldByIndex(strField.Index)
-			err := setValue(&strField, strFieldVal, testNonStrValue)
+			err := setValueOnField(strFieldVal, testNonStrValue)
 			Expect(err).To(HaveOccurred())
 
 			testBadSliceValue := []string{"12", "15", "18"}
 			sliceField := reflect.TypeOf(target).Elem().Field(1)
 			sliceFieldVal := reflect.ValueOf(target).Elem().FieldByIndex(sliceField.Index)
-			err = setValue(&sliceField, sliceFieldVal, testBadSliceValue)
+			err = setValueOnField(sliceFieldVal, testBadSliceValue)
 			Expect(err).To(HaveOccurred())
 		})
 	})
+})
+
+var _ = Describe("unmarshal", func() {
 	When("calling unmarshal with the correct types", func() {
 		It("should populate the target", func() {
 			target := &testStruct{}

@@ -5,6 +5,7 @@ package devices
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -19,8 +20,8 @@ type GPSNav struct {
 	TimestampStatus string `json:"timestampStatus" fetcherKey:"navStatusTimestamp"`
 	TimestampClock  string `json:"timestampClock" fetcherKey:"navClockTimestamp"`
 	GPSFix          string `json:"GPSFix" fetcherKey:"gpsFix"`
-	TimeAcc         string `json:"timeAcc" fetcherKey:"timeAcc"`
-	FreqAcc         string `json:"freqAcc" fetcherKey:"freqAcc"`
+	TimeAcc         int    `json:"timeAcc" fetcherKey:"timeAcc"`
+	FreqAcc         int    `json:"freqAcc" fetcherKey:"freqAcc"`
 }
 
 func (gpsNav *GPSNav) GetAnalyserFormat() (*callbacks.AnalyserFormatType, error) {
@@ -91,11 +92,19 @@ func processUBXNav(result map[string]string) (map[string]any, error) {
 	if err != nil {
 		return processedResult, fmt.Errorf("failed to parse navClockTimestamp %w", err)
 	}
+	timeAcc, err := strconv.Atoi(match[13])
+	if err != nil {
+		return processedResult, fmt.Errorf("failed to convert %s into and int", match[13])
+	}
+	freqAcc, err := strconv.Atoi(match[14])
+	if err != nil {
+		return processedResult, fmt.Errorf("failed to convert %s into and int", match[14])
+	}
 
 	processedResult["navClockTimestamp"] = timestampClock.Format(time.RFC3339Nano)
 	processedResult["gpsFix"] = match[3]
-	processedResult["timeAcc"] = match[13]
-	processedResult["freqAcc"] = match[14]
+	processedResult["timeAcc"] = timeAcc
+	processedResult["freqAcc"] = freqAcc
 
 	return processedResult, nil
 }
