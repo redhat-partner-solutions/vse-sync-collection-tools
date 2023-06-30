@@ -3,16 +3,12 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
-	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/logging"
-	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/runner"
-	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/utils"
 )
 
 const (
@@ -22,33 +18,19 @@ const (
 )
 
 var (
-	kubeConfig             string
-	pollCount              int
-	pollInterval           int
-	devInfoAnnouceInterval int
-	ptpInterface           string
-	outputFile             string
-	logLevel               string
-	useAnalyserJSON        bool
-	collectorNames         []string
+	kubeConfig      string
+	logLevel        string
+	outputFile      string
+	useAnalyserJSON bool
+	ptpInterface    string
 
 	// rootCmd represents the base command when called without any subcommands
 	rootCmd = &cobra.Command{
 		Use:   "vse-sync-testsuite",
 		Short: "A monitoring tool for PTP related metrics",
 		Long:  `A monitoring tool for PTP related metrics.`,
-		Run: func(cmd *cobra.Command, args []string) {
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			logging.SetupLogging(logLevel, os.Stdout)
-			collectionRunner := runner.NewCollectorRunner(collectorNames)
-			collectionRunner.Run(
-				kubeConfig,
-				outputFile,
-				pollCount,
-				pollInterval,
-				devInfoAnnouceInterval,
-				ptpInterface,
-				useAnalyserJSON,
-			)
 		},
 	}
 )
@@ -62,68 +44,12 @@ func Execute() {
 	}
 }
 
-func init() { //nolint:funlen // Allow this to get a little long
-	rootCmd.PersistentFlags().StringVarP(&kubeConfig, "kubeconfig", "k", "", "Path to the kubeconfig file")
-	err := rootCmd.MarkPersistentFlagRequired("kubeconfig")
-	utils.IfErrorExitOrPanic(err)
-
-	rootCmd.PersistentFlags().StringVarP(&ptpInterface, "interface", "i", "", "Name of the first port on the target card")
-	err = rootCmd.MarkPersistentFlagRequired("interface")
-	utils.IfErrorExitOrPanic(err)
-
-	rootCmd.PersistentFlags().IntVarP(
-		&pollCount,
-		"count",
-		"c",
-		defaultCount,
-		"Number of queries the cluster (-1) means infinite",
-	)
-	rootCmd.PersistentFlags().IntVarP(
-		&pollInterval,
-		"rate",
-		"r",
-		defaultPollInterval,
-		"Poll interval for querying the cluster. The value will be polled once ever interval. "+
-			"Using --rate 10 will cause the value to be polled once every 10 seconds",
-	)
-	rootCmd.PersistentFlags().IntVarP(
-		&devInfoAnnouceInterval,
-		"announce",
-		"a",
-		defaultDevInfoInterval,
-		"interval for announcing the dev info",
-	)
-
+func init() {
 	rootCmd.PersistentFlags().StringVarP(
 		&logLevel,
 		"verbosity",
 		"v",
 		log.WarnLevel.String(),
 		"Log level (debug, info, warn, error, fatal, panic)",
-	)
-	rootCmd.PersistentFlags().StringVarP(&outputFile, "output", "o", "", "Path to the output file")
-
-	rootCmd.PersistentFlags().BoolVarP(
-		&useAnalyserJSON,
-		"use-analyser-format",
-		"j",
-		false,
-		"Output in a format to be used by analysers from vse-sync-pp",
-	)
-
-	defaultCollectorNames := make([]string, 0)
-	defaultCollectorNames = append(defaultCollectorNames, runner.All)
-	rootCmd.PersistentFlags().StringSliceVarP(
-		&collectorNames,
-		"collector",
-		"s",
-		defaultCollectorNames,
-		fmt.Sprintf(
-			"the collectors you wish to run (case-insensitive):\n"+
-				"\trequired collectors: %s (will be automatically added)\n"+
-				"\toptional collectors: %s",
-			strings.Join(runner.RequiredCollectorNames, ", "),
-			strings.Join(runner.OptionalCollectorNames, ", "),
-		),
 	)
 }
