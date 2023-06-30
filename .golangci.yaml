@@ -86,6 +86,7 @@ linters:
     - structcheck
     - varcheck
     - wsl
+    - ireturn
 issues:
   # Excluding configuration per-path, per-linter, per-text and per-source
   exclude-rules:

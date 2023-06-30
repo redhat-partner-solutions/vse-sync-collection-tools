@@ -8,6 +8,7 @@ import (
 
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/callbacks"
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/clients"
+	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/collectors/contexts"
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/collectors/devices"
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/utils"
 )
@@ -15,7 +16,6 @@ import (
 var (
 	GPSCollectorName = "GNSS"
 	gpsNavKey        = "gpsNav"
-	GPSContainer     = "gpsd"
 )
 
 type GPSCollector struct {
@@ -84,9 +84,9 @@ func (gps *GPSCollector) GetPollCount() int {
 
 // Returns a new GPSCollector based on values in the CollectionConstructor
 func NewGPSCollector(constructor *CollectionConstructor) (Collector, error) {
-	ctx, err := clients.NewContainerContext(constructor.Clientset, PTPNamespace, PodNamePrefix, GPSContainer)
+	ctx, err := contexts.GetPTPgpsdContext(constructor.Clientset)
 	if err != nil {
-		return &GPSCollector{}, fmt.Errorf("could not create container context %w", err)
+		return &GPSCollector{}, fmt.Errorf("failed to create DPLLCollector: %w", err)
 	}
 
 	collector := GPSCollector{
