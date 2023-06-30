@@ -8,6 +8,7 @@ import (
 
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/callbacks"
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/clients"
+	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/collectors/contexts"
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/collectors/devices"
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/utils"
 )
@@ -84,9 +85,9 @@ func (dpll *DPLLCollector) GetPollCount() int {
 
 // Returns a new DPLLCollector from the CollectionConstuctor Factory
 func NewDPLLCollector(constructor *CollectionConstructor) (Collector, error) {
-	ctx, err := clients.NewContainerContext(constructor.Clientset, PTPNamespace, PodNamePrefix, PTPContainer)
+	ctx, err := contexts.GetPTPDaemonContext(constructor.Clientset)
 	if err != nil {
-		return &DPLLCollector{}, fmt.Errorf("could not create container context %w", err)
+		return &DPLLCollector{}, fmt.Errorf("failed to create DPLLCollector: %w", err)
 	}
 	err = devices.BuildDPLLInfoFetcher(constructor.PTPInterface)
 	if err != nil {

@@ -12,7 +12,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/runner"
-	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/utils"
 )
 
 var (
@@ -44,13 +43,7 @@ var collectCmd = &cobra.Command{
 func init() { //nolint:funlen // Allow this to get a little long
 	rootCmd.AddCommand(collectCmd)
 
-	collectCmd.PersistentFlags().StringVarP(&kubeConfig, "kubeconfig", "k", "", "Path to the kubeconfig file")
-	err := collectCmd.MarkPersistentFlagRequired("kubeconfig")
-	utils.IfErrorExitOrPanic(err)
-
-	collectCmd.PersistentFlags().StringVarP(&ptpInterface, "interface", "i", "", "Name of the PTP interface")
-	err = collectCmd.MarkPersistentFlagRequired("interface")
-	utils.IfErrorExitOrPanic(err)
+	AddCommonFlags(collectCmd)
 
 	collectCmd.Flags().IntVarP(
 		&pollCount,
@@ -88,14 +81,5 @@ func init() { //nolint:funlen // Allow this to get a little long
 			strings.Join(runner.RequiredCollectorNames, ", "),
 			strings.Join(runner.OptionalCollectorNames, ", "),
 		),
-	)
-	collectCmd.PersistentFlags().StringVarP(&outputFile, "output", "o", "", "Path to the output file")
-
-	collectCmd.PersistentFlags().BoolVarP(
-		&useAnalyserJSON,
-		"use-analyser-format",
-		"j",
-		false,
-		"Output in a format to be used by analysers from vse-sync-pp",
 	)
 }

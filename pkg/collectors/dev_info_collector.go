@@ -11,8 +11,10 @@ import (
 
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/callbacks"
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/clients"
+	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/collectors/contexts"
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/collectors/devices"
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/utils"
+	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/vaildations"
 )
 
 type DevInfoCollector struct {
@@ -32,8 +34,6 @@ type DevInfoCollector struct {
 const (
 	DevInfoCollectorName = "DevInfo"
 	DeviceInfo           = "device-info"
-	VendorIntel          = "0x8086"
-	DeviceE810           = "0x1593"
 )
 
 func (ptpDev *DevInfoCollector) GetPollInterval() int {
@@ -131,21 +131,13 @@ func (ptpDev *DevInfoCollector) GetPollCount() int {
 	return int(atomic.LoadUint32(&ptpDev.count))
 }
 
-func verify(ptpDevInfo *devices.PTPDeviceInfo) error {
-	if ptpDevInfo.VendorID != VendorIntel || ptpDevInfo.DeviceID != DeviceE810 {
-		return utils.NewInvalidEnvError(fmt.Errorf("NIC device is not based on E810"))
-	}
-	return nil
-}
-
 // Returns a new DevInfoCollector from the CollectionConstuctor Factory
 func NewDevInfoCollector(constructor *CollectionConstructor) (Collector, error) {
-	ctx, err := clients.NewContainerContext(constructor.Clientset, PTPNamespace, PodNamePrefix, PTPContainer)
-	if err != nil {
-		return &DevInfoCollector{}, fmt.Errorf("could not create container context %w", err)
-	}
-
 	// Build DPPInfoFetcher ahead of time call to GetPTPDeviceInfo will build the other
+	ctx, err := contexts.GetPTPDaemonContext(constructor.Clientset)
+	if err != nil {
+		return &DevInfoCollector{}, fmt.Errorf("failed to create DevInfoCollector: %w", err)
+	}
 	err = devices.BuildPTPDeviceInfo(constructor.PTPInterface)
 	if err != nil {
 		return &DevInfoCollector{}, fmt.Errorf("failed to build fetcher for PTPDeviceInfo %w", err)
@@ -156,7 +148,7 @@ func NewDevInfoCollector(constructor *CollectionConstructor) (Collector, error) 
 		return &DevInfoCollector{}, fmt.Errorf("failed to fetch initial DeviceInfo %w", err)
 	}
 
-	err = verify(&ptpDevInfo)
+	err = vaildations.VerifyDeviceInfo(&ptpDevInfo)
 	if err != nil {
 		callbackErr := constructor.Callback.Call(&ptpDevInfo, DeviceInfo)
 		if callbackErr != nil {
