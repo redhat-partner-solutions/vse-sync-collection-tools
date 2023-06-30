@@ -22,25 +22,21 @@ const (
 )
 
 type DevDPLLInfo struct {
-	Timestamp string `json:"date" fetcherKey:"date"`
-	EECState  string `json:"EECState" fetcherKey:"dpll_0_state"`
-	PPSState  string `json:"PPSState" fetcherKey:"dpll_1_state"`
-	PPSOffset string `json:"PPSOffset" fetcherKey:"dpll_1_offset"`
+	Timestamp string  `json:"date" fetcherKey:"date"`
+	EECState  string  `json:"EECState" fetcherKey:"dpll_0_state"`
+	PPSState  string  `json:"PPSState" fetcherKey:"dpll_1_state"`
+	PPSOffset float64 `json:"PPSOffset" fetcherKey:"dpll_1_offset"`
 }
 
 // AnalyserJSON returns the json expected by the analysers
 func (dpllInfo *DevDPLLInfo) GetAnalyserFormat() (*callbacks.AnalyserFormatType, error) {
-	offset, err := strconv.ParseFloat(dpllInfo.PPSOffset, 32)
-	if err != nil {
-		return &callbacks.AnalyserFormatType{}, fmt.Errorf("failed converting PPSOffset %w", err)
-	}
 	formatted := callbacks.AnalyserFormatType{
 		ID: "dpll/time-error",
 		Data: []any{
 			dpllInfo.Timestamp,
 			dpllInfo.EECState,
 			dpllInfo.PPSState,
-			fmt.Sprintf("%f", offset/unitConversionFactor),
+			dpllInfo.PPSOffset / unitConversionFactor,
 		},
 	}
 	return &formatted, nil
@@ -69,11 +65,22 @@ func init() {
 	dpplDateCmd.SetOutputProcessor(formatTimestampAsRFC3339Nano)
 }
 
+func postProcessDPLL(result map[string]string) (map[string]any, error) {
+	processedResult := make(map[string]any)
+	offset, err := strconv.ParseFloat(result["dpll_1_offset"], 32)
+	if err != nil {
+		return processedResult, fmt.Errorf("failed converting dpll_1_offset %w to an int", err)
+	}
+	processedResult["dpll_1_offset"] = offset
+	return processedResult, nil
+}
+
 // BuildDPLLInfoFetcher popluates the fetcher required for
 // collecting the DPLLInfo
 func BuildDPLLInfoFetcher(interfaceName string) error {
 	fetcherInst := fetcher.NewFetcher()
 	dpllFetcher[interfaceName] = fetcherInst
+	fetcherInst.SetPostProcesser(postProcessDPLL)
 	fetcherInst.AddCommand(dpplDateCmd)
 
 	err := fetcherInst.AddNewCommand(

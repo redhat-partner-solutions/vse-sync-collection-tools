@@ -37,10 +37,10 @@ var _ = Describe("NewContainerContext", func() {
 		clients.NewSPDYExecutor = testutils.NewFakeNewSPDYExecutor(responder, nil)
 	})
 	When("called GetDevDPLLInfo", func() {
-		It("should return a valid PTPDeviceInfo", func() {
+		It("should return a valid DevDPLLInfo", func() {
 			eecState := "2"
 			pssState := "10"
-			offset := "-34"
+			offset := float64(-34)
 
 			expectedInput := "echo '<date>';date +%s.%N;echo '</date>';"
 			expectedInput += "echo '<dpll_0_state>';cat /sys/class/net/aFakeInterface/device/dpll_0_state;echo '</dpll_0_state>';"
@@ -50,7 +50,7 @@ var _ = Describe("NewContainerContext", func() {
 			expectedOutput := "<date>\n1686916187.0584\n</date>\n"
 			expectedOutput += fmt.Sprintf("<dpll_0_state>\n%s\n</dpll_0_state>\n", eecState)
 			expectedOutput += fmt.Sprintf("<dpll_1_state>\n%s\n</dpll_1_state>\n", pssState)
-			expectedOutput += fmt.Sprintf("<dpll_1_offset>\n%s\n</dpll_1_offset>\n", offset)
+			expectedOutput += fmt.Sprintf("<dpll_1_offset>\n%f\n</dpll_1_offset>\n", offset)
 
 			response[expectedInput] = []byte(expectedOutput)
 

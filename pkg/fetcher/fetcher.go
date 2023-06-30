@@ -5,7 +5,6 @@ package fetcher
 import (
 	"bytes"
 	"fmt"
-	"reflect"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -49,53 +48,6 @@ func (inst *Fetcher) AddNewCommand(key, cmd string, trim bool) error {
 // AddCommand takes a command instance and adds it the fetcher
 func (inst *Fetcher) AddCommand(cmdInst *clients.Cmd) {
 	inst.cmdGrp.AddCommand(cmdInst)
-}
-
-func setValue(field *reflect.StructField, fieldVal reflect.Value, value any) error {
-	//nolint:exhaustive //we could extend this but its not needed yet
-	switch field.Type.Kind() {
-	case reflect.String:
-		stringRes, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("failed to convert %v into string", value)
-		}
-		fieldVal.SetString(stringRes)
-	case reflect.Slice:
-		resType := reflect.TypeOf(value)
-		if field.Type != resType {
-			return fmt.Errorf(
-				"type of %v does not match field type %v",
-				resType,
-				field.Type,
-			)
-		}
-		fieldVal.Set(reflect.ValueOf(value))
-	default:
-		return fmt.Errorf("fetcher unmarshal not implemented for type: %s", field.Type.Name())
-	}
-	return nil
-}
-
-// unmarshal will populate the fields in `target` with the values from `result` according to the fields`fetcherKey` tag.
-// fields with no `fetcherKey` tag will not be touched, and elements in `result` without a matched field will be ignored.
-func unmarshal(result map[string]any, target any) error {
-	val := reflect.ValueOf(target)
-	typ := reflect.TypeOf(target)
-
-	for i := 0; i < val.Elem().NumField(); i++ {
-		field := typ.Elem().Field(i)
-		resultName := field.Tag.Get("fetcherKey")
-		if resultName != "" {
-			f := val.Elem().FieldByIndex(field.Index)
-			if res, ok := result[resultName]; ok {
-				err := setValue(&field, f, res)
-				if err != nil {
-					return fmt.Errorf("failed to set value on feild %s: %w", resultName, err)
-				}
-			}
-		}
-	}
-	return nil
 }
 
 // Fetch executes the commands on the container passed as the ctx and

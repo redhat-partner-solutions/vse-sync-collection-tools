@@ -16,24 +16,19 @@ import (
 )
 
 type PTPDeviceInfo struct {
-	Timestamp  string `json:"date" fetcherKey:"date"`
-	VendorID   string `json:"vendorId" fetcherKey:"vendorID"`
-	DeviceID   string `json:"deviceInfo" fetcherKey:"devID"`
-	GNSSDev    string `json:"GNSSDev" fetcherKey:"gnss"`
-	Timeoffset string `json:"timeOffset" fetcherKey:"timeOffset"`
+	Timestamp  string        `json:"date" fetcherKey:"date"`
+	VendorID   string        `json:"vendorId" fetcherKey:"vendorID"`
+	DeviceID   string        `json:"deviceInfo" fetcherKey:"devID"`
+	GNSSDev    string        `json:"GNSSDev" fetcherKey:"gnss"`
+	Timeoffset time.Duration `json:"timeOffset" fetcherKey:"timeOffset"`
 }
 
 // AnalyserJSON returns the json expected by the analysers
 func (ptpDevInfo *PTPDeviceInfo) GetAnalyserFormat() (*callbacks.AnalyserFormatType, error) {
-	offset, err := time.ParseDuration(ptpDevInfo.Timeoffset)
-	if err != nil {
-		return &callbacks.AnalyserFormatType{}, fmt.Errorf("failed to parse offset %s %w", ptpDevInfo.Timeoffset, err)
-	}
-
 	formatted := callbacks.AnalyserFormatType{
 		ID: "devInfo",
 		Data: []any{
-			time.Now().Add(offset).UTC().Format(time.RFC3339Nano),
+			time.Now().Add(ptpDevInfo.Timeoffset).UTC().Format(time.RFC3339Nano),
 			ptpDevInfo.Timestamp,
 			ptpDevInfo.VendorID,
 			ptpDevInfo.DeviceID,
@@ -66,7 +61,7 @@ func extractOffsetFromTimestamp(result map[string]string) (map[string]any, error
 		return processedResult, fmt.Errorf("failed to parse timestamp  %w", err)
 	}
 	processedResult["date"] = timestamp.Format(time.RFC3339Nano)
-	processedResult["timeOffset"] = fmt.Sprintf("%fs", time.Since(timestamp).Seconds())
+	processedResult["timeOffset"] = time.Since(timestamp)
 	return processedResult, nil
 }
 
