@@ -82,13 +82,13 @@ func (clientsholder *Clientset) ExecCommandContainer(ctx ContainerContext, comma
 	commandStr := command
 	var buffOut bytes.Buffer
 	var buffErr bytes.Buffer
-	log.Debug(fmt.Sprintf(
+	log.Debugf(
 		"execute command on ns=%s, pod=%s container=%s, cmd: %s",
 		ctx.GetNamespace(),
 		ctx.GetPodName(),
 		ctx.GetContainerName(),
 		strings.Join(commandStr, " "),
-	))
+	)
 	req := clientsholder.K8sRestClient.Post().
 		Namespace(ctx.GetNamespace()).
 		Resource("pods").
@@ -105,7 +105,7 @@ func (clientsholder *Clientset) ExecCommandContainer(ctx ContainerContext, comma
 
 	exec, err := NewSPDYExecutor(clientsholder.RestConfig, "POST", req.URL())
 	if err != nil {
-		log.Error(err)
+		log.Debug(err)
 		return stdout, stderr, fmt.Errorf("error setting up remote command: %w", err)
 	}
 
@@ -115,11 +115,11 @@ func (clientsholder *Clientset) ExecCommandContainer(ctx ContainerContext, comma
 	})
 	stdout, stderr = buffOut.String(), buffErr.String()
 	if err != nil {
-		log.Error(err)
-		log.Error(req.URL())
-		log.Error("command: ", command)
-		log.Error("stderr: ", stderr)
-		log.Error("stdout: ", stdout)
+		log.Debug(err)
+		log.Debug(req.URL())
+		log.Debug("command: ", command)
+		log.Debug("stderr: ", stderr)
+		log.Debug("stdout: ", stdout)
 		return stdout, stderr, fmt.Errorf("error running remote command: %w", err)
 	}
 	return stdout, stderr, nil
@@ -130,13 +130,13 @@ func (clientsholder *Clientset) ExecCommandContainerStdIn(ctx ContainerContext, 
 	commandStr := command
 	var buffOut bytes.Buffer
 	var buffErr bytes.Buffer
-	log.Debug(fmt.Sprintf(
+	log.Debugf(
 		"execute command on ns=%s, pod=%s container=%s, cmd: %s",
 		ctx.GetNamespace(),
 		ctx.GetPodName(),
 		ctx.GetContainerName(),
 		strings.Join(commandStr, " "),
-	))
+	)
 	req := clientsholder.K8sRestClient.Post().
 		Namespace(ctx.GetNamespace()).
 		Resource("pods").
@@ -153,7 +153,7 @@ func (clientsholder *Clientset) ExecCommandContainerStdIn(ctx ContainerContext, 
 
 	exec, err := NewSPDYExecutor(clientsholder.RestConfig, "POST", req.URL())
 	if err != nil {
-		log.Error(err)
+		log.Debug(err)
 		return stdout, stderr, fmt.Errorf("error setting up remote command: %w", err)
 	}
 
@@ -164,12 +164,12 @@ func (clientsholder *Clientset) ExecCommandContainerStdIn(ctx ContainerContext, 
 	})
 	stdin, stdout, stderr := buffIn.String(), buffOut.String(), buffErr.String()
 	if err != nil {
-		log.Error(err)
-		log.Error(req.URL())
-		log.Error("command: ", command)
-		log.Error("stdin: ", stdin)
-		log.Error("stderr: ", stderr)
-		log.Error("stdout: ", stdout)
+		log.Debug(err)
+		log.Debug(req.URL())
+		log.Debug("command: ", command)
+		log.Debug("stdin: ", stdin)
+		log.Debug("stderr: ", stderr)
+		log.Debug("stdout: ", stdout)
 		return stdout, stderr, fmt.Errorf("error running remote command: %w", err)
 	}
 	return stdout, stderr, nil

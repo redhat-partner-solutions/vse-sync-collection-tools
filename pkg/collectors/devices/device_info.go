@@ -126,7 +126,7 @@ func GetPTPDeviceInfo(interfaceName string, ctx clients.ContainerContext) (PTPDe
 
 	err := fetcherInst.Fetch(ctx, &devInfo)
 	if err != nil {
-		log.Errorf("failed to fetch devInfo %s", err.Error())
+		log.Debugf("failed to fetch devInfo %s", err.Error())
 		return devInfo, fmt.Errorf("failed to fetch devInfo %w", err)
 	}
 	devInfo.GNSSDev = "/dev/" + devInfo.GNSSDev
