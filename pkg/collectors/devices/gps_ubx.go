@@ -67,7 +67,6 @@ func init() {
 		true,
 	)
 	if err != nil {
-		log.Errorf("failed to add command %s %s", "GPS", err.Error())
 		panic(fmt.Errorf("failed to setup GPS fetcher %w", err))
 	}
 }
@@ -106,7 +105,7 @@ func GetGPSNav(ctx clients.ContainerContext) (GPSNav, error) {
 	gpsNav := GPSNav{}
 	err := gpsFetcher.Fetch(ctx, &gpsNav)
 	if err != nil {
-		log.Errorf("failed to fetch gpsNav %s", err.Error())
+		log.Debugf("failed to fetch gpsNav %s", err.Error())
 		return gpsNav, fmt.Errorf("failed to fetch gpsNav %w", err)
 	}
 	return gpsNav, nil

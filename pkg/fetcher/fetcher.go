@@ -139,15 +139,15 @@ func runCommands(ctx clients.ContainerContext, cmdGrp clients.Cmder) (result map
 
 	stdout, _, err := clientset.ExecCommandContainerStdIn(ctx, command, buffIn)
 	if err != nil {
-		log.Errorf("command in container failed unexpectedly. context: %v", ctx)
-		log.Errorf("command in container failed unexpectedly. command: %v", command)
-		log.Errorf("command in container failed unexpectedly. error: %v", err)
+		log.Debugf("command in container failed unexpectedly. context: %v", ctx)
+		log.Debugf("command in container failed unexpectedly. command: %v", command)
+		log.Debugf("command in container failed unexpectedly. error: %v", err)
 		return result, fmt.Errorf("runCommands failed %w", err)
 	}
 	result, err = cmdGrp.ExtractResult(stdout)
 	if err != nil {
-		log.Errorf("extraction failed %s", err.Error())
-		log.Errorf("output was %s", stdout)
+		log.Debugf("extraction failed %s", err.Error())
+		log.Debugf("output was %s", stdout)
 		return result, fmt.Errorf("runCommands failed %w", err)
 	}
 	return result, nil

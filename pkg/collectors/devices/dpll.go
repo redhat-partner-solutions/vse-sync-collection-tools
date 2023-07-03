@@ -124,7 +124,7 @@ func GetDevDPLLInfo(ctx clients.ContainerContext, interfaceName string) (DevDPLL
 	}
 	err := fetcherInst.Fetch(ctx, &dpllInfo)
 	if err != nil {
-		log.Errorf("failed to fetch dpllInfo %s", err.Error())
+		log.Debugf("failed to fetch dpllInfo %s", err.Error())
 		return dpllInfo, fmt.Errorf("failed to fetch dpllInfo %w", err)
 	}
 	return dpllInfo, nil
