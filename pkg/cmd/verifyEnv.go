@@ -17,7 +17,7 @@ var verifyEnvCmd = &cobra.Command{
 	Short: "verify the environment for collection",
 	Long:  `verify the environment for collection`,
 	Run: func(cmd *cobra.Command, args []string) {
-		verify.Verify(ptpInterface, kubeConfig)
+		verify.Verify(ptpInterface, kubeConfig, useAnalyserJSON)
 	},
 }
 

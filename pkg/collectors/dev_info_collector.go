@@ -148,7 +148,8 @@ func NewDevInfoCollector(constructor *CollectionConstructor) (Collector, error) 
 		return &DevInfoCollector{}, fmt.Errorf("failed to fetch initial DeviceInfo %w", err)
 	}
 
-	err = vaildations.VerifyDeviceInfo(&ptpDevInfo)
+	devDetails := vaildations.NewDeviceDetails(&ptpDevInfo)
+	err = devDetails.Verify()
 	if err != nil {
 		callbackErr := constructor.Callback.Call(&ptpDevInfo, DeviceInfo)
 		if callbackErr != nil {
