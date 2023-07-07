@@ -67,7 +67,7 @@ func init() { //nolint:funlen // Allow this to get a little long
 	err := rootCmd.MarkPersistentFlagRequired("kubeconfig")
 	utils.IfErrorExitOrPanic(err)
 
-	rootCmd.PersistentFlags().StringVarP(&ptpInterface, "interface", "i", "", "Name of the PTP interface")
+	rootCmd.PersistentFlags().StringVarP(&ptpInterface, "interface", "i", "", "Name of the first port on the target card")
 	err = rootCmd.MarkPersistentFlagRequired("interface")
 	utils.IfErrorExitOrPanic(err)
 
