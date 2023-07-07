@@ -22,8 +22,8 @@ type PTPDeviceInfo struct {
 	VendorID        string        `json:"vendorId" fetcherKey:"vendorID"`
 	DeviceID        string        `json:"deviceInfo" fetcherKey:"devID"`
 	GNSSDev         string        `json:"GNSSDev" fetcherKey:"gnss"`
-	Timeoffset      time.Duration `json:"timeOffset" fetcherKey:"timeOffset"`
 	FirmwareVersion string        `json:"firmwareVersion" fetcherKey:"firmwareVersion"`
+	Timeoffset      time.Duration `json:"timeOffset" fetcherKey:"timeOffset"`
 }
 
 // AnalyserJSON returns the json expected by the analysers
@@ -96,7 +96,7 @@ func devInfoPostProcesser(result map[string]string) (map[string]any, error) {
 	for key, value := range firmwareResult {
 		processedResult[key] = value
 	}
-	return firmwareResult, nil
+	return processedResult, nil
 }
 
 func processGNSSPath(s string) (string, error) {
