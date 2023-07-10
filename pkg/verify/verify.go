@@ -5,7 +5,6 @@ package verify
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	log "github.com/sirupsen/logrus"
 
@@ -67,17 +66,11 @@ func report(failures, successes []*ValidationResult, useAnalyserJSON bool) {
 		if len(failures) == 0 {
 			fmt.Println("No issues found.") //nolint:forbidigo // This to print out to the user
 		} else {
-			pattern := strings.Repeat("\t%w\n", len(failures))
-			validationsErrors := make([]any, 0)
+			validationsErrors := make([]error, 0)
 			for _, res := range failures {
 				validationsErrors = append(validationsErrors, res.err)
 			}
-			err := utils.NewInvalidEnvError(
-				fmt.Errorf(
-					"The following issues where found:\n"+pattern,
-					validationsErrors...,
-				),
-			)
+			err := utils.MakeCompositeInvalidEnvError(validationsErrors)
 			utils.IfErrorExitOrPanic(err)
 		}
 	}
