@@ -131,6 +131,33 @@ func (ptpDev *DevInfoCollector) GetPollCount() int {
 	return int(atomic.LoadUint32(&ptpDev.count))
 }
 
+func verify(ptpDevInfo *devices.PTPDeviceInfo, constructor *CollectionConstructor) error {
+	devDetails := vaildations.NewDeviceDetails(ptpDevInfo)
+	errors := make([]error, 0)
+
+	err := devDetails.Verify()
+	if err != nil {
+		errors = append(errors, err)
+	}
+
+	firmware := vaildations.NewDeviceDetails(ptpDevInfo)
+	err = firmware.Verify()
+	if err != nil {
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		callbackErr := constructor.Callback.Call(ptpDevInfo, DeviceInfo)
+		if callbackErr != nil {
+			errors = append(errors, fmt.Errorf("callback failed %w", callbackErr))
+		}
+		//nolint:wrapcheck // this returns a wrapped error
+		return utils.MakeCompositeInvalidEnvError(errors)
+	}
+
+	return nil
+}
+
 // Returns a new DevInfoCollector from the CollectionConstuctor Factory
 func NewDevInfoCollector(constructor *CollectionConstructor) (Collector, error) {
 	// Build DPPInfoFetcher ahead of time call to GetPTPDeviceInfo will build the other
@@ -148,16 +175,9 @@ func NewDevInfoCollector(constructor *CollectionConstructor) (Collector, error) 
 		return &DevInfoCollector{}, fmt.Errorf("failed to fetch initial DeviceInfo %w", err)
 	}
 
-	devDetails := vaildations.NewDeviceDetails(&ptpDevInfo)
-	err = devDetails.Verify()
+	err = verify(&ptpDevInfo, constructor)
 	if err != nil {
-		callbackErr := constructor.Callback.Call(&ptpDevInfo, DeviceInfo)
-		if callbackErr != nil {
-			return &DevInfoCollector{}, utils.NewInvalidEnvError(
-				fmt.Errorf("callback failed %s %w", callbackErr.Error(), err),
-			)
-		}
-		return &DevInfoCollector{}, utils.NewInvalidEnvError(fmt.Errorf("failed to verify environment %w", err))
+		return &DevInfoCollector{}, err
 	}
 
 	collector := DevInfoCollector{
