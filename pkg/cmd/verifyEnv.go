@@ -20,5 +20,8 @@ var verifyEnvCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(verifyEnvCmd)
-	AddCommonFlags(verifyEnvCmd)
+	AddKubeconfigFlag(verifyEnvCmd)
+	AddOutputFlag(verifyEnvCmd)
+	AddFormatFlag(verifyEnvCmd)
+	AddInterfaceFlag(verifyEnvCmd)
 }
