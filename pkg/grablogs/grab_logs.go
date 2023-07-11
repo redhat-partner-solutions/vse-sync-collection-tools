@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	ptpContainers = []string{"gpsd", "linuxptp-daemon-container"}
+	ptpContainers = []string{"linuxptp-daemon-container"}
 )
 
 func buildCommand(containerName, kubeconfigPath, logWindow string) *exec.Cmd {
