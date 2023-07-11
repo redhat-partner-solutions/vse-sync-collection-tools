@@ -15,17 +15,17 @@ var (
 	ptpInterface    string
 )
 
-func AddCommonFlags(targetCmd *cobra.Command) {
+func AddKubeconfigFlag(targetCmd *cobra.Command) {
 	targetCmd.Flags().StringVarP(&kubeConfig, "kubeconfig", "k", "", "Path to the kubeconfig file")
 	err := targetCmd.MarkFlagRequired("kubeconfig")
 	utils.IfErrorExitOrPanic(err)
+}
 
-	targetCmd.Flags().StringVarP(&ptpInterface, "interface", "i", "", "Name of the PTP interface")
-	err = targetCmd.MarkFlagRequired("interface")
-	utils.IfErrorExitOrPanic(err)
-
+func AddOutputFlag(targetCmd *cobra.Command) {
 	targetCmd.Flags().StringVarP(&outputFile, "output", "o", "", "Path to the output file")
+}
 
+func AddFormatFlag(targetCmd *cobra.Command) {
 	targetCmd.Flags().BoolVarP(
 		&useAnalyserJSON,
 		"use-analyser-format",
@@ -33,4 +33,10 @@ func AddCommonFlags(targetCmd *cobra.Command) {
 		false,
 		"Output in a format to be used by analysers from vse-sync-pp",
 	)
+}
+
+func AddInterfaceFlag(targetCmd *cobra.Command) {
+	targetCmd.Flags().StringVarP(&ptpInterface, "interface", "i", "", "Name of the PTP interface")
+	err := targetCmd.MarkFlagRequired("interface")
+	utils.IfErrorExitOrPanic(err)
 }

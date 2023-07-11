@@ -40,7 +40,10 @@ var collectCmd = &cobra.Command{
 func init() { //nolint:funlen // Allow this to get a little long
 	rootCmd.AddCommand(collectCmd)
 
-	AddCommonFlags(collectCmd)
+	AddKubeconfigFlag(collectCmd)
+	AddOutputFlag(collectCmd)
+	AddFormatFlag(collectCmd)
+	AddInterfaceFlag(collectCmd)
 
 	collectCmd.Flags().IntVarP(
 		&pollCount,
