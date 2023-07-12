@@ -23,6 +23,7 @@ type PTPDeviceInfo struct {
 	DeviceID        string        `json:"deviceInfo" fetcherKey:"devID"`
 	GNSSDev         string        `json:"GNSSDev" fetcherKey:"gnss"`
 	FirmwareVersion string        `json:"firmwareVersion" fetcherKey:"firmwareVersion"`
+	DriverVersion   string        `json:"driverVersion" fetcherKey:"driverVersion"`
 	Timeoffset      time.Duration `json:"timeOffset" fetcherKey:"timeOffset"`
 }
 
@@ -37,15 +38,26 @@ func (ptpDevInfo *PTPDeviceInfo) GetAnalyserFormat() ([]*callbacks.AnalyserForma
 			ptpDevInfo.DeviceID,
 			ptpDevInfo.GNSSDev,
 			ptpDevInfo.FirmwareVersion,
+			ptpDevInfo.DriverVersion,
 		},
 	}
 	return []*callbacks.AnalyserFormatType{&formatted}, nil
 }
 
 var (
-	devFetcher           map[string]*fetcher.Fetcher
-	devDateCmd           *clients.Cmd
-	firmwareVersionRegex = regexp.MustCompile(`firmware-version:\s+(.*)`)
+	devFetcher   map[string]*fetcher.Fetcher
+	devDateCmd   *clients.Cmd
+	ethtoolRegex = regexp.MustCompile(`version: (.*)\nfirmware-version: (.*)\n`)
+	// driver: ice
+	// version: 1.11.20.7
+	// firmware-version: 4.20 0x8001778b 1.3346.0
+	// expansion-rom-version:
+	// bus-info: 0000:86:00.0
+	// supports-statistics: yes
+	// supports-test: yes
+	// supports-eeprom-access: yes
+	// supports-register-dump: yes
+	// supports-priv-flags: yes
 )
 
 func init() {
@@ -70,16 +82,17 @@ func extractOffsetFromTimestamp(result map[string]string) (map[string]any, error
 	return processedResult, nil
 }
 
-func extractFirmware(result map[string]string) (map[string]any, error) {
+func extractEthtoolsInfo(result map[string]string) (map[string]any, error) {
 	processedResult := make(map[string]any, 0)
-	match := firmwareVersionRegex.FindStringSubmatch(result["firmwareVersion"])
+	match := ethtoolRegex.FindStringSubmatch(result["ethtoolOut"])
 	if len(match) == 0 {
 		return processedResult, fmt.Errorf(
-			"failed to extract firmwareVersion from %s",
-			result["firmwareVersion"],
+			"failed to extract ethtoolOut from %s",
+			result["ethtoolOut"],
 		)
 	}
-	processedResult["firmwareVersion"] = match[1]
+	processedResult["driverVersion"] = match[1]
+	processedResult["firmwareVersion"] = match[2]
 	return processedResult, nil
 }
 
@@ -88,7 +101,7 @@ func devInfoPostProcesser(result map[string]string) (map[string]any, error) {
 	if err != nil {
 		return processedResult, err
 	}
-	firmwareResult, err := extractFirmware(result)
+	firmwareResult, err := extractEthtoolsInfo(result)
 	if err != nil {
 		return processedResult, err
 	}
@@ -140,12 +153,12 @@ func BuildPTPDeviceInfo(interfaceName string) error {
 		return failedToAddError("vendorID", err)
 	}
 
-	err = fetcherInst.AddNewCommand("firmwareVersion",
-		fmt.Sprintf("ethtool -i %s | grep firmware --color=never", interfaceName),
+	err = fetcherInst.AddNewCommand("ethtoolOut",
+		fmt.Sprintf("ethtool -i %s", interfaceName),
 		true,
 	)
 	if err != nil {
-		return failedToAddError("firmwareVersion", err)
+		return failedToAddError("ethtoolOut", err)
 	}
 	return nil
 }
