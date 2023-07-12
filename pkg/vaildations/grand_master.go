@@ -4,6 +4,7 @@ package vaildations
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/clients"
@@ -15,13 +16,36 @@ type IsGrandMaster struct {
 	client *clients.Clientset
 }
 
+type PTPConfigProfile struct {
+	Ptp4lConf string `json:"ptp4lConf"`
+}
+
+type PTPConfigSpec struct {
+	Profiles []PTPConfigProfile `json:"profile"`
+}
+type PTPConfig struct {
+	Spec PTPConfigSpec `json:"spec"`
+}
+
+type PTPConfigList struct {
+	ApiVersion string      `json:"apiVersion"`
+	Items      []PTPConfig `json:"items"`
+}
+
+func FetchPTPConfigs(client *clients.Clientset) {
+
+}
+
 func (dev *IsGrandMaster) Verify() error {
-	data, err := dev.client.K8sRestClient.Get().
+	data, _ := dev.client.K8sRestClient.Get().
 		AbsPath("/apis/ptp.openshift.io/v1").
 		Namespace("openshift-ptp").
 		Resource("ptpconfigs").
 		DoRaw(context.TODO())
-	fmt.Println(data, err)
+
+	unpacked := &PTPConfigList{}
+	json.Unmarshal(data, unpacked)
+	fmt.Println(unpacked)
 	return nil
 }
 
