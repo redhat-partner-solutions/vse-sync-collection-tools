@@ -35,7 +35,9 @@ func (clientsholder *Clientset) findPodNameFromPrefix(namespace, prefix string) 
 	podNames := make([]string, 0)
 
 	for i := range podList.Items {
-		if strings.HasPrefix(podList.Items[i].Name, prefix) {
+		hasPrefix := strings.HasPrefix(podList.Items[i].Name, prefix)
+		isDebug := strings.HasSuffix(podList.Items[i].Name, "-debug")
+		if hasPrefix && !isDebug {
 			podNames = append(podNames, podList.Items[i].Name)
 		}
 	}
