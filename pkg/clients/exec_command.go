@@ -10,6 +10,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/remotecommand"
 	"k8s.io/kubectl/pkg/scheme"
@@ -19,9 +20,11 @@ var NewSPDYExecutor = remotecommand.NewSPDYExecutor
 
 // ContainerContext encapsulates the context in which a command is run; the namespace, pod, and container.
 type ContainerContext struct {
+	clientset     *Clientset
 	namespace     string
 	podName       string
 	containerName string
+	podNamePrefix string
 }
 
 func (clientsholder *Clientset) findPodNameFromPrefix(namespace, prefix string) (string, error) {
@@ -47,6 +50,15 @@ func (clientsholder *Clientset) findPodNameFromPrefix(namespace, prefix string) 
 	}
 }
 
+func (c *ContainerContext) Refresh() error {
+	newPodname, err := c.clientset.findPodNameFromPrefix(c.namespace, c.podNamePrefix)
+	if err != nil {
+		return err
+	}
+	c.podName = newPodname
+	return nil
+}
+
 func NewContainerContext(
 	clientset *Clientset,
 	namespace, podNamePrefix, containerName string,
@@ -59,6 +71,8 @@ func NewContainerContext(
 		namespace:     namespace,
 		podName:       podName,
 		containerName: containerName,
+		podNamePrefix: podNamePrefix,
+		clientset:     clientset,
 	}
 	return ctx, nil
 }
@@ -77,13 +91,13 @@ func (c *ContainerContext) GetContainerName() string {
 
 // ExecCommand runs command in a container and returns output buffers
 //
-//nolint:lll // allow slightly long function definition
+//nolint:lll,funlen // allow slightly long function definition and allow a slightly long function
 func (clientsholder *Clientset) ExecCommandContainer(ctx ContainerContext, command []string) (stdout, stderr string, err error) {
 	commandStr := command
 	var buffOut bytes.Buffer
 	var buffErr bytes.Buffer
 	log.Debugf(
-		"execute command on ns=%s, pod=%s container=%s, cmd: %s",
+		"execute command on ns=%s, pod=%s container=%s, cmd: %s\n",
 		ctx.GetNamespace(),
 		ctx.GetPodName(),
 		ctx.GetContainerName(),
@@ -115,6 +129,13 @@ func (clientsholder *Clientset) ExecCommandContainer(ctx ContainerContext, comma
 	})
 	stdout, stderr = buffOut.String(), buffErr.String()
 	if err != nil {
+		if errors.IsNotFound(err) {
+			log.Debugf("Pod %s was not found, likely restarted so refreshing context", ctx.GetPodName())
+			refreshErr := ctx.Refresh()
+			if refreshErr != nil {
+				log.Debug("Failed to refresh container context", refreshErr)
+			}
+		}
 		log.Debug(err)
 		log.Debug(req.URL())
 		log.Debug("command: ", command)
