@@ -132,18 +132,18 @@ func (ptpDev *DevInfoCollector) GetPollCount() int {
 }
 
 func verify(ptpDevInfo *devices.PTPDeviceInfo, constructor *CollectionConstructor) error {
-	devDetails := vaildations.NewDeviceDetails(ptpDevInfo)
 	errors := make([]error, 0)
-
-	err := devDetails.Verify()
-	if err != nil {
-		errors = append(errors, err)
+	checks := []vaildations.Validation{
+		vaildations.NewDeviceDetails(ptpDevInfo),
+		vaildations.NewDeviceDetails(ptpDevInfo),
+		vaildations.NewDeviceDriver(ptpDevInfo),
 	}
 
-	firmware := vaildations.NewDeviceDetails(ptpDevInfo)
-	err = firmware.Verify()
-	if err != nil {
-		errors = append(errors, err)
+	for _, check := range checks {
+		err := check.Verify()
+		if err != nil {
+			errors = append(errors, err)
+		}
 	}
 
 	if len(errors) > 0 {

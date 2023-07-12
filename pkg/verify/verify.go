@@ -27,7 +27,10 @@ func getDevInfoValidations(
 	utils.IfErrorExitOrPanic(err)
 	devDetails := vaildations.NewDeviceDetails(&devInfo)
 	devFirmware := vaildations.NewDeviceFirmware(&devInfo)
-	return []vaildations.Validation{devDetails, devFirmware}
+	devDriver := vaildations.NewDeviceDriver(&devInfo)
+	// OCP Version 4.13 >=
+	// Check ptp config for "ts2phc.master 1"
+	return []vaildations.Validation{devDetails, devFirmware, devDriver}
 }
 
 func getValidations(interfaceName, kubeConfig string) []vaildations.Validation {
@@ -35,6 +38,10 @@ func getValidations(interfaceName, kubeConfig string) []vaildations.Validation {
 	clientset, err := clients.GetClientset(kubeConfig)
 	utils.IfErrorExitOrPanic(err)
 	checks = append(checks, getDevInfoValidations(clientset, interfaceName)...)
+
+	gm := vaildations.NewIsGrandMaster(clientset)
+	gm.Verify()
+
 	return checks
 }
 
