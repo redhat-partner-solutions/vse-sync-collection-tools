@@ -38,9 +38,8 @@ func getValidations(interfaceName, kubeConfig string) []vaildations.Validation {
 	utils.IfErrorExitOrPanic(err)
 	checks = append(checks, getDevInfoValidations(clientset, interfaceName)...)
 	checks = append(checks, vaildations.NewIsGrandMaster(clientset))
+	checks = append(checks, vaildations.NewOperatorVersion(clientset))
 	// an interesting one is the GPSD version minimum acceptable is 3.25
-	opVer := vaildations.NewOperatorVersion(clientset)
-	opVer.Verify()
 	return checks
 }
 
