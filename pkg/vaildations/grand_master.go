@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	isConfiguredForGrandMaster = "Card driver is valid"
+	isConfiguredForGrandMaster = "Configured for grand master"
 	gmFlag                     = "ts2phc.master 1"
 )
 
