@@ -23,12 +23,8 @@ const (
 )
 
 type OperatorVersion struct {
-	Version   string             `json:"version"`
-	group     string             `json:"-"`
-	version   string             `json:"-"`
-	resource  string             `json:"-"`
-	namespace string             `json:"-"`
-	client    *clients.Clientset `json:"-"`
+	Version string `json:"version"`
+	Error   error  `json:"fetchError"`
 }
 
 type CSV struct {
@@ -37,33 +33,36 @@ type CSV struct {
 }
 
 func (opVer *OperatorVersion) Verify() error {
-	version, err := getOperatorVersion(opVer)
-	opVer.Version = version
-	if err != nil {
-		return err
+	if opVer.Error != nil {
+		return opVer.Error
 	}
-	if semver.Compare(fmt.Sprintf("v%s", version), fmt.Sprintf("v%s", MinOperatorVersion)) < 0 {
+	if semver.Compare(fmt.Sprintf("v%s", opVer.Version), fmt.Sprintf("v%s", MinOperatorVersion)) < 0 {
 		return utils.NewInvalidEnvError(
 			fmt.Errorf(
 				"invalid firmware version: %s < %s",
-				version,
+				opVer.Version,
 				MinOperatorVersion,
 			),
 		)
 	}
-
 	return nil
 }
 
-func getOperatorVersion(opVer *OperatorVersion) (string, error) {
-	dynamic := dynamic.NewForConfigOrDie(opVer.client.RestConfig)
+func getOperatorVersion(
+	group,
+	version,
+	resource,
+	namespace string,
+	client *clients.Clientset,
+) (string, error) {
+	dynamic := dynamic.NewForConfigOrDie(client.RestConfig)
 
 	resourceId := schema.GroupVersionResource{
-		Group:    opVer.group,
-		Version:  opVer.version,
-		Resource: opVer.resource,
+		Group:    group,
+		Version:  version,
+		Resource: resource,
 	}
-	list, _ := dynamic.Resource(resourceId).Namespace(opVer.namespace).
+	list, _ := dynamic.Resource(resourceId).Namespace(namespace).
 		List(context.Background(), metav1.ListOptions{})
 
 	for _, item := range list.Items {
@@ -87,11 +86,12 @@ func (opVer *OperatorVersion) GetData() any { //nolint:ireturn // data will very
 }
 
 func NewOperatorVersion(client *clients.Clientset) *OperatorVersion {
-	return &OperatorVersion{
-		group:     "operators.coreos.com",
-		version:   "v1alpha1",
-		resource:  "clusterserviceversions",
-		namespace: "openshift-ptp",
-		client:    client,
-	}
+	version, err := getOperatorVersion(
+		"operators.coreos.com",
+		"v1alpha1",
+		"clusterserviceversions",
+		"openshift-ptp",
+		client,
+	)
+	return &OperatorVersion{Version: version, Error: err}
 }
