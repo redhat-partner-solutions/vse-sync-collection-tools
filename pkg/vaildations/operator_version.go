@@ -23,19 +23,19 @@ type OperatorVersion struct {
 	client    *clients.Clientset `json:"-"`
 }
 
+type OuterSpec struct {
+	CRD CRDValue `json:"customresourcedefinitions"`
+}
+
 type CRDValue struct {
-	CRD string `json:"customresourcedefinitions"`
+	Install InstallValue `json:"install"`
 }
 
 type InstallValue struct {
-	Install string `json:"install"`
+	Spec SpecValue `json:"spec"`
 }
 
 type SpecValue struct {
-	Spec string `json:"spec"`
-}
-
-type VersionValue struct {
 	Value string `json:"value"`
 }
 
@@ -52,9 +52,8 @@ func (opVer *OperatorVersion) Verify() error {
 
 	for _, item := range list.Items {
 		for key, value := range item.Object {
-			fmt.Println("key", key)
 			if key == "spec" {
-				crd := &CRDValue{}
+				crd := &OuterSpec{}
 				marsh, _ := json.Marshal(value)
 				json.Unmarshal(marsh, crd)
 				fmt.Println(crd)
