@@ -23,7 +23,8 @@ const (
 )
 
 type ClusterVersion struct {
-	VersionWithError
+	Version string
+	Error   error
 }
 
 func (ver *ClusterVersion) MarshalJSON() ([]byte, error) {

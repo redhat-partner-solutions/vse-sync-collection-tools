@@ -23,7 +23,8 @@ const (
 )
 
 type OperatorVersion struct {
-	VersionWithError
+	Version string
+	Error   error
 }
 
 func (ver *OperatorVersion) MarshalJSON() ([]byte, error) {
