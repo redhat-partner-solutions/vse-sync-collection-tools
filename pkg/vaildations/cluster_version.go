@@ -48,6 +48,14 @@ func (clusterVer *ClusterVersion) Verify() error {
 	return nil
 }
 
+type Status struct {
+	Desired clusterVersion `json:"desired"`
+}
+
+type clusterVersion struct {
+	Version string `json:"version"`
+}
+
 func getClusterVersion(
 	group,
 	version,
@@ -65,14 +73,11 @@ func getClusterVersion(
 		List(context.Background(), metav1.ListOptions{})
 
 	for _, item := range list.Items {
-		value := item.Object["spec"]
-		// crd := &CSV{}
+		value := item.Object["status"]
+		status := &Status{}
 		marsh, _ := json.Marshal(value)
-		// json.Unmarshal(marsh, crd)
-		// if crd.DisplayName == "PTP Operator" {
-		// 	return crd.Version, nil
-		// }
-		fmt.Println(string(marsh))
+		json.Unmarshal(marsh, status)
+		return status.Desired.Version, nil
 	}
 	return "", errors.New("failed to find PTP Operator CSV")
 }
