@@ -96,7 +96,7 @@ func init() {
 // processUBXNav parses the output of the ubxtool extracting the required values for gpsNav
 func processUBXNav(result map[string]string) (map[string]any, error) {
 	processedResult := make(map[string]any)
-	match := ubxFirmwareVersion.FindStringSubmatch(result["GPS"])
+	match := ubxNavRegex.FindStringSubmatch(result["GPS"])
 	if len(match) == 0 {
 		return processedResult, fmt.Errorf(
 			"unable to parse UBX Nav Status or Clock from %s",
@@ -132,7 +132,7 @@ func processUBXNav(result map[string]string) (map[string]any, error) {
 
 func processUBXMonVer(result map[string]string) (map[string]any, error) {
 	processedResult := make(map[string]any)
-	match := ubxNavRegex.FindStringSubmatch(result["GPS"])
+	match := ubxFirmwareVersion.FindStringSubmatch(result["GPS"])
 	if len(match) == 0 {
 		return processedResult, fmt.Errorf(
 			"unable to parse UBX MON Version from %s",
