@@ -59,6 +59,12 @@ func reportAnalysertJSON(failures, successes, unknown []*ValidationResult) {
 	callback, err := callbacks.SetupCallback("-", callbacks.AnalyserJSON)
 	utils.IfErrorExitOrPanic(err)
 
+	for _, unknownCheck := range unknown {
+		err := callback.Call(unknownCheck, "env-check-unkown")
+		if err != nil {
+			log.Errorf("callback failed during validation %s", err.Error())
+		}
+	}
 	for _, failure := range failures {
 		err := callback.Call(failure, "env-check-failure")
 		if err != nil {
