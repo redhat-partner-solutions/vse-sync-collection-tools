@@ -20,6 +20,7 @@ type GPSNav struct {
 	TimestampStatus string `json:"timestampStatus" fetcherKey:"navStatusTimestamp"`
 	TimestampClock  string `json:"timestampClock" fetcherKey:"navClockTimestamp"`
 	TimestampVer    string `json:"timestampVersion" fetcherKey:"versionTimestamp"`
+	FirmwareVersion string `json:"firmwareVersion" fetcherKey:"firmwareVersion"`
 	GPSFix          string `json:"GPSFix" fetcherKey:"gpsFix"`
 	TimeAcc         int    `json:"timeAcc" fetcherKey:"timeAcc"`
 	FreqAcc         int    `json:"freqAcc" fetcherKey:"freqAcc"`
@@ -139,6 +140,13 @@ func processUBXMonVer(result map[string]string) (map[string]any, error) {
 			result["GPS"],
 		)
 	}
+
+	timestampMonVer, err := utils.ParseTimestamp(match[1])
+	if err != nil {
+		return processedResult, fmt.Errorf("failed to parse versionTimestamp %w", err)
+	}
+	processedResult["versionTimestamp"] = timestampMonVer.Format(time.RFC3339Nano)
+
 	version := fwVersionExtension.FindStringSubmatch(match[4])
 	if len(version) == 0 {
 		return processedResult, fmt.Errorf(
