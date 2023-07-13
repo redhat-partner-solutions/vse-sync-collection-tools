@@ -5,9 +5,10 @@ package vaildations
 import (
 	"fmt"
 
+	"golang.org/x/mod/semver"
+
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/collectors/devices"
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/utils"
-	"golang.org/x/mod/semver"
 )
 
 const deviceDriverVersionID = "Card driver is valid"
