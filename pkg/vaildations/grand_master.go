@@ -23,7 +23,7 @@ type IsGrandMaster struct {
 }
 
 type PTPConfigProfile struct {
-	Ptp4lConf string `json:"ptp4lConf"`
+	Ts2PhcConf string `json:"ts2phcConf"`
 }
 
 type PTPConfigSpec struct {
@@ -55,7 +55,7 @@ func (gm *IsGrandMaster) Verify() error {
 	for _, item := range ptpConfigList.Items {
 		gm.Profiles = append(gm.Profiles, item.Spec.Profiles...)
 		for _, profile := range item.Spec.Profiles {
-			if strings.Contains(profile.Ptp4lConf, gmFlag) {
+			if strings.Contains(profile.Ts2PhcConf, gmFlag) {
 				return nil
 			}
 		}
