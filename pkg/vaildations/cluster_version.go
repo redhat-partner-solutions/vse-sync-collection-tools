@@ -88,7 +88,7 @@ func getClusterVersion(
 }
 
 func (clusterVer *ClusterVersion) GetID() string {
-	return ptpOperatorVersionID
+	return clusterVersionID
 }
 
 func (clusterVer *ClusterVersion) GetData() any { //nolint:ireturn // data will very for each validation
