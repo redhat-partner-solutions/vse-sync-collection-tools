@@ -7,6 +7,7 @@ import (
 	// "github.com/operator-framework/api/pkg/operators/v1alpha1"
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/clients"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 )
@@ -23,7 +24,7 @@ type OperatorVersion struct {
 }
 
 type VersionValue struct {
-	Version `json'version'`
+	Version string `json:"version"`
 }
 
 func (opVer *OperatorVersion) Verify() error {
@@ -42,7 +43,7 @@ func (opVer *OperatorVersion) Verify() error {
 		for key, value := range item.Object {
 			fmt.Println("key", key)
 			if key == "spec" {
-				vers, ok := value.(VersionValue)
+				vers, ok := value.(*unstructured.Unstructured)
 				if ok {
 					fmt.Println(vers, vers)
 				}
