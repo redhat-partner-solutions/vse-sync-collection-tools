@@ -36,7 +36,7 @@ type InstallValue struct {
 }
 
 type SpecValue struct {
-	Value string `json:"value"`
+	Version string `json:"version"`
 }
 
 func (opVer *OperatorVersion) Verify() error {
