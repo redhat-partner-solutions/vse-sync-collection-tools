@@ -50,14 +50,14 @@ func (opVer *OperatorVersion) Verify() error {
 	list, _ := dynamic.Resource(resourceId).Namespace(opVer.namespace).
 		List(context.Background(), metav1.ListOptions{})
 
-	for index, item := range list.Items {
-		fmt.Println("index", index)
+	for _, item := range list.Items {
 		for key, value := range item.Object {
 			fmt.Println("key", key)
 			if key == "spec" {
 				crd := &CRDValue{}
 				marsh, _ := json.Marshal(value)
 				json.Unmarshal(marsh, crd)
+				fmt.Println(crd)
 			}
 		}
 	}
