@@ -154,7 +154,7 @@ func processUBXMonVer(result map[string]string) (map[string]any, error) {
 			match[4],
 		)
 	}
-	processedResult["firmwareVerson"] = version[1]
+	processedResult["firmwareVersion"] = version[1]
 	return processedResult, nil
 }
 
