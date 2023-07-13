@@ -27,7 +27,7 @@ type OperatorVersion struct {
 	Error   error  `json:"fetchError"`
 }
 
-func (ver OperatorVersion) MarshalJSON() ([]byte, error) {
+func (ver *OperatorVersion) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		Version string `json:"version"`
 		Error   string `json:"fetchError"`

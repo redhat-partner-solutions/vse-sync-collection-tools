@@ -27,7 +27,7 @@ type ClusterVersion struct {
 	Error   error  `json:"fetchError"`
 }
 
-func (ver ClusterVersion) MarshalJSON() ([]byte, error) {
+func (ver *ClusterVersion) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		Version string `json:"version"`
 		Error   string `json:"fetchError"`
