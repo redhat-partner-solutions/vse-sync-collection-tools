@@ -19,6 +19,7 @@ import (
 type GPSNav struct {
 	TimestampStatus string `json:"timestampStatus" fetcherKey:"navStatusTimestamp"`
 	TimestampClock  string `json:"timestampClock" fetcherKey:"navClockTimestamp"`
+	TimestampVer    string `json:"timestampVersion" fetcherKey:"versionTimestamp"`
 	GPSFix          string `json:"GPSFix" fetcherKey:"gpsFix"`
 	TimeAcc         int    `json:"timeAcc" fetcherKey:"timeAcc"`
 	FreqAcc         int    `json:"freqAcc" fetcherKey:"freqAcc"`
@@ -56,15 +57,35 @@ var (
 		//   iTOW 474605000 clkB 61594 clkD 56 tAcc 5 fAcc 164
 		//
 	)
-	gpsFetcher *fetcher.Fetcher
+	ubxFirmwareVersion = regexp.MustCompile(
+		timeStampPattern +
+			`\nUBX-MON-VER:\n\s+` +
+			`swVersion (.*)` +
+			`hwVersion (.*)` +
+			`[extension (.*)\n]+`,
+		// 1689260332.4728
+		// UBX-MON-VER:
+		// swVersion EXT CORE 1.00 (3fda8e)
+		// hwVersion 00190000
+		// extension ROM BASE 0x118B2060
+		// extension FWVER=TIM 2.20
+		// extension PROTVER=29.20
+		// extension MOD=ZED-F9T
+		// extension GPS;GLO;GAL;BDS
+		// extension SBAS;QZSS
+		// extension NAVIC
+
+	)
+	fwVersionExtension = regexp.MustCompile(`extension FWVER=(.*)`)
+	gpsFetcher         *fetcher.Fetcher
 )
 
 func init() {
 	gpsFetcher = fetcher.NewFetcher()
-	gpsFetcher.SetPostProcesser(processUBXNav)
+	gpsFetcher.SetPostProcesser(processUBX)
 	err := gpsFetcher.AddNewCommand(
 		"GPS",
-		"ubxtool -t -p NAV-STATUS -p NAV-CLOCK -P 29.20",
+		"ubxtool -t -p NAV-STATUS -p NAV-CLOCK -p MON-VER -P 29.20",
 		true,
 	)
 	if err != nil {
@@ -106,6 +127,41 @@ func processUBXNav(result map[string]string) (map[string]any, error) {
 	processedResult["timeAcc"] = timeAcc
 	processedResult["freqAcc"] = freqAcc
 
+	return processedResult, nil
+}
+
+func processUBXMonVer(result map[string]string) (map[string]any, error) {
+	processedResult := make(map[string]any)
+	match := ubxNavRegex.FindStringSubmatch(result["GPS"])
+	if len(match) == 0 {
+		return processedResult, fmt.Errorf(
+			"unable to parse UBX MON Version from %s",
+			result["GPS"],
+		)
+	}
+	version := fwVersionExtension.FindStringSubmatch(match[4])
+	if len(version) == 0 {
+		return processedResult, fmt.Errorf(
+			"unable to parse version from extenstions in %s",
+			match[4],
+		)
+	}
+	processedResult["firmwareVerson"] = version[1]
+	return processedResult, nil
+}
+
+func processUBX(result map[string]string) (map[string]any, error) {
+	processedResult, err := processUBXNav(result)
+	if err != nil {
+		return processedResult, err
+	}
+	monVerResult, err := processUBXMonVer(result)
+	if err != nil {
+		return processedResult, err
+	}
+	for key, value := range monVerResult {
+		processedResult[key] = value
+	}
 	return processedResult, nil
 }
 
