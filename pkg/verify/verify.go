@@ -50,6 +50,10 @@ func getValidations(interfaceName, kubeConfig string) []vaildations.Validation {
 	checks = append(checks, vaildations.NewIsGrandMaster(clientset))
 	checks = append(checks, vaildations.NewOperatorVersion(clientset))
 	checks = append(checks, getGNSSValidation(clientset))
+
+	clusterVersion := vaildations.NewClusterVersion(clientset)
+	clusterVersion.Verify()
+
 	// OCP Version 4.13 >=
 	// an interesting one is the GPSD version minimum acceptable is 3.25
 	return checks
