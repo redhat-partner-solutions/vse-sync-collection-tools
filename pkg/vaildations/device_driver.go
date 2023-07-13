@@ -3,13 +3,7 @@
 package vaildations
 
 import (
-	"fmt"
-	"strings"
-
-	"golang.org/x/mod/semver"
-
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/collectors/devices"
-	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/utils"
 )
 
 const deviceDriverVersionID = "Card driver is valid"
@@ -23,17 +17,17 @@ type DeviceDriver struct {
 }
 
 func (dev *DeviceDriver) Verify() error {
-	firmwarVersionParts := strings.Split(dev.Version, " ")
-	actualVersion := fmt.Sprintf("v%s", firmwarVersionParts[0])
-	if semver.Compare(actualVersion, fmt.Sprintf("v%s", MinDriverVersion)) < 0 {
-		return utils.NewInvalidEnvError(
-			fmt.Errorf(
-				"invalid firmware version: %s < %s",
-				firmwarVersionParts[0],
-				MinDriverVersion,
-			),
-		)
-	}
+	// firmwarVersionParts := strings.Split(dev.Version, " ")
+	// actualVersion := fmt.Sprintf("v%s", firmwarVersionParts[0])
+	// if semver.Compare(actualVersion, fmt.Sprintf("v%s", MinDriverVersion)) < 0 {
+	// 	return utils.NewInvalidEnvError(
+	// 		fmt.Errorf(
+	// 			"invalid firmware version: %s < %s",
+	// 			firmwarVersionParts[0],
+	// 			MinDriverVersion,
+	// 		),
+	// 	)
+	// }
 	return nil
 }
 

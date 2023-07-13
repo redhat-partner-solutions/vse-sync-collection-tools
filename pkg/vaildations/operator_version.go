@@ -3,16 +3,23 @@ package vaildations
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	// "github.com/operator-framework/api/pkg/operators/v1alpha1"
+
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/clients"
+	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/utils"
+	"golang.org/x/mod/semver"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 )
 
-const ptpOperatorVersionID = "PTP Operactor Version is valid"
+const (
+	ptpOperatorVersionID = "PTP Operactor Version is valid"
+	MinOperatorVersion   = "4.14.0"
+)
 
 type OperatorVersion struct {
 	Version   string             `json:"version"`
@@ -23,23 +30,31 @@ type OperatorVersion struct {
 	client    *clients.Clientset `json:"-"`
 }
 
-type OuterSpec struct {
-	CRD CRDValue `json:"customresourcedefinitions"`
-}
-
-type CRDValue struct {
-	Install InstallValue `json:"install"`
-}
-
-type InstallValue struct {
-	Spec SpecValue `json:"spec"`
-}
-
-type SpecValue struct {
-	Version string `json:"version"`
+type CSV struct {
+	DisplayName string `json:"displayName"`
+	Version     string `json:"version"`
 }
 
 func (opVer *OperatorVersion) Verify() error {
+	version, err := getOperatorVersion(opVer)
+	opVer.Version = version
+	if err != nil {
+		return err
+	}
+	if semver.Compare(fmt.Sprintf("v%s", version), fmt.Sprintf("v%s", MinOperatorVersion)) < 0 {
+		return utils.NewInvalidEnvError(
+			fmt.Errorf(
+				"invalid firmware version: %s < %s",
+				version,
+				MinOperatorVersion,
+			),
+		)
+	}
+
+	return nil
+}
+
+func getOperatorVersion(opVer *OperatorVersion) (string, error) {
 	dynamic := dynamic.NewForConfigOrDie(opVer.client.RestConfig)
 
 	resourceId := schema.GroupVersionResource{
@@ -51,18 +66,15 @@ func (opVer *OperatorVersion) Verify() error {
 		List(context.Background(), metav1.ListOptions{})
 
 	for _, item := range list.Items {
-		for key, value := range item.Object {
-			if key == "spec" {
-				crd := &OuterSpec{}
-				marsh, _ := json.Marshal(value)
-				json.Unmarshal(marsh, crd)
-				fmt.Println(crd)
-			}
+		value := item.Object["spec"]
+		crd := &CSV{}
+		marsh, _ := json.Marshal(value)
+		json.Unmarshal(marsh, crd)
+		if crd.DisplayName == "PTP Operator" {
+			return crd.Version, nil
 		}
 	}
-
-	// v1alpha1.ClusterServiceVersion{}
-	return nil
+	return "", errors.New("failed to find new")
 }
 
 func (opVer *OperatorVersion) GetID() string {
