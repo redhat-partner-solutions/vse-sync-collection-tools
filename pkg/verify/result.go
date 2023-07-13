@@ -39,3 +39,13 @@ func (res *ValidationResult) GetAnalyserFormat() ([]*callbacks.AnalyserFormatTyp
 	}
 	return []*callbacks.AnalyserFormatType{&formatted}, nil
 }
+
+func (res *ValidationResult) IsInvalidEnv() bool {
+	if res.err != nil {
+		invalidEnv := &utils.InvalidEnvError{}
+		if errors.As(res.err, invalidEnv) {
+			return true
+		}
+	}
+	return false
+}

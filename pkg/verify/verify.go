@@ -55,7 +55,7 @@ func getValidations(interfaceName, kubeConfig string) []vaildations.Validation {
 	return checks
 }
 
-func reportAnalysertJSON(failures, successes []*ValidationResult) {
+func reportAnalysertJSON(failures, successes, unknown []*ValidationResult) {
 	callback, err := callbacks.SetupCallback("-", callbacks.AnalyserJSON)
 	utils.IfErrorExitOrPanic(err)
 
@@ -73,9 +73,9 @@ func reportAnalysertJSON(failures, successes []*ValidationResult) {
 	}
 }
 
-func report(failures, successes []*ValidationResult, useAnalyserJSON bool) {
+func report(failures, successes, unknown []*ValidationResult, useAnalyserJSON bool) {
 	if useAnalyserJSON {
-		reportAnalysertJSON(failures, successes)
+		reportAnalysertJSON(failures, successes, unknown)
 		if len(failures) > 0 {
 			os.Exit(int(utils.InvalidEnv))
 		}
@@ -98,6 +98,7 @@ func Verify(interfaceName, kubeConfig string, useAnalyserJSON bool) {
 
 	failures := make([]*ValidationResult, 0)
 	successes := make([]*ValidationResult, 0)
+	unknown := make([]*ValidationResult, 0)
 	for _, check := range checks {
 		err := check.Verify()
 		res := &ValidationResult{
@@ -105,11 +106,15 @@ func Verify(interfaceName, kubeConfig string, useAnalyserJSON bool) {
 			valdation: check,
 		}
 		if err != nil {
-			failures = append(failures, res)
+			if res.IsInvalidEnv() {
+				failures = append(failures, res)
+			} else {
+				unknown = append(unknown, res)
+			}
 		} else {
 			successes = append(successes, res)
 		}
 	}
 
-	report(failures, successes, useAnalyserJSON)
+	report(failures, successes, unknown, useAnalyserJSON)
 }
