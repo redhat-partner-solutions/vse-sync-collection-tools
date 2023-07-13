@@ -28,8 +28,18 @@ func getDevInfoValidations(
 	devDetails := vaildations.NewDeviceDetails(&devInfo)
 	devFirmware := vaildations.NewDeviceFirmware(&devInfo)
 	devDriver := vaildations.NewDeviceDriver(&devInfo)
-	// OCP Version 4.13 >=
 	return []vaildations.Validation{devDetails, devFirmware, devDriver}
+}
+
+func getGNSSValidation(
+	clientset *clients.Clientset,
+) vaildations.Validation {
+	ctx, err := contexts.GetPTPgpsdContext(clientset)
+	utils.IfErrorExitOrPanic(err)
+	gnssInfo, err := devices.GetGPSNav(ctx)
+	utils.IfErrorExitOrPanic(err)
+	gnssVersion := vaildations.NewGNSS(&gnssInfo)
+	return gnssVersion
 }
 
 func getValidations(interfaceName, kubeConfig string) []vaildations.Validation {
@@ -39,6 +49,8 @@ func getValidations(interfaceName, kubeConfig string) []vaildations.Validation {
 	checks = append(checks, getDevInfoValidations(clientset, interfaceName)...)
 	checks = append(checks, vaildations.NewIsGrandMaster(clientset))
 	checks = append(checks, vaildations.NewOperatorVersion(clientset))
+	checks = append(checks, getGNSSValidation(clientset))
+	// OCP Version 4.13 >=
 	// an interesting one is the GPSD version minimum acceptable is 3.25
 	return checks
 }
