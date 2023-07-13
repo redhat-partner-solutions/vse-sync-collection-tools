@@ -74,7 +74,7 @@ func getOperatorVersion(
 			return crd.Version, nil
 		}
 	}
-	return "", errors.New("failed to find new")
+	return "", errors.New("failed to find PTP Operator CSV")
 }
 
 func (opVer *OperatorVersion) GetID() string {
