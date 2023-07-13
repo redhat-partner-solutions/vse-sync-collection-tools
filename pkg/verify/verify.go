@@ -62,7 +62,7 @@ func reportAnalysertJSON(failures, successes, unknown []*ValidationResult) {
 	utils.IfErrorExitOrPanic(err)
 
 	for _, unknownCheck := range unknown {
-		err := callback.Call(unknownCheck, "env-check-unkown")
+		err := callback.Call(unknownCheck, "env-check-unknown")
 		if err != nil {
 			log.Errorf("callback failed during validation %s", err.Error())
 		}
@@ -110,6 +110,7 @@ func Verify(interfaceName, kubeConfig string, useAnalyserJSON bool) {
 	failures := make([]*ValidationResult, 0)
 	successes := make([]*ValidationResult, 0)
 	unknown := make([]*ValidationResult, 0)
+	
 	for _, check := range checks {
 		err := check.Verify()
 		res := &ValidationResult{
