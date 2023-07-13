@@ -30,11 +30,14 @@ func (opVer *OperatorVersion) Verify() error {
 		Version:  opVer.version,
 		Resource: opVer.resource,
 	}
-	list, err := dynamic.Resource(resourceId).Namespace(opVer.namespace).
+	list, _ := dynamic.Resource(resourceId).Namespace(opVer.namespace).
 		List(context.Background(), metav1.ListOptions{})
 
-	fmt.Println(err)
-	fmt.Println(list)
+	for key, value := range list.Items {
+		fmt.Println("key", key)
+		fmt.Println("value", value)
+	}
+
 	// v1alpha1.ClusterServiceVersion{}
 	return nil
 }
@@ -49,7 +52,7 @@ func (opVer *OperatorVersion) GetData() any { //nolint:ireturn // data will very
 
 func NewOperatorVersion(client *clients.Clientset) *OperatorVersion {
 	return &OperatorVersion{
-		group:     "",
+		group:     "operators.coreos.com",
 		version:   "v1alpha1",
 		resource:  "clusterserviceversions",
 		namespace: "openshift-ptp",
