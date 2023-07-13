@@ -59,10 +59,10 @@ var (
 	)
 	ubxFirmwareVersion = regexp.MustCompile(
 		timeStampPattern +
-			`\nUBX-MON-VER:\n\s+` +
-			`swVersion (.*)` +
-			`hwVersion (.*)` +
-			`[extension (.*)\n]+`,
+			`\nUBX-MON-VER:` +
+			`\n\s+swVersion (.*)` +
+			`\n\s+hwVersion (.*)` +
+			`\n\s+((?:extension .*(?:\n\s+)?)+)`,
 		// 1689260332.4728
 		// UBX-MON-VER:
 		// swVersion EXT CORE 1.00 (3fda8e)
