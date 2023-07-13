@@ -89,7 +89,7 @@ func report(failures, successes, unknown []*ValidationResult, useAnalyserJSON bo
 		}
 	} else {
 		for _, res := range unknown {
-			log.Warn(res.err.Error())
+			log.Error(res.err.Error())
 		}
 		if len(failures) == 0 {
 			fmt.Println("No issues found.") //nolint:forbidigo // This to print out to the user
