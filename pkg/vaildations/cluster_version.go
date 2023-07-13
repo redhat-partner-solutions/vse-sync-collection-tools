@@ -27,10 +27,15 @@ type ClusterVersion struct {
 	Error   error  `json:"fetchError"`
 }
 
-// type CSV struct {
-// 	DisplayName string `json:"displayName"`
-// 	Version     string `json:"version"`
-// }
+func (ver ClusterVersion) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&struct {
+		Version string `json:"version"`
+		Error   string `json:"fetchError"`
+	}{
+		Version: ver.Version,
+		Error:   ver.Error.Error(),
+	})
+}
 
 func (clusterVer *ClusterVersion) Verify() error {
 	if clusterVer.Error != nil {
