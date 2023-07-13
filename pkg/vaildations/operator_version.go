@@ -22,6 +22,10 @@ type OperatorVersion struct {
 	client    *clients.Clientset `json:"-"`
 }
 
+// type VersionValue struct {
+// 	Version `json'version'`
+// }
+
 func (opVer *OperatorVersion) Verify() error {
 	dynamic := dynamic.NewForConfigOrDie(opVer.client.RestConfig)
 
@@ -36,9 +40,19 @@ func (opVer *OperatorVersion) Verify() error {
 	for index, item := range list.Items {
 		fmt.Println("index", index)
 		for key, value := range item.Object {
-			fmt.Println("------")
 			fmt.Println("key", key)
-			fmt.Println("value", value)
+			if key == "spec" {
+				fmt.Println(value)
+				// for skey, svalue := range value {
+				// 	fmt.Println("skey", skey)
+				// 	if skey == "version" {
+
+				// 	}
+				// }
+			}
+			// 	fmt.Println("------")
+
+			// 	fmt.Println("value", value)
 		}
 	}
 
