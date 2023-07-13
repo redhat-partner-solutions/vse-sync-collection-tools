@@ -69,8 +69,11 @@ func getClusterVersion(
 		Version:  version,
 		Resource: resource,
 	}
-	list, _ := dynamic.Resource(resourceId).
+	list, err := dynamic.Resource(resourceId).
 		List(context.Background(), metav1.ListOptions{})
+	if err != nil {
+		return "", err
+	}
 
 	for _, item := range list.Items {
 		value := item.Object["status"]

@@ -62,8 +62,12 @@ func getOperatorVersion(
 		Version:  version,
 		Resource: resource,
 	}
-	list, _ := dynamic.Resource(resourceId).Namespace(namespace).
+	list, err := dynamic.Resource(resourceId).Namespace(namespace).
 		List(context.Background(), metav1.ListOptions{})
+
+	if err != nil {
+		return "", err
+	}
 
 	for _, item := range list.Items {
 		value := item.Object["spec"]
