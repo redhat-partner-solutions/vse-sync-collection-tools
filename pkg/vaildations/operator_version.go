@@ -28,13 +28,13 @@ type OperatorVersion struct {
 }
 
 func (ver *OperatorVersion) MarshalJSON() ([]byte, error) {
-	var err string
+	var err any
 	if ver.Error != nil {
 		err = ver.Error.Error()
 	}
 	return json.Marshal(&struct {
 		Version string `json:"version"`
-		Error   string `json:"fetchError"`
+		Error   any    `json:"fetchError"`
 	}{
 		Version: ver.Version,
 		Error:   err,
