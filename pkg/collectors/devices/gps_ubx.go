@@ -17,15 +17,19 @@ import (
 )
 
 type GPSNav struct {
-	TimestampStatus string `json:"timestampStatus" fetcherKey:"navStatusTimestamp"`
-	TimestampClock  string `json:"timestampClock" fetcherKey:"navClockTimestamp"`
-	GPSFix          string `json:"GPSFix" fetcherKey:"gpsFix"`
-	TimestampMon    string `json:"timestampMon" fetcherKey:"monTimestamp"`
-	AntBlockID      []int  `json:"antBlockId" fetcherKey:"antBlockId"`
-	AntStatus       []int  `json:"antStatus" fetcherKey:"antStatus"`
-	AntPower        []int  `json:"antPower" fetcherKey:"antPower"`
-	TimeAcc         int    `json:"timeAcc" fetcherKey:"timeAcc"`
-	FreqAcc         int    `json:"freqAcc" fetcherKey:"freqAcc"`
+	TimestampStatus string            `json:"timestampStatus" fetcherKey:"navStatusTimestamp"`
+	TimestampClock  string            `json:"timestampClock" fetcherKey:"navClockTimestamp"`
+	GPSFix          string            `json:"GPSFix" fetcherKey:"gpsFix"`
+	AntennaDetails  []*AntennaDetails `json:"antennaDetails" fetcherKey:"antennaDetails"`
+	TimeAcc         int               `json:"timeAcc" fetcherKey:"timeAcc"`
+	FreqAcc         int               `json:"freqAcc" fetcherKey:"freqAcc"`
+}
+
+type AntennaDetails struct {
+	Timestamp string `json:"timestamp"`
+	BlockID   int    `json:"blockId"`
+	Status    int    `json:"status"`
+	Power     int    `json:"power"`
 }
 
 func (gpsNav *GPSNav) GetAnalyserFormat() ([]*callbacks.AnalyserFormatType, error) {
@@ -40,14 +44,14 @@ func (gpsNav *GPSNav) GetAnalyserFormat() ([]*callbacks.AnalyserFormatType, erro
 		},
 	})
 
-	for blockIndex, blockID := range gpsNav.AntBlockID {
+	for _, ant := range gpsNav.AntennaDetails {
 		messages = append(messages, &callbacks.AnalyserFormatType{
 			ID: "gnss/rf-mon",
 			Data: []any{
-				gpsNav.TimestampMon,
-				blockID,
-				gpsNav.AntStatus[blockIndex],
-				gpsNav.AntPower[blockIndex],
+				ant.Timestamp,
+				ant.BlockID,
+				ant.Status,
+				ant.Power,
 			},
 		})
 	}
@@ -162,7 +166,7 @@ func processUBXMon(result map[string]string) (map[string]any, error) { //nolint:
 	if err != nil {
 		return processedResult, fmt.Errorf("failed to parse monTimestamp %w", err)
 	}
-	processedResult["monTimestamp"] = timestampMon.Format(time.RFC3339Nano)
+	timestamp := timestampMon.Format(time.RFC3339Nano)
 
 	nBlocks, err := strconv.Atoi(antFullMatch[2])
 	if err != nil {
@@ -170,32 +174,31 @@ func processUBXMon(result map[string]string) (map[string]any, error) { //nolint:
 	}
 
 	antBlockMatches := ubxAntInternalBlockRegex.FindAllStringSubmatch(antFullMatch[3], nBlocks)
-	antBlockID := make([]int, 0)
-	antStatus := make([]int, 0)
-	antPower := make([]int, 0)
+
+	antennaDetails := make([]*AntennaDetails, 0)
 	for _, antBlock := range antBlockMatches {
 		antBlockIDValue, err := strconv.Atoi(antBlock[1])
 		if err != nil {
 			return processedResult, fmt.Errorf("failed to convert %s to an int for antBlockIDValue %w", antBlock[1], err)
 		}
-		antBlockID = append(antBlockID, antBlockIDValue)
-
 		antStatusValue, err := strconv.Atoi(antBlock[2])
 		if err != nil {
 			return processedResult, fmt.Errorf("failed to convert %s to an int for antStatusValue %w", antBlock[2], err)
 		}
-		antStatus = append(antStatus, antStatusValue)
-
 		antPowerValue, err := strconv.Atoi(antBlock[3])
 		if err != nil {
 			return processedResult, fmt.Errorf("failed to convert %s to an int for antPowerValue %w", antBlock[3], err)
 		}
-		antPower = append(antPower, antPowerValue)
+
+		antennaDetails = append(antennaDetails, &AntennaDetails{
+			Timestamp: timestamp,
+			BlockID:   antBlockIDValue,
+			Status:    antStatusValue,
+			Power:     antPowerValue,
+		})
 	}
 
-	processedResult["antBlockId"] = antBlockID
-	processedResult["antStatus"] = antStatus
-	processedResult["antPower"] = antPower
+	processedResult["antennaDetails"] = antennaDetails
 	return processedResult, nil
 }
 
