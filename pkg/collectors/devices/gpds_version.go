@@ -15,7 +15,7 @@ import (
 
 type GPSDVersion struct {
 	Timestamp string `json:"timestamp" fetcherKey:"date"`
-	Version   string `json:"version" fetcherKey:"version"`
+	Version   string `json:"version" fetcherKey:"GPSD"`
 }
 
 func (gpsd *GPSDVersion) GetAnalyserFormat() ([]*callbacks.AnalyserFormatType, error) {
