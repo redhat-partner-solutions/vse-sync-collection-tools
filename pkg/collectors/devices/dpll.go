@@ -44,7 +44,7 @@ func (dpllInfo *DevDPLLInfo) GetAnalyserFormat() ([]*callbacks.AnalyserFormatTyp
 
 var (
 	dpllFetcher map[string]*fetcher.Fetcher
-	dpplDateCmd *clients.Cmd
+	dpllDateCmd *clients.Cmd
 )
 
 func formatTimestampAsRFC3339Nano(s string) (string, error) {
@@ -57,12 +57,12 @@ func formatTimestampAsRFC3339Nano(s string) (string, error) {
 
 func init() {
 	dpllFetcher = make(map[string]*fetcher.Fetcher)
-	dpplDateCmdInst, err := clients.NewCmd("date", "date +%s.%N")
+	dpllDateCmdInst, err := clients.NewCmd("date", "date +%s.%N")
 	if err != nil {
 		panic(err)
 	}
-	dpplDateCmd = dpplDateCmdInst
-	dpplDateCmd.SetOutputProcessor(formatTimestampAsRFC3339Nano)
+	dpllDateCmd = dpllDateCmdInst
+	dpllDateCmd.SetOutputProcessor(formatTimestampAsRFC3339Nano)
 }
 
 func postProcessDPLL(result map[string]string) (map[string]any, error) {
@@ -81,7 +81,7 @@ func BuildDPLLInfoFetcher(interfaceName string) error {
 	fetcherInst := fetcher.NewFetcher()
 	dpllFetcher[interfaceName] = fetcherInst
 	fetcherInst.SetPostProcesser(postProcessDPLL)
-	fetcherInst.AddCommand(dpplDateCmd)
+	fetcherInst.AddCommand(dpllDateCmd)
 
 	err := fetcherInst.AddNewCommand(
 		"dpll_0_state",

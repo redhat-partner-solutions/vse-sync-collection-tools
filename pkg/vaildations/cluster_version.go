@@ -43,7 +43,7 @@ func (clusterVer *ClusterVersion) Verify() error {
 			fmt.Errorf(
 				"invalid firmware version: %s < %s",
 				clusterVer.Version,
-				MinOperatorVersion,
+				MinClusterVersion,
 			),
 		)
 	}

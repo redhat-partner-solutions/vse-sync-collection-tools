@@ -42,6 +42,17 @@ func getGNSSValidation(
 	return gnssVersion
 }
 
+func getGPSDValidation(
+	clientset *clients.Clientset,
+) vaildations.Validation {
+	ctx, err := contexts.GetPTPgpsdContext(clientset)
+	utils.IfErrorExitOrPanic(err)
+	gpsdInfo, err := devices.GetGPSDVersion(ctx)
+	utils.IfErrorExitOrPanic(err)
+	gpsdVersion := vaildations.NewGPSDVersion(&gpsdInfo)
+	return gpsdVersion
+}
+
 func getValidations(interfaceName, kubeConfig string) []vaildations.Validation {
 	checks := make([]vaildations.Validation, 0)
 	clientset, err := clients.GetClientset(kubeConfig)
@@ -50,10 +61,8 @@ func getValidations(interfaceName, kubeConfig string) []vaildations.Validation {
 	checks = append(checks, vaildations.NewIsGrandMaster(clientset))
 	checks = append(checks, vaildations.NewOperatorVersion(clientset))
 	checks = append(checks, getGNSSValidation(clientset))
-
 	checks = append(checks, vaildations.NewClusterVersion(clientset))
-
-	// an interesting one is the GPSD version minimum acceptable is 3.25
+	checks = append(checks, getGPSDValidation(clientset))
 	return checks
 }
 
@@ -110,7 +119,7 @@ func Verify(interfaceName, kubeConfig string, useAnalyserJSON bool) {
 	failures := make([]*ValidationResult, 0)
 	successes := make([]*ValidationResult, 0)
 	unknown := make([]*ValidationResult, 0)
-	
+
 	for _, check := range checks {
 		err := check.Verify()
 		res := &ValidationResult{
