@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/clients"
@@ -18,12 +19,12 @@ const (
 )
 
 type IsGrandMaster struct {
-	Profiles []PTPConfigProfile `json:"profiles"`
 	client   *clients.Clientset `json:"-"`
+	Profiles []PTPConfigProfile `json:"profiles"`
 }
 
 type PTPConfigProfile struct {
-	Ts2PhcConf string `json:"ts2phcConf"`
+	TS2PhcConf string `json:"ts2phcConf"`
 }
 
 type PTPConfigSpec struct {
@@ -34,28 +35,38 @@ type PTPConfig struct {
 }
 
 type PTPConfigList struct {
-	ApiVersion string      `json:"apiVersion"`
+	APIVersion string      `json:"apiVersion"`
 	Items      []PTPConfig `json:"items"`
 }
 
-func FetchPTPConfigs(client *clients.Clientset) PTPConfigList {
-	data, _ := client.K8sRestClient.Get().
+func FetchPTPConfigs(client *clients.Clientset) (PTPConfigList, error) {
+	data, err := client.K8sRestClient.Get().
 		AbsPath("/apis/ptp.openshift.io/v1").
 		Namespace("openshift-ptp").
 		Resource("ptpconfigs").
 		DoRaw(context.TODO())
 
+	if err != nil {
+		return PTPConfigList{}, fmt.Errorf("failed to fetch ptpconfigs %w", err)
+	}
+
 	unpacked := &PTPConfigList{}
-	json.Unmarshal(data, unpacked)
-	return *unpacked
+	err = json.Unmarshal(data, unpacked)
+	if err != nil {
+		return PTPConfigList{}, fmt.Errorf("failed to unmarshal ptpconfigs %w", err)
+	}
+	return *unpacked, nil
 }
 
 func (gm *IsGrandMaster) Verify() error {
-	ptpConfigList := FetchPTPConfigs(gm.client)
+	ptpConfigList, err := FetchPTPConfigs(gm.client)
+	if err != nil {
+		return err
+	}
 	for _, item := range ptpConfigList.Items {
 		gm.Profiles = append(gm.Profiles, item.Spec.Profiles...)
 		for _, profile := range item.Spec.Profiles {
-			if strings.Contains(profile.Ts2PhcConf, gmFlag) {
+			if strings.Contains(profile.TS2PhcConf, gmFlag) {
 				return nil
 			}
 		}

@@ -10,6 +10,12 @@ import (
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/vaildations"
 )
 
+const (
+	resUnk   = "unknown"
+	resTrue  = "true"
+	resFalse = "false"
+)
+
 type ValidationResult struct {
 	valdation vaildations.Validation
 	err       error
@@ -17,15 +23,15 @@ type ValidationResult struct {
 
 func (res *ValidationResult) GetAnalyserFormat() ([]*callbacks.AnalyserFormatType, error) {
 	msg := ""
-	result := "unknown"
+	result := resUnk
 	if res.err != nil {
 		msg = res.err.Error()
 		invalidEnv := &utils.InvalidEnvError{}
 		if errors.As(res.err, invalidEnv) {
-			result = "false"
+			result = resFalse
 		}
 	} else {
-		result = "true"
+		result = resTrue
 	}
 
 	formatted := callbacks.AnalyserFormatType{

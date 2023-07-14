@@ -58,11 +58,14 @@ func getValidations(interfaceName, kubeConfig string) []vaildations.Validation {
 	clientset, err := clients.GetClientset(kubeConfig)
 	utils.IfErrorExitOrPanic(err)
 	checks = append(checks, getDevInfoValidations(clientset, interfaceName)...)
-	checks = append(checks, vaildations.NewIsGrandMaster(clientset))
-	checks = append(checks, vaildations.NewOperatorVersion(clientset))
-	checks = append(checks, getGNSSValidation(clientset))
-	checks = append(checks, vaildations.NewClusterVersion(clientset))
-	checks = append(checks, getGPSDValidation(clientset))
+	checks = append(
+		checks,
+		vaildations.NewIsGrandMaster(clientset),
+		vaildations.NewOperatorVersion(clientset),
+		getGNSSValidation(clientset),
+		vaildations.NewClusterVersion(clientset),
+		getGPSDValidation(clientset),
+	)
 	return checks
 }
 

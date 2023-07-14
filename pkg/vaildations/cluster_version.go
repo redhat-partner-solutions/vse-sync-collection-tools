@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/mod/semver"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -23,8 +24,8 @@ const (
 )
 
 type ClusterVersion struct {
-	Version string
 	Error   error
+	Version string
 }
 
 func (ver *ClusterVersion) MarshalJSON() ([]byte, error) {
@@ -34,19 +35,19 @@ func (ver *ClusterVersion) MarshalJSON() ([]byte, error) {
 	})
 }
 
-func (clusterVer *ClusterVersion) Verify() error {
-	if clusterVer.Error != nil {
-		return clusterVer.Error
+func (ver *ClusterVersion) Verify() error {
+	if ver.Error != nil {
+		return ver.Error
 	}
-	ver := fmt.Sprintf("v%s", clusterVer.Version)
-	if !semver.IsValid(ver) {
-		return fmt.Errorf("could not parse version %s", ver)
+	version := fmt.Sprintf("v%s", ver.Version)
+	if !semver.IsValid(version) {
+		return fmt.Errorf("could not parse version %s", version)
 	}
-	if semver.Compare(ver, fmt.Sprintf("v%s", MinClusterVersion)) < 0 {
+	if semver.Compare(version, fmt.Sprintf("v%s", MinClusterVersion)) < 0 {
 		return utils.NewInvalidEnvError(
 			fmt.Errorf(
 				"invalid firmware version: %s < %s",
-				clusterVer.Version,
+				ver.Version,
 				MinClusterVersion,
 			),
 		)
@@ -68,35 +69,43 @@ func getClusterVersion(
 	resource string,
 	client *clients.Clientset,
 ) (string, error) {
-	dynamic := dynamic.NewForConfigOrDie(client.RestConfig)
+	dynamicClient := dynamic.NewForConfigOrDie(client.RestConfig)
 
-	resourceId := schema.GroupVersionResource{
+	resourceID := schema.GroupVersionResource{
 		Group:    group,
 		Version:  version,
 		Resource: resource,
 	}
-	list, err := dynamic.Resource(resourceId).
+	list, err := dynamicClient.Resource(resourceID).
 		List(context.Background(), metav1.ListOptions{})
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to fetch cluster version %w", err)
 	}
 
 	for _, item := range list.Items {
 		value := item.Object["status"]
 		status := &Status{}
-		marsh, _ := json.Marshal(value)
-		json.Unmarshal(marsh, status)
+		marsh, err := json.Marshal(value)
+		if err != nil {
+			log.Debug("failed to marshal cluster version status", err)
+			continue
+		}
+		err = json.Unmarshal(marsh, status)
+		if err != nil {
+			log.Debug("failed to marshal cluster version status", err)
+			continue
+		}
 		return status.Desired.Version, nil
 	}
 	return "", errors.New("failed to find PTP Operator CSV")
 }
 
-func (clusterVer *ClusterVersion) GetID() string {
+func (ver *ClusterVersion) GetID() string {
 	return clusterVersionID
 }
 
-func (clusterVer *ClusterVersion) GetData() any { //nolint:ireturn // data will very for each validation
-	return clusterVer
+func (ver *ClusterVersion) GetData() any { //nolint:ireturn // data will very for each validation
+	return ver
 }
 
 func NewClusterVersion(client *clients.Clientset) *ClusterVersion {

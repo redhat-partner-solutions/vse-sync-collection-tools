@@ -8,23 +8,23 @@ import (
 	"errors"
 	"fmt"
 
-	"golang.org/x/mod/semver"
+	log "github.com/sirupsen/logrus"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 
 	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/clients"
-	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/utils"
 )
 
 const (
-	ptpOperatorVersionID = "PTP Operactor Version is valid"
-	MinOperatorVersion   = "4.14.0"
+	ptpOperatorVersionID  = "PTP Operactor Version is valid"
+	MinOperatorVersion    = "4.14.0"
+	ptpOperatorDiplayName = "PTP Operator"
 )
 
 type OperatorVersion struct {
-	Version string
 	Error   error
+	Version string
 }
 
 func (ver *OperatorVersion) MarshalJSON() ([]byte, error) {
@@ -39,24 +39,11 @@ type CSV struct {
 	Version     string `json:"version"`
 }
 
-func (opVer *OperatorVersion) Verify() error {
-	if opVer.Error != nil {
-		return opVer.Error
+func (ver *OperatorVersion) Verify() error {
+	if ver.Error != nil {
+		return ver.Error
 	}
-	ver := fmt.Sprintf("v%s", opVer.Version)
-	if !semver.IsValid(ver) {
-		return fmt.Errorf("could not parse version %s", ver)
-	}
-	if semver.Compare(ver, fmt.Sprintf("v%s", MinOperatorVersion)) < 0 {
-		return utils.NewInvalidEnvError(
-			fmt.Errorf(
-				"invalid firmware version: %s < %s",
-				opVer.Version,
-				MinOperatorVersion,
-			),
-		)
-	}
-	return nil
+	return checkVersion(ver.Version, MinOperatorVersion)
 }
 
 func getOperatorVersion(
@@ -66,38 +53,46 @@ func getOperatorVersion(
 	namespace string,
 	client *clients.Clientset,
 ) (string, error) {
-	dynamic := dynamic.NewForConfigOrDie(client.RestConfig)
+	dynamicClient := dynamic.NewForConfigOrDie(client.RestConfig)
 
-	resourceId := schema.GroupVersionResource{
+	resourceID := schema.GroupVersionResource{
 		Group:    group,
 		Version:  version,
 		Resource: resource,
 	}
-	list, err := dynamic.Resource(resourceId).Namespace(namespace).
+	list, err := dynamicClient.Resource(resourceID).Namespace(namespace).
 		List(context.Background(), metav1.ListOptions{})
 
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to fetch operator version %w", err)
 	}
 
 	for _, item := range list.Items {
 		value := item.Object["spec"]
 		crd := &CSV{}
-		marsh, _ := json.Marshal(value)
-		json.Unmarshal(marsh, crd)
-		if crd.DisplayName == "PTP Operator" {
+		marsh, err := json.Marshal(value)
+		if err != nil {
+			log.Debug("failed to marshal cluster service version spec", err)
+			continue
+		}
+		err = json.Unmarshal(marsh, crd)
+		if err != nil {
+			log.Debug("failed to marshal cluster service version spec", err)
+			continue
+		}
+		if crd.DisplayName == ptpOperatorDiplayName {
 			return crd.Version, nil
 		}
 	}
 	return "", errors.New("failed to find PTP Operator CSV")
 }
 
-func (opVer *OperatorVersion) GetID() string {
+func (ver *OperatorVersion) GetID() string {
 	return ptpOperatorVersionID
 }
 
-func (opVer *OperatorVersion) GetData() any { //nolint:ireturn // data will very for each validation
-	return opVer
+func (ver *OperatorVersion) GetData() any { //nolint:ireturn // data will very for each validation
+	return ver
 }
 
 func NewOperatorVersion(client *clients.Clientset) *OperatorVersion {
