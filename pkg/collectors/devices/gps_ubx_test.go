@@ -71,11 +71,12 @@ var _ = Describe("GetGPSNav", func() {
 
 			gpsInfo, err := devices.GetGPSNav(ctx)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(gpsInfo.TimestampStatus).To(Equal("2023-06-16T11:49:47.0584Z"))
-			Expect(gpsInfo.TimestampClock).To(Equal("2023-06-16T11:49:47.0586Z"))
-			Expect(gpsInfo.GPSFix).To(Equal("3"))
-			Expect(gpsInfo.TimeAcc).To(Equal(5))
-			Expect(gpsInfo.FreqAcc).To(Equal(164))
+			Expect(gpsInfo.NavStatus.Timestamp).To(Equal("2023-06-16T11:49:47.0584Z"))
+			Expect(gpsInfo.NavStatus.GPSFix).To(Equal("3"))
+
+			Expect(gpsInfo.NavClock.Timestamp).To(Equal("2023-06-16T11:49:47.0586Z"))
+			Expect(gpsInfo.NavClock.TimeAcc).To(Equal(5))
+			Expect(gpsInfo.NavClock.FreqAcc).To(Equal(164))
 
 			Expect(gpsInfo.AntennaDetails[0].Timestamp).To(Equal("2023-06-16T11:49:47.0584Z"))
 			Expect(gpsInfo.AntennaDetails[0].BlockID).To(Equal(0))
