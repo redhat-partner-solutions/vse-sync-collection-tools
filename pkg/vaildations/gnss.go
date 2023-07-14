@@ -25,6 +25,9 @@ type GNSSVersion struct {
 func (gnss *GNSSVersion) Verify() error {
 	parts := strings.Split(gnss.Version, " ")
 	actualVersion := fmt.Sprintf("v%s", parts[1])
+	if !semver.IsValid(actualVersion) {
+		return fmt.Errorf("could not parse version %s", actualVersion)
+	}
 	if semver.Compare(actualVersion, fmt.Sprintf("v%s", MinGNSSVersion)) < 0 {
 		return utils.NewInvalidEnvError(
 			fmt.Errorf(

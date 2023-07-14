@@ -43,7 +43,11 @@ func (opVer *OperatorVersion) Verify() error {
 	if opVer.Error != nil {
 		return opVer.Error
 	}
-	if semver.Compare(fmt.Sprintf("v%s", opVer.Version), fmt.Sprintf("v%s", MinOperatorVersion)) < 0 {
+	ver := fmt.Sprintf("v%s", opVer.Version)
+	if !semver.IsValid(ver) {
+		return fmt.Errorf("could not parse version %s", ver)
+	}
+	if semver.Compare(ver, fmt.Sprintf("v%s", MinOperatorVersion)) < 0 {
 		return utils.NewInvalidEnvError(
 			fmt.Errorf(
 				"invalid firmware version: %s < %s",

@@ -22,7 +22,11 @@ type DeviceDriver struct {
 }
 
 func (dev *DeviceDriver) Verify() error {
-	if semver.Compare(fmt.Sprintf("v%s", dev.Version), fmt.Sprintf("v%s", MinDriverVersion)) < 0 {
+	ver := fmt.Sprintf("v%s", dev.Version)
+	if !semver.IsValid(ver) {
+		return fmt.Errorf("could not parse version %s", ver)
+	}
+	if semver.Compare(ver, fmt.Sprintf("v%s", MinDriverVersion)) < 0 {
 		return utils.NewInvalidEnvError(
 			fmt.Errorf(
 				"invalid firmware version: %s < %s",

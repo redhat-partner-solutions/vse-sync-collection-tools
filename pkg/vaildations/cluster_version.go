@@ -38,7 +38,11 @@ func (clusterVer *ClusterVersion) Verify() error {
 	if clusterVer.Error != nil {
 		return clusterVer.Error
 	}
-	if semver.Compare(fmt.Sprintf("v%s", clusterVer.Version), fmt.Sprintf("v%s", MinClusterVersion)) < 0 {
+	ver := fmt.Sprintf("v%s", clusterVer.Version)
+	if !semver.IsValid(ver) {
+		return fmt.Errorf("could not parse version %s", ver)
+	}
+	if semver.Compare(ver, fmt.Sprintf("v%s", MinClusterVersion)) < 0 {
 		return utils.NewInvalidEnvError(
 			fmt.Errorf(
 				"invalid firmware version: %s < %s",

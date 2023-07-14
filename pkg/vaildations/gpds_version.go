@@ -25,6 +25,9 @@ type GPSDVersion struct {
 func (gpsd *GPSDVersion) Verify() error {
 	parts := strings.Split(gpsd.Version, " ")
 	actualVersion := fmt.Sprintf("v%s", strings.ReplaceAll(parts[1], "~", "-"))
+	if !semver.IsValid(actualVersion) {
+		return fmt.Errorf("could not parse version %s", actualVersion)
+	}
 	if semver.Compare(actualVersion, fmt.Sprintf("v%s", MinGSPDVersion)) < 0 {
 		return utils.NewInvalidEnvError(
 			fmt.Errorf(

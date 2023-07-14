@@ -25,6 +25,9 @@ type DeviceFirmware struct {
 func (dev *DeviceFirmware) Verify() error {
 	firmwarVersionParts := strings.Split(dev.Version, " ")
 	actualVersion := fmt.Sprintf("v%s", firmwarVersionParts[0])
+	if !semver.IsValid(actualVersion) {
+		return fmt.Errorf("could not parse version %s", actualVersion)
+	}
 	if semver.Compare(actualVersion, fmt.Sprintf("v%s", MinFirmwareVersion)) < 0 {
 		return utils.NewInvalidEnvError(
 			fmt.Errorf(
