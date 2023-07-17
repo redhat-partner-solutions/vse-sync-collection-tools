@@ -84,7 +84,7 @@ func (gps *GPSCollector) GetPollCount() int {
 
 // Returns a new GPSCollector based on values in the CollectionConstructor
 func NewGPSCollector(constructor *CollectionConstructor) (Collector, error) {
-	ctx, err := contexts.GetPTPgpsdContext(constructor.Clientset)
+	ctx, err := contexts.GetPTPDaemonContext(constructor.Clientset)
 	if err != nil {
 		return &GPSCollector{}, fmt.Errorf("failed to create DPLLCollector: %w", err)
 	}
