@@ -1,5 +1,58 @@
 # Implementing Collectors
 
+## High level flow
+This sequance diagram shows the high level flow of data from the SUT to User and contains
+```mermaid
+sequenceDiagram
+    participant User
+    participant Runner
+    participant Collector
+    participant Fetcher
+    participant SUT
+    participant callback
+
+    User ->>+ Runner: Runs binary
+    note left of Runner: runner.Run()
+
+    Runner ->> Runner: Gather collectors
+    note right of Runner: GetCollectorsToRun()
+
+    Runner ->> Collector: Starts collector
+      note over Runner,Collector: Runner.start() calls Collector.Start()
+
+    Runner ->> Runner: Spawns Runner.Poller() goroutine for collector
+    loop Runner.Poller(): Until user interupts or number of polls is reached
+        Runner ->>+ Collector: Calls Poll
+        note over Runner,Collector: Runner.Poller() calls Collector.Poll()
+
+        Collector ->>+ Fetcher: Requests Data
+        note over Collector,Fetcher: Collector.poll() calls function <br> in devices submodule which <br> inturn calls Fetcher.Fetch()
+        Fetcher ->>+ SUT: Runs commands
+        note left of SUT: Fetcher.Fetch() calls runCommands()
+
+        SUT ->>- Fetcher: Command result
+        note left of SUT: runCommands() returns result
+        Fetcher ->>- Collector: Returns results
+        note left of Fetcher: Fetcher.Fetch() unpacks results into a struct
+
+
+        Collector ->> callback: sends data to callback
+        note left of callback: Callback.Call()
+        callback ->> User: Presents formatted data to user
+        Collector ->>- Runner: Sends poll sucess/failure via results channel
+        note left of Collector: resultsChan <- PollResult{CollectorName, Errors}
+
+        Runner ->> Runner: Reacts to failures
+    end
+    Runner ->>- Collector: Stops collector
+    note left of Collector: Runner.cleanUpAll() calls Collector.CleanUp()
+```
+
+
+
+
+
+## Step by step
 You will first need to create a stuct for reporting the collected values to the user. It needs to conform to the `callbacks.OutputType` interface and any fields which you wish to show the user will require a json tag.
 
 Any collector must conform to the collector interface It should use the callback to expose collected information to the user.
