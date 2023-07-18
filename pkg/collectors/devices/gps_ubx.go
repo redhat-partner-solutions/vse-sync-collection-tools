@@ -48,7 +48,7 @@ func (gpsNav *GPSDetails) GetAnalyserFormat() ([]*callbacks.AnalyserFormatType, 
 			gpsNav.NavClock.Timestamp,
 			gpsNav.NavStatus.GPSFix,
 			gpsNav.NavClock.TimeAcc,
-			gpsNav.NavClock.FreqAcc,
+			// gpsNav.NavClock.FreqAcc,
 		},
 	})
 
