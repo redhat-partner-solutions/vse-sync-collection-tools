@@ -6,15 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"strings"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/callbacks"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/clients"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/fetcher"
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/utils"
 )
 
 const (
@@ -44,25 +41,10 @@ func (dpllInfo *DevDPLLInfo) GetAnalyserFormat() ([]*callbacks.AnalyserFormatTyp
 
 var (
 	dpllFetcher map[string]*fetcher.Fetcher
-	dpplDateCmd *clients.Cmd
 )
-
-func formatTimestampAsRFC3339Nano(s string) (string, error) {
-	timestamp, err := utils.ParseTimestamp(strings.TrimSpace(s))
-	if err != nil {
-		return "", fmt.Errorf("failed to parse timestamp %w", err)
-	}
-	return timestamp.Format(time.RFC3339Nano), nil
-}
 
 func init() {
 	dpllFetcher = make(map[string]*fetcher.Fetcher)
-	dpplDateCmdInst, err := clients.NewCmd("date", "date +%s.%N")
-	if err != nil {
-		panic(err)
-	}
-	dpplDateCmd = dpplDateCmdInst
-	dpplDateCmd.SetOutputProcessor(formatTimestampAsRFC3339Nano)
 }
 
 func postProcessDPLL(result map[string]string) (map[string]any, error) {
@@ -79,7 +61,7 @@ func postProcessDPLL(result map[string]string) (map[string]any, error) {
 // collecting the DPLLInfo
 func BuildDPLLInfoFetcher(interfaceName string) error { //nolint:dupl // Further dedup risks be too abstract or fragile
 	fetcherInst, err := fetcher.FetcherFactory(
-		[]*clients.Cmd{dpplDateCmd},
+		[]*clients.Cmd{dateCmd},
 		[]fetcher.AddCommandArgs{
 			{
 				Key:     "dpll_0_state",

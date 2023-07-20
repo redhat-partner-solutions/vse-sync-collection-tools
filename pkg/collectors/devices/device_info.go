@@ -12,7 +12,6 @@ import (
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/callbacks"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/clients"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/fetcher"
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/utils"
 )
 
 type PTPDeviceInfo struct {
@@ -40,27 +39,18 @@ func (ptpDevInfo *PTPDeviceInfo) GetAnalyserFormat() ([]*callbacks.AnalyserForma
 
 var (
 	devFetcher map[string]*fetcher.Fetcher
-	devDateCmd *clients.Cmd
 )
 
 func init() {
 	devFetcher = make(map[string]*fetcher.Fetcher)
-	devDateCmdInst, err := clients.NewCmd("date", "date +%s.%N")
-	if err != nil {
-		panic(err)
-	}
-
-	devDateCmd = devDateCmdInst
-	devDateCmd.SetOutputProcessor(fetcher.TrimSpace)
 }
 
 func extractOffsetFromTimestamp(result map[string]string) (map[string]any, error) {
 	processedResult := make(map[string]any, 0)
-	timestamp, err := utils.ParseTimestamp(result["date"])
+	timestamp, err := time.Parse(time.RFC3339Nano, result["date"])
 	if err != nil {
 		return processedResult, fmt.Errorf("failed to parse timestamp  %w", err)
 	}
-	processedResult["date"] = timestamp.Format(time.RFC3339Nano)
 	processedResult["timeOffset"] = time.Since(timestamp)
 	return processedResult, nil
 }
@@ -69,7 +59,7 @@ func extractOffsetFromTimestamp(result map[string]string) (map[string]any, error
 // collecting the PTPDeviceInfo
 func BuildPTPDeviceInfo(interfaceName string) error { //nolint:dupl // Further dedup risks be too abstract or fragile
 	fetcherInst, err := fetcher.FetcherFactory(
-		[]*clients.Cmd{devDateCmd},
+		[]*clients.Cmd{dateCmd},
 		[]fetcher.AddCommandArgs{
 			{
 				Key:     "gnss",
