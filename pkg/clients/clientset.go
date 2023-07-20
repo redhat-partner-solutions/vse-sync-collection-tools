@@ -13,7 +13,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
-	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/utils"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/utils"
 )
 
 // A Clientset contains clients for the different k8s API groups in one place
