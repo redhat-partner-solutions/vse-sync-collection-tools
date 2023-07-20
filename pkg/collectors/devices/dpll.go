@@ -103,7 +103,7 @@ func BuildDPLLInfoFetcher(interfaceName string) error { //nolint:dupl // Further
 		return fmt.Errorf("failed to create fetcher for dpll: %w", err)
 	}
 	dpllFetcher[interfaceName] = fetcherInst
-	fetcherInst.SetPostProcesser(postProcessDPLL)
+	fetcherInst.SetPostProcessor(postProcessDPLL)
 	return nil
 }
 

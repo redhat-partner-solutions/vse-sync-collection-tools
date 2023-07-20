@@ -14,7 +14,7 @@ import (
 
 type Fetcher struct {
 	cmdGrp        *clients.CmdGroup
-	postProcesser func(map[string]string) (map[string]any, error)
+	postProcessor func(map[string]string) (map[string]any, error)
 }
 
 func NewFetcher() *Fetcher {
@@ -27,8 +27,8 @@ func TrimSpace(s string) (string, error) {
 	return strings.TrimSpace(s), nil
 }
 
-func (inst *Fetcher) SetPostProcesser(ppFunc func(map[string]string) (map[string]any, error)) {
-	inst.postProcesser = ppFunc
+func (inst *Fetcher) SetPostProcessor(ppFunc func(map[string]string) (map[string]any, error)) {
+	inst.postProcessor = ppFunc
 }
 
 // AddNewCommand creates a new command from a string
@@ -61,8 +61,8 @@ func (inst *Fetcher) Fetch(ctx clients.ContainerContext, pack any) error {
 	for key, value := range runResult {
 		result[key] = value
 	}
-	if inst.postProcesser != nil {
-		updatedResults, ppErr := inst.postProcesser(runResult)
+	if inst.postProcessor != nil {
+		updatedResults, ppErr := inst.postProcessor(runResult)
 		if ppErr != nil {
 			return fmt.Errorf("feching failed post process the data %w", ppErr)
 		}

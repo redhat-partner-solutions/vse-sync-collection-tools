@@ -116,7 +116,7 @@ var (
 
 func init() {
 	gpsFetcher = fetcher.NewFetcher()
-	gpsFetcher.SetPostProcesser(processUBX)
+	gpsFetcher.SetPostProcessor(processUBX)
 	err := gpsFetcher.AddNewCommand(
 		"GPS",
 		"ubxtool -t -p NAV-STATUS -p NAV-CLOCK -p MON-RF -P 29.20",

@@ -77,7 +77,7 @@ func init(){
         panic("Failed to add uptime command to fetcher")
     }
     // Assign processUptime to uptimeFetcher.
-    uptimeFetcher.SetPostProcesser(processUptime)
+    uptimeFetcher.SetPostProcessor(processUptime)
 }
 
 // Here we define something to take the raw result from MyUptimeValue and extracts values
