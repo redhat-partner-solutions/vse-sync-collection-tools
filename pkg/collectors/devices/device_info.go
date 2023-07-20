@@ -67,37 +67,33 @@ func extractOffsetFromTimestamp(result map[string]string) (map[string]any, error
 
 // BuildPTPDeviceInfo popluates the fetcher required for
 // collecting the PTPDeviceInfo
-func BuildPTPDeviceInfo(interfaceName string) error { //nolint:dupl //no need to dedup these
-	fetcherInst := fetcher.NewFetcher()
+func BuildPTPDeviceInfo(interfaceName string) error { //nolint:dupl // Further dedup risks be too abstract or fragile
+	fetcherInst, err := fetcher.FetcherFactory(
+		[]*clients.Cmd{devDateCmd},
+		[]fetcher.AddCommandArgs{
+			{
+				Key:     "gnss",
+				Command: fmt.Sprintf("ls /sys/class/net/%s/device/gnss/", interfaceName),
+				Trim:    true,
+			},
+			{
+				Key:     "devID",
+				Command: fmt.Sprintf("cat /sys/class/net/%s/device/device", interfaceName),
+				Trim:    true,
+			},
+			{
+				Key:     "vendorID",
+				Command: fmt.Sprintf("cat /sys/class/net/%s/device/vendor", interfaceName),
+				Trim:    true,
+			},
+		},
+	)
+	if err != nil {
+		log.Errorf("failed to create fetcher for devInfo: %s", err.Error())
+		return fmt.Errorf("failed to create fetcher for devInfo: %w", err)
+	}
 	devFetcher[interfaceName] = fetcherInst
 	fetcherInst.SetPostProcesser(extractOffsetFromTimestamp)
-	fetcherInst.AddCommand(devDateCmd)
-
-	err := fetcherInst.AddNewCommand(
-		"gnss",
-		fmt.Sprintf("ls /sys/class/net/%s/device/gnss/", interfaceName),
-		true,
-	)
-	if err != nil {
-		return failedToAddCommand("devInfo", "gnss", err)
-	}
-
-	err = fetcherInst.AddNewCommand(
-		"devID",
-		fmt.Sprintf("cat /sys/class/net/%s/device/device", interfaceName),
-		true,
-	)
-	if err != nil {
-		return failedToAddCommand("devInfo", "devID", err)
-	}
-
-	err = fetcherInst.AddNewCommand("vendorID",
-		fmt.Sprintf("cat /sys/class/net/%s/device/vendor", interfaceName),
-		true,
-	)
-	if err != nil {
-		return failedToAddCommand("devInfo", "vendorID", err)
-	}
 	return nil
 }
 
