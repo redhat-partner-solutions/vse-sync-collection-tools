@@ -77,38 +77,33 @@ func postProcessDPLL(result map[string]string) (map[string]any, error) {
 
 // BuildDPLLInfoFetcher popluates the fetcher required for
 // collecting the DPLLInfo
-func BuildDPLLInfoFetcher(interfaceName string) error { //nolint:dupl //no need to dedup these
-	fetcherInst := fetcher.NewFetcher()
+func BuildDPLLInfoFetcher(interfaceName string) error { //nolint:dupl // Further dedup risks be too abstract or fragile
+	fetcherInst, err := fetcher.FetcherFactory(
+		[]*clients.Cmd{dpplDateCmd},
+		[]fetcher.AddCommandArgs{
+			{
+				Key:     "dpll_0_state",
+				Command: fmt.Sprintf("cat /sys/class/net/%s/device/dpll_0_state", interfaceName),
+				Trim:    true,
+			},
+			{
+				Key:     "dpll_1_state",
+				Command: fmt.Sprintf("cat /sys/class/net/%s/device/dpll_1_state", interfaceName),
+				Trim:    true,
+			},
+			{
+				Key:     "dpll_1_offset",
+				Command: fmt.Sprintf("cat /sys/class/net/%s/device/dpll_1_offset", interfaceName),
+				Trim:    true,
+			},
+		},
+	)
+	if err != nil {
+		log.Errorf("failed to create fetcher for dpll: %s", err.Error())
+		return fmt.Errorf("failed to create fetcher for dpll: %w", err)
+	}
 	dpllFetcher[interfaceName] = fetcherInst
 	fetcherInst.SetPostProcesser(postProcessDPLL)
-	fetcherInst.AddCommand(dpplDateCmd)
-
-	err := fetcherInst.AddNewCommand(
-		"dpll_0_state",
-		fmt.Sprintf("cat /sys/class/net/%s/device/dpll_0_state", interfaceName),
-		true,
-	)
-	if err != nil {
-		return failedToAddCommand("dpll", "dpll_0_state", err)
-	}
-
-	err = fetcherInst.AddNewCommand(
-		"dpll_1_state",
-		fmt.Sprintf("cat /sys/class/net/%s/device/dpll_1_state", interfaceName),
-		true,
-	)
-	if err != nil {
-		return failedToAddCommand("dpll", "dpll_1_state", err)
-	}
-
-	err = fetcherInst.AddNewCommand(
-		"dpll_1_offset",
-		fmt.Sprintf("cat /sys/class/net/%s/device/dpll_1_offset", interfaceName),
-		true,
-	)
-	if err != nil {
-		return failedToAddCommand("dpll", "dpll_1_offset", err)
-	}
 	return nil
 }
 
