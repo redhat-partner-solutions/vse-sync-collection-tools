@@ -93,7 +93,7 @@ func BuildPTPDeviceInfo(interfaceName string) error { //nolint:dupl // Further d
 		return fmt.Errorf("failed to create fetcher for devInfo: %w", err)
 	}
 	devFetcher[interfaceName] = fetcherInst
-	fetcherInst.SetPostProcesser(extractOffsetFromTimestamp)
+	fetcherInst.SetPostProcessor(extractOffsetFromTimestamp)
 	return nil
 }
 
