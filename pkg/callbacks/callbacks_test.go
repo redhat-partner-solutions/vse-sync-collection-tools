@@ -10,7 +10,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/callbacks"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/callbacks"
 )
 
 func NewTestFile() *testFile {

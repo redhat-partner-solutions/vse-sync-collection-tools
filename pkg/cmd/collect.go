@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/runner"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/runner"
 )
 
 var (

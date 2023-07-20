@@ -5,8 +5,8 @@ package vaildations
 import (
 	"fmt"
 
-	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/collectors/devices"
-	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/utils"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors/devices"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/utils"
 )
 
 const deviceDetailsID = "Card is valid NIC"

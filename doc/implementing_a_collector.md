@@ -81,7 +81,7 @@ package collectors
 import (
 	"fmt"
 
-	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/callbacks"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/callbacks"
 )
 const (
 	AnnouncementCollectorName = "MyCustomerAnouncer"

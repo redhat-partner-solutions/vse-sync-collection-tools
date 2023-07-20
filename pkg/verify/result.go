@@ -3,8 +3,8 @@
 package verify
 
 import (
-	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/callbacks"
-	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/vaildations"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/callbacks"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/vaildations"
 )
 
 type ValidationResult struct {

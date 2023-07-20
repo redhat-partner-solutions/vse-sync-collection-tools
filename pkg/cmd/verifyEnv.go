@@ -5,7 +5,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/verify"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/verify"
 )
 
 var envCmd = &cobra.Command{

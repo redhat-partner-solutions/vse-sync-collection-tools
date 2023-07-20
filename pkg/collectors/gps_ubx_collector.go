@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"sync/atomic"
 
-	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/callbacks"
-	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/clients"
-	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/collectors/contexts"
-	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/collectors/devices"
-	"github.com/redhat-partner-solutions/vse-sync-testsuite/pkg/utils"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/callbacks"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/clients"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors/contexts"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors/devices"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/utils"
 )
 
 var (

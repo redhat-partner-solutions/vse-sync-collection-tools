@@ -1,4 +1,4 @@
-module github.com/redhat-partner-solutions/vse-sync-testsuite
+module github.com/redhat-partner-solutions/vse-sync-collection-tools
 
 go 1.18
 
