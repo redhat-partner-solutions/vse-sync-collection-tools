@@ -17,23 +17,25 @@ import (
 )
 
 //nolint:ireturn // this needs to be an interface
-func getDevInfoValidation(
+func getDevInfoValidations(
 	clientset *clients.Clientset,
 	interfaceName string,
-) vaildations.Validation {
+) []vaildations.Validation {
 	ctx, err := contexts.GetPTPDaemonContext(clientset)
 	utils.IfErrorExitOrPanic(err)
 	devInfo, err := devices.GetPTPDeviceInfo(interfaceName, ctx)
 	utils.IfErrorExitOrPanic(err)
 	devDetails := vaildations.NewDeviceDetails(&devInfo)
-	return devDetails
+	devFirmware := vaildations.NewDeviceFirmware(&devInfo)
+	devDriver := vaildations.NewDeviceDriver(&devInfo)
+	return []vaildations.Validation{devDetails, devFirmware, devDriver}
 }
 
 func getValidations(interfaceName, kubeConfig string) []vaildations.Validation {
 	checks := make([]vaildations.Validation, 0)
 	clientset, err := clients.GetClientset(kubeConfig)
 	utils.IfErrorExitOrPanic(err)
-	checks = append(checks, getDevInfoValidation(clientset, interfaceName))
+	checks = append(checks, getDevInfoValidations(clientset, interfaceName)...)
 	return checks
 }
 

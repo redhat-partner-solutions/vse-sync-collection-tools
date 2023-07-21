@@ -20,6 +20,20 @@ import (
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/testutils"
 )
 
+const ethtoolOutput = `<ethtoolOut>
+driver: ice
+version: %s
+firmware-version: %s
+expansion-rom-version:
+bus-info: 0000:86:00.0
+supports-statistics: yes
+supports-test: yes
+supports-eeprom-access: yes
+supports-register-dump: yes
+supports-priv-flags: yes
+</ethtoolOut>
+`
+
 var testPod = &v1.Pod{
 	ObjectMeta: metav1.ObjectMeta{
 		Name:        "TestPod-8292",
@@ -53,16 +67,20 @@ var _ = Describe("NewContainerContext", func() {
 			vendor := "0x8086"
 			devID := "0x1593"
 			gnssDev := "gnss0"
+			firmwareVersion := "4.20 0x8001778b 1.3346.0"
+			driverVersion := "1.11.20.7"
 
 			expectedInput := "echo '<date>';date +%s.%N;echo '</date>';"
 			expectedInput += "echo '<gnss>';ls /sys/class/net/aFakeInterface/device/gnss/;echo '</gnss>';"
 			expectedInput += "echo '<devID>';cat /sys/class/net/aFakeInterface/device/device;echo '</devID>';"
 			expectedInput += "echo '<vendorID>';cat /sys/class/net/aFakeInterface/device/vendor;echo '</vendorID>';"
+			expectedInput += "echo '<ethtoolOut>';ethtool -i aFakeInterface;echo '</ethtoolOut>';"
 
 			expectedOutput := "<date>\n1686916187.0584\n</date>\n"
 			expectedOutput += fmt.Sprintf("<gnss>\n%s\n</gnss>\n", gnssDev)
 			expectedOutput += fmt.Sprintf("<devID>\n%s\n</devID>\n", devID)
 			expectedOutput += fmt.Sprintf("<vendorID>\n%s\n</vendorID>\n", vendor)
+			expectedOutput += fmt.Sprintf(ethtoolOutput, driverVersion, firmwareVersion)
 
 			response[expectedInput] = []byte(expectedOutput)
 
@@ -74,6 +92,8 @@ var _ = Describe("NewContainerContext", func() {
 			Expect(info.DeviceID).To(Equal(devID))
 			Expect(info.VendorID).To(Equal(vendor))
 			Expect(info.GNSSDev).To(Equal("/dev/" + gnssDev))
+			Expect(info.FirmwareVersion).To(Equal(firmwareVersion))
+			Expect(info.DriverVersion).To(Equal(driverVersion))
 		})
 	})
 })

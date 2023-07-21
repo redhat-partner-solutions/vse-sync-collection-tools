@@ -3,11 +3,14 @@
 package collectors
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/callbacks"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/clients"
@@ -131,6 +134,38 @@ func (ptpDev *DevInfoCollector) GetPollCount() int {
 	return int(atomic.LoadUint32(&ptpDev.count))
 }
 
+func verify(ptpDevInfo *devices.PTPDeviceInfo, constructor *CollectionConstructor) error {
+	checkErrors := make([]error, 0)
+	checks := []vaildations.Validation{
+		vaildations.NewDeviceDetails(ptpDevInfo),
+		vaildations.NewDeviceDriver(ptpDevInfo),
+		vaildations.NewDeviceFirmware(ptpDevInfo),
+	}
+
+	for _, check := range checks {
+		err := check.Verify()
+		invalidEnv := &utils.InvalidEnvError{}
+		if err != nil {
+			if errors.As(err, invalidEnv) {
+				checkErrors = append(checkErrors, err)
+			} else {
+				log.Warningf("failed to verify %s: %s", check.GetID(), err.Error())
+			}
+		}
+	}
+
+	if len(checkErrors) > 0 {
+		callbackErr := constructor.Callback.Call(ptpDevInfo, DeviceInfo)
+		if callbackErr != nil {
+			checkErrors = append(checkErrors, fmt.Errorf("callback failed %w", callbackErr))
+		}
+		//nolint:wrapcheck // this returns a wrapped error
+		return utils.MakeCompositeInvalidEnvError(checkErrors)
+	}
+
+	return nil
+}
+
 // Returns a new DevInfoCollector from the CollectionConstuctor Factory
 func NewDevInfoCollector(constructor *CollectionConstructor) (Collector, error) {
 	// Build DPPInfoFetcher ahead of time call to GetPTPDeviceInfo will build the other
@@ -148,16 +183,9 @@ func NewDevInfoCollector(constructor *CollectionConstructor) (Collector, error) 
 		return &DevInfoCollector{}, fmt.Errorf("failed to fetch initial DeviceInfo %w", err)
 	}
 
-	devDetails := vaildations.NewDeviceDetails(&ptpDevInfo)
-	err = devDetails.Verify()
+	err = verify(&ptpDevInfo, constructor)
 	if err != nil {
-		callbackErr := constructor.Callback.Call(&ptpDevInfo, DeviceInfo)
-		if callbackErr != nil {
-			return &DevInfoCollector{}, utils.NewInvalidEnvError(
-				fmt.Errorf("callback failed %s %w", callbackErr.Error(), err),
-			)
-		}
-		return &DevInfoCollector{}, utils.NewInvalidEnvError(fmt.Errorf("failed to verify environment %w", err))
+		return &DevInfoCollector{}, err
 	}
 
 	collector := DevInfoCollector{
