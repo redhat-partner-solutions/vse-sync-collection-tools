@@ -4,6 +4,8 @@ package utils
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 )
 
 type exitCode int
@@ -58,4 +60,14 @@ func checkError(err error) (exitCode, bool) {
 	}
 
 	return NotHandled, false
+}
+
+func MakeCompositeInvalidEnvError(errSlice []error) error {
+	pattern := strings.Repeat("\t%w\n", len(errSlice))
+
+	values := make([]any, 0)
+	for _, err := range errSlice {
+		values = append(values, err)
+	}
+	return NewInvalidEnvError(fmt.Errorf("The following issues where found:\n"+pattern, values...))
 }
