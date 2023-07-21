@@ -64,6 +64,7 @@ func getValidations(interfaceName, kubeConfig string) []vaildations.Validation {
 		getGPSDValidation(clientset),
 		vaildations.NewIsGrandMaster(clientset),
 		vaildations.NewOperatorVersion(clientset),
+		vaildations.NewClusterVersion(clientset),
 	)
 	return checks
 }
