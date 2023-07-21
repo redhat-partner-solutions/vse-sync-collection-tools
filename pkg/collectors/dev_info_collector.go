@@ -176,5 +176,5 @@ func NewDevInfoCollector(constructor *CollectionConstructor) (Collector, error) 
 }
 
 func init() {
-	RegisterCollector(DevInfoCollectorName, NewDevInfoCollector)
+	RegisterCollector(DevInfoCollectorName, NewDevInfoCollector, true)
 }

@@ -48,10 +48,6 @@ sequenceDiagram
     note left of Collector: Runner.cleanUpAll() calls Collector.CleanUp()
 ```
 
-
-
-
-
 ## Step by step
 You will first need to create a stuct for reporting the collected values to the user. It needs to conform to the `callbacks.OutputType` interface and any fields which you wish to show the user will require a json tag.
 
@@ -150,7 +146,7 @@ func NewAnnouncementCollector(constuctor *CollectionConstuctor) (Collector, erro
 }
 
 func init(){
-	registry.register(AnnouncementCollectorName, NewAnnouncementCollector)
+	// We'll make this a required collector
+	RegisterCollector(AnnouncementCollectorName, NewAnnouncementCollector, true)
 }
-
 ```
