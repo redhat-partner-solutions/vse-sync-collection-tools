@@ -5,14 +5,23 @@ package cmd
 import (
 	"fmt"
 	"strings"
+	"time"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/runner"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/utils"
+)
+
+const (
+	defaultDuration        string = "1000s"
+	defaultPollInterval    int    = 1
+	defaultDevInfoInterval int    = 60
 )
 
 var (
-	pollCount              int
+	requestedDurationStr   string
 	pollInterval           int
 	devInfoAnnouceInterval int
 	collectorNames         []string
@@ -25,10 +34,17 @@ var collectCmd = &cobra.Command{
 	Long:  `Run the collector tool to gather data from your target cluster`,
 	Run: func(cmd *cobra.Command, args []string) {
 		collectionRunner := runner.NewCollectorRunner(collectorNames)
+
+		requestedDuration, err := time.ParseDuration(requestedDurationStr)
+		if requestedDuration.Nanoseconds() < 0 {
+			log.Panicf("Requested duration must be positive")
+		}
+		utils.IfErrorExitOrPanic(err)
+
 		collectionRunner.Run(
 			kubeConfig,
 			outputFile,
-			pollCount,
+			requestedDuration,
 			pollInterval,
 			devInfoAnnouceInterval,
 			ptpInterface,
@@ -45,12 +61,13 @@ func init() { //nolint:funlen // Allow this to get a little long
 	AddFormatFlag(collectCmd)
 	AddInterfaceFlag(collectCmd)
 
-	collectCmd.Flags().IntVarP(
-		&pollCount,
-		"count",
-		"c",
-		defaultCount,
-		"Number of data points to collect from the cluster. Use `-1` to poll forever",
+	collectCmd.Flags().StringVarP(
+		&requestedDurationStr,
+		"duration",
+		"d",
+		defaultDuration,
+		"A positive duration string sequence of decimal numbers and a unit suffix, such as \"300ms\", \"1.5h\" or \"2h45m\"."+
+			" Valid time units are \"s\", \"m\", \"h\".",
 	)
 	collectCmd.Flags().IntVarP(
 		&pollInterval,

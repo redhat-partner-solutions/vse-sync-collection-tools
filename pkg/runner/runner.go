@@ -31,17 +31,17 @@ func getQuitChannel() chan os.Signal {
 }
 
 type CollectorRunner struct {
+	endTime                time.Time
 	quit                   chan os.Signal
 	collectorQuitChannel   map[string]chan os.Signal
 	pollResults            chan collectors.PollResult
 	erroredPolls           chan collectors.PollResult
 	collectorInstances     map[string]collectors.Collector
 	collectorNames         []string
-	pollCount              int
-	pollInterval           int
-	devInfoAnnouceInterval int
 	runningCollectorsWG    utils.WaitGroupCount
 	runningAnnouncersWG    utils.WaitGroupCount
+	pollInterval           int
+	devInfoAnnouceInterval int
 	onlyAnnouncers         bool
 }
 
@@ -64,11 +64,11 @@ func (runner *CollectorRunner) initialise(
 	ptpInterface string,
 	clientset *clients.Clientset,
 	pollInterval int,
-	pollCount int,
+	requestedDuration time.Duration,
 	devInfoAnnouceInterval int,
 ) {
 	runner.pollInterval = pollInterval
-	runner.pollCount = pollCount
+	runner.endTime = time.Now().Add(requestedDuration)
 	runner.devInfoAnnouceInterval = devInfoAnnouceInterval
 
 	constructor := &collectors.CollectionConstructor{
@@ -111,12 +111,11 @@ func (runner *CollectorRunner) setOnlyAnnouncers() {
 
 func (runner *CollectorRunner) shouldKeepPolling(
 	collector collectors.Collector,
-	runningPolls *utils.WaitGroupCount,
 ) bool {
 	if collector.IsAnnouncer() && !runner.onlyAnnouncers {
 		return runner.runningCollectorsWG.GetCount() > 0
 	} else {
-		return runner.pollCount < 0 || (collector.GetPollCount()+runningPolls.GetCount()) <= runner.pollCount
+		return time.Since(runner.endTime) <= 0
 	}
 }
 
@@ -131,7 +130,7 @@ func (runner *CollectorRunner) poller(
 	pollInterval := time.Duration(collector.GetPollInterval()) * time.Second
 	runningPolls := utils.WaitGroupCount{}
 	log.Debugf("Collector with poll interval %f ", pollInterval.Seconds())
-	for runner.shouldKeepPolling(collector, &runningPolls) {
+	for runner.shouldKeepPolling(collector) {
 		// If pollResults were to block we do not want to keep spawning polls
 		// so we shouldn't allow too many polls to be running simultaneously
 		if runningPolls.GetCount() >= maxRunningPolls {
@@ -196,7 +195,7 @@ func (runner *CollectorRunner) cleanUpAll() {
 func (runner *CollectorRunner) Run( //nolint:funlen // allow a slightly long function
 	kubeConfig string,
 	outputFile string,
-	pollCount int,
+	requestedDuration time.Duration,
 	pollInterval int,
 	devInfoAnnouceInterval int,
 	ptpInterface string,
@@ -212,7 +211,7 @@ func (runner *CollectorRunner) Run( //nolint:funlen // allow a slightly long fun
 
 	callback, err := callbacks.SetupCallback(outputFile, outputFormat)
 	utils.IfErrorExitOrPanic(err)
-	runner.initialise(callback, ptpInterface, clientset, pollInterval, pollCount, devInfoAnnouceInterval)
+	runner.initialise(callback, ptpInterface, clientset, pollInterval, requestedDuration, devInfoAnnouceInterval)
 	runner.start()
 
 	// Use wg count to know if any collectors are running.
