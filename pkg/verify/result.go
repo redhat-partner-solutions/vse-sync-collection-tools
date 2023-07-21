@@ -3,8 +3,17 @@
 package verify
 
 import (
+	"errors"
+
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/callbacks"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/utils"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/vaildations"
+)
+
+const (
+	resUnk   = "unknown"
+	resTrue  = "true"
+	resFalse = "false"
 )
 
 type ValidationResult struct {
@@ -14,17 +23,35 @@ type ValidationResult struct {
 
 func (res *ValidationResult) GetAnalyserFormat() ([]*callbacks.AnalyserFormatType, error) {
 	msg := ""
+	result := resUnk
 	if res.err != nil {
 		msg = res.err.Error()
+		invalidEnv := &utils.InvalidEnvError{}
+		if errors.As(res.err, invalidEnv) {
+			result = resFalse
+		}
+	} else {
+		result = resTrue
 	}
+
 	formatted := callbacks.AnalyserFormatType{
 		ID: "environment-check",
 		Data: []any{
 			res.valdation.GetID(),
-			res.err == nil,
+			result,
 			msg,
 			res.valdation.GetData(),
 		},
 	}
 	return []*callbacks.AnalyserFormatType{&formatted}, nil
+}
+
+func (res *ValidationResult) IsInvalidEnv() bool {
+	if res.err != nil {
+		invalidEnv := &utils.InvalidEnvError{}
+		if errors.As(res.err, invalidEnv) {
+			return true
+		}
+	}
+	return false
 }

@@ -5,7 +5,6 @@ package verify
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	log "github.com/sirupsen/logrus"
 
@@ -38,10 +37,16 @@ func getValidations(interfaceName, kubeConfig string) []vaildations.Validation {
 	return checks
 }
 
-func reportAnalysertJSON(failures, successes []*ValidationResult) {
+func reportAnalyserJSON(failures, successes, unknown []*ValidationResult) {
 	callback, err := callbacks.SetupCallback("-", callbacks.AnalyserJSON)
 	utils.IfErrorExitOrPanic(err)
 
+	for _, unknownCheck := range unknown {
+		err := callback.Call(unknownCheck, "env-check-unknown")
+		if err != nil {
+			log.Errorf("callback failed during validation %s", err.Error())
+		}
+	}
 	for _, failure := range failures {
 		err := callback.Call(failure, "env-check-failure")
 		if err != nil {
@@ -56,29 +61,29 @@ func reportAnalysertJSON(failures, successes []*ValidationResult) {
 	}
 }
 
-func report(failures, successes []*ValidationResult, useAnalyserJSON bool) {
+func report(failures, successes, unknown []*ValidationResult, useAnalyserJSON bool) {
 	if useAnalyserJSON {
-		reportAnalysertJSON(failures, successes)
+		reportAnalyserJSON(failures, successes, unknown)
 		if len(failures) > 0 {
 			os.Exit(int(utils.InvalidEnv))
 		}
-	} else {
-		if len(failures) == 0 {
-			fmt.Println("No issues found.") //nolint:forbidigo // This to print out to the user
-		} else {
-			pattern := strings.Repeat("\t%w\n", len(failures))
-			validationsErrors := make([]any, 0)
-			for _, res := range failures {
-				validationsErrors = append(validationsErrors, res.err)
-			}
-			err := utils.NewInvalidEnvError(
-				fmt.Errorf(
-					"The following issues where found:\n"+pattern,
-					validationsErrors...,
-				),
-			)
-			utils.IfErrorExitOrPanic(err)
+		return
+	}
+	switch {
+	case len(failures) > 0:
+		validationsErrors := make([]error, 0)
+		for _, res := range failures {
+			validationsErrors = append(validationsErrors, res.err)
 		}
+		err := utils.MakeCompositeInvalidEnvError(validationsErrors)
+		utils.IfErrorExitOrPanic(err)
+	case len(unknown) > 0:
+		for _, res := range unknown {
+			log.Error(res.err.Error())
+		}
+		fmt.Println("Some checks failed, it is likely something is not correct in the environment") //nolint:forbidigo // This to print out to the user
+	default:
+		fmt.Println("No issues found.") //nolint:forbidigo // This to print out to the user
 	}
 }
 
@@ -87,6 +92,8 @@ func Verify(interfaceName, kubeConfig string, useAnalyserJSON bool) {
 
 	failures := make([]*ValidationResult, 0)
 	successes := make([]*ValidationResult, 0)
+	unknown := make([]*ValidationResult, 0)
+
 	for _, check := range checks {
 		err := check.Verify()
 		res := &ValidationResult{
@@ -94,11 +101,15 @@ func Verify(interfaceName, kubeConfig string, useAnalyserJSON bool) {
 			valdation: check,
 		}
 		if err != nil {
-			failures = append(failures, res)
+			if res.IsInvalidEnv() {
+				failures = append(failures, res)
+			} else {
+				unknown = append(unknown, res)
+			}
 		} else {
 			successes = append(successes, res)
 		}
 	}
 
-	report(failures, successes, useAnalyserJSON)
+	report(failures, successes, unknown, useAnalyserJSON)
 }
