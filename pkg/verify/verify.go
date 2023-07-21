@@ -42,6 +42,17 @@ func getGNSSValidation(
 	return gnssVersion
 }
 
+func getGPSDValidation(
+	clientset *clients.Clientset,
+) vaildations.Validation {
+	ctx, err := contexts.GetPTPDaemonContext(clientset)
+	utils.IfErrorExitOrPanic(err)
+	gpsdInfo, err := devices.GetGPSDVersion(ctx)
+	utils.IfErrorExitOrPanic(err)
+	gpsdVersion := vaildations.NewGPSDVersion(&gpsdInfo)
+	return gpsdVersion
+}
+
 func getValidations(interfaceName, kubeConfig string) []vaildations.Validation {
 	checks := make([]vaildations.Validation, 0)
 	clientset, err := clients.GetClientset(kubeConfig)
@@ -50,6 +61,7 @@ func getValidations(interfaceName, kubeConfig string) []vaildations.Validation {
 	checks = append(
 		checks,
 		getGNSSValidation(clientset),
+		getGPSDValidation(clientset),
 	)
 	return checks
 }
