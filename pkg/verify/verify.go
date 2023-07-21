@@ -62,6 +62,7 @@ func getValidations(interfaceName, kubeConfig string) []vaildations.Validation {
 		checks,
 		getGNSSValidation(clientset),
 		getGPSDValidation(clientset),
+		vaildations.NewIsGrandMaster(clientset),
 	)
 	return checks
 }
