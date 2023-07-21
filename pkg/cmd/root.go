@@ -11,12 +11,6 @@ import (
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/logging"
 )
 
-const (
-	defaultCount           int = 10
-	defaultPollInterval    int = 1
-	defaultDevInfoInterval int = 60
-)
-
 var (
 	logLevel string
 
