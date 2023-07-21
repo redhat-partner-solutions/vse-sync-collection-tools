@@ -31,11 +31,26 @@ func getDevInfoValidations(
 	return []vaildations.Validation{devDetails, devFirmware, devDriver}
 }
 
+func getGNSSValidation(
+	clientset *clients.Clientset,
+) vaildations.Validation {
+	ctx, err := contexts.GetPTPDaemonContext(clientset)
+	utils.IfErrorExitOrPanic(err)
+	gnssInfo, err := devices.GetGPSNav(ctx)
+	utils.IfErrorExitOrPanic(err)
+	gnssVersion := vaildations.NewGNSS(&gnssInfo)
+	return gnssVersion
+}
+
 func getValidations(interfaceName, kubeConfig string) []vaildations.Validation {
 	checks := make([]vaildations.Validation, 0)
 	clientset, err := clients.GetClientset(kubeConfig)
 	utils.IfErrorExitOrPanic(err)
 	checks = append(checks, getDevInfoValidations(clientset, interfaceName)...)
+	checks = append(
+		checks,
+		getGNSSValidation(clientset),
+	)
 	return checks
 }
 
