@@ -17,8 +17,9 @@ var (
 )
 
 func init() {
-	OptionalCollectorNames = []string{collectors.DPLLCollectorName, collectors.GPSCollectorName}
-	RequiredCollectorNames = []string{collectors.DevInfoCollectorName}
+	registry := collectors.GetRegistry()
+	OptionalCollectorNames = registry.GetOptionalNames()
+	RequiredCollectorNames = registry.GetRequiredNames()
 }
 
 func isIn(name string, arr []string) bool {
