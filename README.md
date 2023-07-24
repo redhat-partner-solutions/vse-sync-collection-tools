@@ -11,11 +11,10 @@ The core approach taken is to strongly encourage and enforce separation of conce
 ## Setup
 
 1. [Install Go](https://go.dev/doc/install)
-1. Install required binaries: `make install-tools`. Ensure your `$GOBIN` is on your `$PATH`
 1. Install dependencies with `go mod tidy`
 
 ### Development Extras
-
+1. Install dev binaries: `make install-tools`. Ensure your `$GOBIN` is on your `$PATH`
 1. yamllint
     1. [Install yamllint](https://yamllint.readthedocs.io/en/stable/) with `sudo yum install yamllint`
     1. run with `yamllint ./`
@@ -34,12 +33,26 @@ The core approach taken is to strongly encourage and enforce separation of conce
     1. manually run against all files with `pre-commit run --all-files` or against staged files with `pre-commit run`.
     1. Otherwise pre-commit will now run automatically when you make a new commit.
 
-## Running Collectors
-
-Run the following command, referencing your created files as needed:
+## Checking Enviroment
+Run the following command  (check help string for more details):
 
 ```shell
-./vse-sync-testsuite --interface="<ptp interface>" --kubeconfig="${KUBECONFIG}"
+./vse-sync-collection-tools env verify --interface="<ptp interface>" --kubeconfig="${KUBECONFIG}"
+```
+
+## Running Collectors
+
+Run the following command  (check help string for more details):
+
+```shell
+./vse-sync-collection-tools collect --interface="<ptp interface>" --kubeconfig="${KUBECONFIG}"
+```
+
+## Fetching logs
+Run the following command (check help string for more details):
+
+```shell
+./vse-sync-collection-tools logs --kubeconfig="${KUBECONFIG}"
 ```
 
 ## Running tests
@@ -56,6 +69,4 @@ See [Adding a collector](doc/implementing_a_collector.md)
 
 * unit tests for all of `pkg/`
 * add more collectors
-* allow user to specify the collectors they want to run
-* move collectors into go routines
 * better data persistance options
