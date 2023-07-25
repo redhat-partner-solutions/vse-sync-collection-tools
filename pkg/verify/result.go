@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	resUnk   = "unknown"
-	resTrue  = "true"
-	resFalse = "false"
+	resUnk   = "error"
+	resTrue  = true
+	resFalse = false
 )
 
 type ValidationResult struct {
@@ -22,8 +22,9 @@ type ValidationResult struct {
 }
 
 func (res *ValidationResult) GetAnalyserFormat() ([]*callbacks.AnalyserFormatType, error) {
+	var result any
 	msg := ""
-	result := resUnk
+	result = resUnk
 	if res.err != nil {
 		msg = res.err.Error()
 		invalidEnv := &utils.InvalidEnvError{}
