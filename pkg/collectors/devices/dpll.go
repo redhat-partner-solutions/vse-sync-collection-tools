@@ -29,11 +29,11 @@ type DevDPLLInfo struct {
 func (dpllInfo *DevDPLLInfo) GetAnalyserFormat() ([]*callbacks.AnalyserFormatType, error) {
 	formatted := callbacks.AnalyserFormatType{
 		ID: "dpll/time-error",
-		Data: []any{
-			dpllInfo.Timestamp,
-			dpllInfo.EECState,
-			dpllInfo.PPSState,
-			dpllInfo.PPSOffset / unitConversionFactor,
+		Data: map[string]any{
+			"timestamp": dpllInfo.Timestamp,
+			"eecstate":  dpllInfo.EECState,
+			"state":     dpllInfo.PPSState,
+			"terror":    dpllInfo.PPSOffset / unitConversionFactor,
 		},
 	}
 	return []*callbacks.AnalyserFormatType{&formatted}, nil

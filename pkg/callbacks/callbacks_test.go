@@ -38,7 +38,7 @@ type testOutputType struct {
 func (t *testOutputType) GetAnalyserFormat() ([]*callbacks.AnalyserFormatType, error) {
 	fomatted := callbacks.AnalyserFormatType{
 		ID:   "testOutput",
-		Data: []any{"Hello"},
+		Data: map[string]any{"Hello": "World"},
 	}
 	return []*callbacks.AnalyserFormatType{&fomatted}, nil
 }
@@ -69,7 +69,7 @@ var _ = Describe("Callbacks", func() {
 			}
 			err := callback.Call(&out, "testOut")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(mockedFile.ReadString('\n')).To(Equal("{\"id\":\"testOutput\",\"data\":[\"Hello\"]}\n"))
+			Expect(mockedFile.ReadString('\n')).To(Equal("{\"data\":{\"Hello\":\"World\"},\"id\":\"testOutput\"}\n"))
 		})
 	})
 	When("A FileCallback is cleaned up", func() {

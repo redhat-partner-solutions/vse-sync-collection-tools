@@ -21,9 +21,9 @@ type GPSDVersion struct {
 func (gpsd *GPSDVersion) GetAnalyserFormat() ([]*callbacks.AnalyserFormatType, error) {
 	formatted := callbacks.AnalyserFormatType{
 		ID: "gpsd-version",
-		Data: []any{
-			gpsd.Timestamp,
-			gpsd.Version,
+		Data: map[string]any{
+			"timestamp": gpsd.Timestamp,
+			"version":   gpsd.Version,
 		},
 	}
 	return []*callbacks.AnalyserFormatType{&formatted}, nil
