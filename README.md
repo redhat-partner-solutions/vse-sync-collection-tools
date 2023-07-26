@@ -33,14 +33,21 @@ The core approach taken is to strongly encourage and enforce separation of conce
     1. manually run against all files with `pre-commit run --all-files` or against staged files with `pre-commit run`.
     1. Otherwise pre-commit will now run automatically when you make a new commit.
 
-## Checking Enviroment
+## Usage
+### Building binary
+Run the following command to build the binary used in the following commands:
+```shell
+go build --race
+```
+
+### Checking Enviroment
 Run the following command  (check help string for more details):
 
 ```shell
 ./vse-sync-collection-tools env verify --interface="<ptp interface>" --kubeconfig="${KUBECONFIG}"
 ```
 
-## Running Collectors
+### Running Collectors
 
 Run the following command  (check help string for more details):
 
@@ -48,7 +55,7 @@ Run the following command  (check help string for more details):
 ./vse-sync-collection-tools collect --interface="<ptp interface>" --kubeconfig="${KUBECONFIG}"
 ```
 
-## Fetching logs
+### Fetching logs
 Run the following command (check help string for more details):
 
 ```shell
