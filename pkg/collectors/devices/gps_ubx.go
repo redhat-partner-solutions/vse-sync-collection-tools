@@ -24,7 +24,8 @@ type GPSDetails struct {
 
 type GPSNavStatus struct {
 	Timestamp string `json:"timestamp"`
-	GPSFix    string `json:"GPSFix"`
+	Flags     string `json:"flags"`
+	GPSFix    int    `json:"GPSFix"`
 }
 
 type GPSNavClock struct {
@@ -49,6 +50,7 @@ func (gpsNav *GPSDetails) GetAnalyserFormat() ([]*callbacks.AnalyserFormatType, 
 			gpsNav.NavStatus.GPSFix,
 			gpsNav.NavClock.TimeAcc,
 			gpsNav.NavClock.FreqAcc,
+			gpsNav.NavStatus.Flags,
 		},
 	})
 
@@ -131,20 +133,27 @@ func init() {
 // processUBXNavStatus parses the output of the ubxtool extracting the required values for GPSNav
 func processUBXNavStatus(result map[string]string) (map[string]any, error) {
 	processedResult := make(map[string]any)
-	matchNav := ubxNavStatusRegex.FindStringSubmatch(result["GPS"])
-	if len(matchNav) == 0 {
+	match := ubxNavStatusRegex.FindStringSubmatch(result["GPS"])
+	if len(match) == 0 {
 		return processedResult, fmt.Errorf(
 			"unable to parse UBX Nav Status from %s",
 			result["GPS"],
 		)
 	}
-	timestampSatus, err := utils.ParseTimestamp(matchNav[1])
+	timestampSatus, err := utils.ParseTimestamp(match[1])
 	if err != nil {
 		return processedResult, fmt.Errorf("failed to parse navStatusTimestamp %w", err)
 	}
+
+	gpsFix, err := strconv.Atoi(match[3])
+	if err != nil {
+		return processedResult, fmt.Errorf("failed to parse gpsFix %w", err)
+	}
+
 	processedResult["navStatus"] = GPSNavStatus{
 		Timestamp: timestampSatus.Format(time.RFC3339Nano),
-		GPSFix:    matchNav[3],
+		GPSFix:    gpsFix,
+		Flags:     match[4],
 	}
 	return processedResult, nil
 }

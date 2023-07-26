@@ -49,12 +49,15 @@ func getGPSVersionValidations(
 
 func getGPSStatusValidation(
 	clientset *clients.Clientset,
-) vaildations.Validation {
+) []vaildations.Validation {
 	ctx, err := contexts.GetPTPDaemonContext(clientset)
 	utils.IfErrorExitOrPanic(err)
 	gpsDetails, err := devices.GetGPSNav(ctx)
 	utils.IfErrorExitOrPanic(err)
-	return vaildations.NewGNSSAntStatus(&gpsDetails)
+	return []vaildations.Validation{
+		vaildations.NewGNSSAntStatus(&gpsDetails),
+		vaildations.NewGNSSNavStatus(&gpsDetails),
+	}
 }
 
 func getValidations(interfaceName, kubeConfig string) []vaildations.Validation {
@@ -63,9 +66,9 @@ func getValidations(interfaceName, kubeConfig string) []vaildations.Validation {
 	utils.IfErrorExitOrPanic(err)
 	checks = append(checks, getDevInfoValidations(clientset, interfaceName)...)
 	checks = append(checks, getGPSVersionValidations(clientset)...)
+	checks = append(checks, getGPSStatusValidation(clientset)...)
 	checks = append(
 		checks,
-		getGPSStatusValidation(clientset),
 		vaildations.NewIsGrandMaster(clientset),
 		vaildations.NewOperatorVersion(clientset),
 		vaildations.NewClusterVersion(clientset),
