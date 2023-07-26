@@ -43,6 +43,7 @@ func getGPSVersionValidations(
 		vaildations.NewGPSDVersion(&gnssVersions),
 		vaildations.NewGNSDevices(&gnssVersions),
 		vaildations.NewGNSSModule(&gnssVersions),
+		vaildations.NewGNSSProtocol(&gnssVersions),
 	}
 }
 
