@@ -31,26 +31,17 @@ func getDevInfoValidations(
 	return []vaildations.Validation{devDetails, devFirmware, devDriver}
 }
 
-func getGNSSValidation(
+func getGPSVersionValidations(
 	clientset *clients.Clientset,
-) vaildations.Validation {
+) []vaildations.Validation {
 	ctx, err := contexts.GetPTPDaemonContext(clientset)
 	utils.IfErrorExitOrPanic(err)
-	gnssInfo, err := devices.GetGPSNav(ctx)
+	gnssVersions, err := devices.GetGPSVersions(ctx)
 	utils.IfErrorExitOrPanic(err)
-	gnssVersion := vaildations.NewGNSS(&gnssInfo)
-	return gnssVersion
-}
-
-func getGPSDValidation(
-	clientset *clients.Clientset,
-) vaildations.Validation {
-	ctx, err := contexts.GetPTPDaemonContext(clientset)
-	utils.IfErrorExitOrPanic(err)
-	gpsdInfo, err := devices.GetGPSDVersion(ctx)
-	utils.IfErrorExitOrPanic(err)
-	gpsdVersion := vaildations.NewGPSDVersion(&gpsdInfo)
-	return gpsdVersion
+	return []vaildations.Validation{
+		vaildations.NewGNSS(&gnssVersions),
+		vaildations.NewGPSDVersion(&gnssVersions),
+	}
 }
 
 func getValidations(interfaceName, kubeConfig string) []vaildations.Validation {
@@ -58,10 +49,9 @@ func getValidations(interfaceName, kubeConfig string) []vaildations.Validation {
 	clientset, err := clients.GetClientset(kubeConfig)
 	utils.IfErrorExitOrPanic(err)
 	checks = append(checks, getDevInfoValidations(clientset, interfaceName)...)
+	checks = append(checks, getGPSVersionValidations(clientset)...)
 	checks = append(
 		checks,
-		getGNSSValidation(clientset),
-		getGPSDValidation(clientset),
 		vaildations.NewIsGrandMaster(clientset),
 		vaildations.NewOperatorVersion(clientset),
 		vaildations.NewClusterVersion(clientset),

@@ -39,7 +39,7 @@ var _ = Describe("GetGPSNav", func() {
 
 	When("called GetGPSNav", func() {
 		It("should return a valid GPSNav", func() {
-			expectedInput := "echo '<GPS>';ubxtool -t -p NAV-STATUS -p NAV-CLOCK -p MON-VER -p MON-RF -P 29.20;echo '</GPS>';"
+			expectedInput := "echo '<GPS>';ubxtool -t -p NAV-STATUS -p NAV-CLOCK -p MON-RF -P 29.20;echo '</GPS>';"
 
 			expectedOutput := strings.Join([]string{
 				"<GPS>",
@@ -61,19 +61,6 @@ var _ = Describe("GetGPSNav", func() {
 				"1686916187.0586",
 				"UBX-NAV-CLOCK:",
 				"  iTOW 474605000 clkB 61594 clkD 56 tAcc 5 fAcc 164",
-				"",
-				"1689260332.4728",
-				"UBX-MON-VER:",
-				"  swVersion EXT CORE 1.00 (3fda8e)",
-				"  hwVersion 00190000",
-				"  extension ROM BASE 0x118B2060",
-				"  extension FWVER=TIM 2.20",
-				"  extension PROTVER=29.20",
-				"  extension MOD=ZED-F9T",
-				"  extension GPS;GLO;GAL;BDS",
-				"  extension SBAS;QZSS",
-				"  extension NAVIC",
-				"",
 				"</GPS>",
 			}, "\n")
 			response[expectedInput] = []byte(expectedOutput)
@@ -84,7 +71,7 @@ var _ = Describe("GetGPSNav", func() {
 			gpsInfo, err := devices.GetGPSNav(ctx)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(gpsInfo.NavStatus.Timestamp).To(Equal("2023-06-16T11:49:47.0584Z"))
-			Expect(gpsInfo.NavStatus.GPSFix).To(Equal("3"))
+			Expect(gpsInfo.NavStatus.GPSFix).To(Equal(3))
 
 			Expect(gpsInfo.NavClock.Timestamp).To(Equal("2023-06-16T11:49:47.0586Z"))
 			Expect(gpsInfo.NavClock.TimeAcc).To(Equal(5))

@@ -8,18 +8,17 @@ import (
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors/devices"
 )
 
-const gpsdID = "GPSD Version is valid"
-
-var (
+const (
+	gpsdID         = "GPSD Version is valid"
 	MinGSPDVersion = "3.25"
 )
 
-func NewGPSDVersion(gpsdVer *devices.GPSDVersion) *VersionCheck {
-	parts := strings.Split(gpsdVer.Version, " ")
+func NewGPSDVersion(gpsdVer *devices.GPSVersions) *VersionCheck {
+	parts := strings.Split(gpsdVer.GPSDVersion, " ")
 	return &VersionCheck{
 		id:           gpsdID,
-		Version:      gpsdVer.Version,
-		checkVersion: strings.ReplaceAll(parts[1], "~", "-"),
+		Version:      gpsdVer.GPSDVersion,
+		checkVersion: strings.ReplaceAll(parts[0], "~", "-"),
 		minVersion:   MinGSPDVersion,
 	}
 }
