@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-package collectors
+package collectors //nolint:dupl // new collector
 
 import (
 	"fmt"
