@@ -17,10 +17,9 @@ import (
 )
 
 type GPSDetails struct {
-	NavStatus       GPSNavStatus         `json:"navStatus" fetcherKey:"navStatus"`
-	FirmwareVersion string               `json:"firmwareVersion" fetcherKey:"firmwareVersion"`
-	AntennaDetails  []*GPSAntennaDetails `json:"antennaDetails" fetcherKey:"antennaDetails"`
-	NavClock        GPSNavClock          `json:"navClock" fetcherKey:"navClock"`
+	NavStatus      GPSNavStatus         `json:"navStatus" fetcherKey:"navStatus"`
+	AntennaDetails []*GPSAntennaDetails `json:"antennaDetails" fetcherKey:"antennaDetails"`
+	NavClock       GPSNavClock          `json:"navClock" fetcherKey:"navClock"`
 }
 
 type GPSNavStatus struct {
@@ -112,27 +111,8 @@ var (
 		//     noisePerMS 49 agcCnt 6669 jamInd 2 ofsI 11 magI 146 ofsQ 1 magQ 139
 		//     reserved3 0 0 0
 	)
-	ubxFirmwareVersion = regexp.MustCompile(
-		timeStampPattern +
-			`\nUBX-MON-VER:` +
-			`\n\s+swVersion (.*)` +
-			`\n\s+hwVersion (.*)` +
-			`\n\s+((?:extension .*(?:\n\s+)?)+)`,
-		// 1689260332.4728
-		// UBX-MON-VER:
-		//   swVersion EXT CORE 1.00 (3fda8e)
-		//   hwVersion 00190000
-		//   extension ROM BASE 0x118B2060
-		//   extension FWVER=TIM 2.20
-		//   extension PROTVER=29.20
-		//   extension MOD=ZED-F9T
-		//   extension GPS;GLO;GAL;BDS
-		//   extension SBAS;QZSS
-		//   extension NAVIC
 
-	)
-	fwVersionExtension = regexp.MustCompile(`extension FWVER=(.*)`)
-	gpsFetcher         *fetcher.Fetcher
+	gpsFetcher *fetcher.Fetcher
 )
 
 func init() {
@@ -140,7 +120,7 @@ func init() {
 	gpsFetcher.SetPostProcessor(processUBX)
 	err := gpsFetcher.AddNewCommand(
 		"GPS",
-		"ubxtool -t -p NAV-STATUS -p NAV-CLOCK -p MON-VER -p MON-RF -P 29.20",
+		"ubxtool -t -p NAV-STATUS -p NAV-CLOCK -p MON-RF -P 29.20",
 		true,
 	)
 	if err != nil {
@@ -247,33 +227,6 @@ func processUBXMonRF(result map[string]string) (map[string]any, error) { //nolin
 	return processedResult, nil
 }
 
-func processUBXMonVer(result map[string]string) (map[string]any, error) {
-	processedResult := make(map[string]any)
-	match := ubxFirmwareVersion.FindStringSubmatch(result["GPS"])
-	if len(match) == 0 {
-		return processedResult, fmt.Errorf(
-			"unable to parse UBX MON Version from %s",
-			result["GPS"],
-		)
-	}
-
-	timestampMonVer, err := utils.ParseTimestamp(match[1])
-	if err != nil {
-		return processedResult, fmt.Errorf("failed to parse versionTimestamp %w", err)
-	}
-	processedResult["versionTimestamp"] = timestampMonVer.Format(time.RFC3339Nano)
-
-	version := fwVersionExtension.FindStringSubmatch(match[4])
-	if len(version) == 0 {
-		return processedResult, fmt.Errorf(
-			"unable to parse version from extenstions in %s",
-			match[4],
-		)
-	}
-	processedResult["firmwareVersion"] = version[1]
-	return processedResult, nil
-}
-
 func processUBX(result map[string]string) (map[string]any, error) { //nolint:funlen // allow slightly long function
 	processedResult := make(map[string]any)
 	processedUBXNavStatus, err := processUBXNavStatus(result)
@@ -299,15 +252,6 @@ func processUBX(result map[string]string) (map[string]any, error) { //nolint:fun
 		return processedResult, err
 	}
 	for key, value := range processedUBXMonRF {
-		processedResult[key] = value
-	}
-
-	processedUBXMonVer, err := processUBXMonVer(result)
-	if err != nil {
-		log.Errorf("processUBXMon Failed: %s", err.Error())
-		return processedResult, err
-	}
-	for key, value := range processedUBXMonVer {
 		processedResult[key] = value
 	}
 
