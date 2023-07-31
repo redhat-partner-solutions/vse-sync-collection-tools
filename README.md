@@ -37,8 +37,9 @@ The core approach taken is to strongly encourage and enforce separation of conce
 ### Building binary
 Run the following command to build the binary used in the following commands:
 ```shell
-go build --race
+go build
 ```
+###### NOTE: use the `--race` flag when developing collectors.
 
 ### Checking Enviroment
 Run the following command  (check help string for more details):
