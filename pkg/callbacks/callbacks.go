@@ -28,8 +28,8 @@ const (
 )
 
 type AnalyserFormatType struct {
+	Data any    `json:"data"`
 	ID   string `json:"id"`
-	Data []any  `json:"data"`
 }
 
 type OutputType interface {

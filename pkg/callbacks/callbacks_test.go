@@ -14,7 +14,7 @@ import (
 )
 
 func NewTestFile() *testFile {
-	return &testFile{Buffer: *bytes.NewBuffer([]byte("")), open: true}
+	return &testFile{Buffer: *bytes.NewBuffer([]byte{}), open: true}
 }
 
 type testFile struct {
@@ -69,7 +69,7 @@ var _ = Describe("Callbacks", func() {
 			}
 			err := callback.Call(&out, "testOut")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(mockedFile.ReadString('\n')).To(Equal("{\"id\":\"testOutput\",\"data\":[\"Hello\"]}\n"))
+			Expect(mockedFile.ReadString('\n')).To(Equal("{\"data\":[\"Hello\"],\"id\":\"testOutput\"}\n"))
 		})
 	})
 	When("A FileCallback is cleaned up", func() {
