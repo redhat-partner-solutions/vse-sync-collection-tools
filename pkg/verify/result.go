@@ -27,8 +27,7 @@ func (res *ValidationResult) GetAnalyserFormat() ([]*callbacks.AnalyserFormatTyp
 	result = resUnk
 	if res.err != nil {
 		msg = res.err.Error()
-		invalidEnv := &utils.InvalidEnvError{}
-		if errors.As(res.err, invalidEnv) {
+		if res.IsInvalidEnv() {
 			result = resFalse
 		}
 	} else {
@@ -49,8 +48,8 @@ func (res *ValidationResult) GetAnalyserFormat() ([]*callbacks.AnalyserFormatTyp
 
 func (res *ValidationResult) IsInvalidEnv() bool {
 	if res.err != nil {
-		invalidEnv := &utils.InvalidEnvError{}
-		if errors.As(res.err, invalidEnv) {
+		var invalidEnv *utils.InvalidEnvError
+		if errors.As(res.err, &invalidEnv) {
 			return true
 		}
 	}
