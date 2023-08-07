@@ -144,9 +144,9 @@ func verify(ptpDevInfo *devices.PTPDeviceInfo, constructor *CollectionConstructo
 
 	for _, check := range checks {
 		err := check.Verify()
-		invalidEnv := &utils.InvalidEnvError{}
 		if err != nil {
-			if errors.As(err, invalidEnv) {
+			var invalidEnv *utils.InvalidEnvError
+			if errors.As(err, &invalidEnv) {
 				checkErrors = append(checkErrors, err)
 			} else {
 				log.Warningf("failed to verify %s: %s", check.GetID(), err.Error())
