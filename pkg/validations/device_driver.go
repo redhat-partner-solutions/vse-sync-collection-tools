@@ -15,7 +15,7 @@ const deviceDriverVersionID = TGMIdBaseURI + "/version/nic/driver/wpc/"
 
 var (
 	MinDriverVersion           = "5.14.0"
-	outOfTreeIceDriverSegments = 4
+	outOfTreeIceDriverSegments = 3
 )
 
 func NewDeviceDriver(ptpDevInfo *devices.PTPDeviceInfo) *VersionWithErrorCheck {
