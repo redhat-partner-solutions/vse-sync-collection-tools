@@ -45,24 +45,19 @@ func (gpsNav *GPSDetails) GetAnalyserFormat() ([]*callbacks.AnalyserFormatType, 
 	messages := []*callbacks.AnalyserFormatType{}
 	messages = append(messages, &callbacks.AnalyserFormatType{
 		ID: "gnss/time-error",
-		Data: []any{
-			gpsNav.NavClock.Timestamp,
-			gpsNav.NavStatus.GPSFix,
-			gpsNav.NavClock.TimeAcc,
-			gpsNav.NavClock.FreqAcc,
-			gpsNav.NavStatus.Flags,
+		Data: map[string]any{
+			"timestamp": gpsNav.NavClock.Timestamp,
+			"terror":    gpsNav.NavClock.TimeAcc,
+			"ferror":    gpsNav.NavClock.FreqAcc,
+			"state":     gpsNav.NavStatus.GPSFix,
+			"flags":     gpsNav.NavStatus.Flags,
 		},
 	})
 
 	for _, ant := range gpsNav.AntennaDetails {
 		messages = append(messages, &callbacks.AnalyserFormatType{
-			ID: "gnss/rf-mon",
-			Data: []any{
-				ant.Timestamp,
-				ant.BlockID,
-				ant.Status,
-				ant.Power,
-			},
+			ID:   "gnss/rf-mon",
+			Data: ant,
 		})
 	}
 	return messages, nil

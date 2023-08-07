@@ -36,11 +36,11 @@ func (res *ValidationResult) GetAnalyserFormat() ([]*callbacks.AnalyserFormatTyp
 
 	formatted := callbacks.AnalyserFormatType{
 		ID: "environment-check",
-		Data: []any{
-			res.valdation.GetID(),
-			result,
-			msg,
-			res.valdation.GetData(),
+		Data: map[string]any{
+			"id":       res.valdation.GetID(),
+			"result":   result,
+			"reason":   msg,
+			"analysis": res.valdation.GetData(),
 		},
 	}
 	return []*callbacks.AnalyserFormatType{&formatted}, nil
