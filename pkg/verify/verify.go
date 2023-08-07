@@ -16,6 +16,8 @@ import (
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/validations"
 )
 
+const unknownMsgPrefix = "The following error occurred when trying to gather environment data for the following validations"
+
 //nolint:ireturn // this needs to be an interface
 func getDevInfoValidations(
 	clientset *clients.Clientset,
@@ -108,18 +110,26 @@ func report(failures, successes, unknown []*ValidationResult, useAnalyserJSON bo
 		}
 		return
 	}
+
+	// Report unknowns along side failures
+	if len(unknown) > 0 {
+		dataErrors := make([]error, 0)
+		for _, res := range unknown {
+			dataErrors = append(dataErrors, res.GetPrefixedError())
+		}
+		log.Error(utils.MakeCompositeError(unknownMsgPrefix, dataErrors))
+	}
+
 	switch {
 	case len(failures) > 0:
 		validationsErrors := make([]error, 0)
 		for _, res := range failures {
-			validationsErrors = append(validationsErrors, res.err)
+			validationsErrors = append(validationsErrors, res.GetPrefixedError())
 		}
 		err := utils.MakeCompositeInvalidEnvError(validationsErrors)
 		utils.IfErrorExitOrPanic(err)
 	case len(unknown) > 0:
-		for _, res := range unknown {
-			log.Error(res.err.Error())
-		}
+		// If only unknowns print this message
 		fmt.Println("Some checks failed, it is likely something is not correct in the environment") //nolint:forbidigo // This to print out to the user
 	default:
 		fmt.Println("No issues found.") //nolint:forbidigo // This to print out to the user

@@ -62,12 +62,18 @@ func checkError(err error) (exitCode, bool) {
 	return NotHandled, false
 }
 
-func MakeCompositeInvalidEnvError(errSlice []error) error {
-	pattern := strings.Repeat("\t%w\n", len(errSlice))
+func MakeCompositeError(prefix string, errSlice []error) error {
+	pattern := strings.Repeat("\t%s\n", len(errSlice))
 
 	values := make([]any, 0)
 	for _, err := range errSlice {
-		values = append(values, err)
+		values = append(values, err.Error())
 	}
-	return NewInvalidEnvError(fmt.Errorf("The following issues where found:\n"+pattern, values...))
+	return fmt.Errorf(prefix+":\n"+pattern, values...)
+}
+
+func MakeCompositeInvalidEnvError(errSlice []error) error {
+	return NewInvalidEnvError(
+		MakeCompositeError("The following issues where found", errSlice),
+	)
 }
