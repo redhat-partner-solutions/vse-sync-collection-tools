@@ -18,7 +18,7 @@ import (
 
 const (
 	ptpOperatorVersionID  = "PTP Operactor Version is valid"
-	MinOperatorVersion    = "4.14.0"
+	MinOperatorVersion    = "4.14.0-0" // trailing -0 is required to allow preGA version
 	ptpOperatorDiplayName = "PTP Operator"
 )
 
