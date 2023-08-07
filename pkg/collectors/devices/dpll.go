@@ -19,21 +19,21 @@ const (
 )
 
 type DevDPLLInfo struct {
-	Timestamp string  `json:"date" fetcherKey:"date"`
-	EECState  string  `json:"EECState" fetcherKey:"dpll_0_state"`
-	PPSState  string  `json:"PPSState" fetcherKey:"dpll_1_state"`
-	PPSOffset float64 `json:"PPSOffset" fetcherKey:"dpll_1_offset"`
+	Timestamp string  `json:"timestamp" fetcherKey:"date"`
+	EECState  string  `json:"eecstate" fetcherKey:"dpll_0_state"`
+	PPSState  string  `json:"state" fetcherKey:"dpll_1_state"`
+	PPSOffset float64 `json:"terror" fetcherKey:"dpll_1_offset"`
 }
 
 // AnalyserJSON returns the json expected by the analysers
 func (dpllInfo *DevDPLLInfo) GetAnalyserFormat() ([]*callbacks.AnalyserFormatType, error) {
 	formatted := callbacks.AnalyserFormatType{
 		ID: "dpll/time-error",
-		Data: []any{
-			dpllInfo.Timestamp,
-			dpllInfo.EECState,
-			dpllInfo.PPSState,
-			dpllInfo.PPSOffset / unitConversionFactor,
+		Data: map[string]any{
+			"timestamp": dpllInfo.Timestamp,
+			"eecstate":  dpllInfo.EECState,
+			"state":     dpllInfo.PPSState,
+			"terror":    dpllInfo.PPSOffset / unitConversionFactor,
 		},
 	}
 	return []*callbacks.AnalyserFormatType{&formatted}, nil

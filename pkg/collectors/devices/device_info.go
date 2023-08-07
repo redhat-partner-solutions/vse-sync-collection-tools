@@ -30,14 +30,14 @@ type PTPDeviceInfo struct {
 func (ptpDevInfo *PTPDeviceInfo) GetAnalyserFormat() ([]*callbacks.AnalyserFormatType, error) {
 	formatted := callbacks.AnalyserFormatType{
 		ID: "devInfo",
-		Data: []any{
-			time.Now().Add(ptpDevInfo.Timeoffset).UTC().Format(time.RFC3339Nano),
-			ptpDevInfo.Timestamp,
-			ptpDevInfo.VendorID,
-			ptpDevInfo.DeviceID,
-			ptpDevInfo.GNSSDev,
-			ptpDevInfo.FirmwareVersion,
-			ptpDevInfo.DriverVersion,
+		Data: map[string]any{
+			"timestamp":         time.Now().Add(ptpDevInfo.Timeoffset).UTC().Format(time.RFC3339Nano),
+			"fetched_timestamp": ptpDevInfo.Timestamp,
+			"vendorID":          ptpDevInfo.VendorID,
+			"devID":             ptpDevInfo.DeviceID,
+			"gnss":              ptpDevInfo.GNSSDev,
+			"firmwareVersion":   ptpDevInfo.FirmwareVersion,
+			"driverVersion":     ptpDevInfo.DriverVersion,
 		},
 	}
 	return []*callbacks.AnalyserFormatType{&formatted}, nil

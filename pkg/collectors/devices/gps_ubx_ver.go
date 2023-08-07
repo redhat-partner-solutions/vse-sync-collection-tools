@@ -29,11 +29,8 @@ type GPSVersions struct {
 func (gpsVer *GPSVersions) GetAnalyserFormat() ([]*callbacks.AnalyserFormatType, error) {
 	messages := []*callbacks.AnalyserFormatType{
 		{
-			ID: "gnss/time-error",
-			Data: []any{
-				gpsVer.Timestamp,
-				gpsVer.FirmwareVersion,
-			},
+			ID:   "gnss/time-error",
+			Data: gpsVer,
 		},
 	}
 	return messages, nil
