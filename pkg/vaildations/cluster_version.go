@@ -18,7 +18,7 @@ import (
 
 const (
 	clusterVersionID  = "Opensift Cluster Version is valid"
-	MinClusterVersion = "4.13.3"
+	MinClusterVersion = "4.14.0-0" // trailing -0 is required to allow preGA version
 )
 
 type Status struct {
