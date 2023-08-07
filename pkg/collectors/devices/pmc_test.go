@@ -39,9 +39,13 @@ var _ = Describe("GetPMC", func() {
 
 	When("called GetPMC", func() {
 		It("should return a valid GMSettings", func() {
-			expectedInput := "echo '<PMC>';pmc -u -f /var/run/ptp4l.0.config  'GET GRANDMASTER_SETTINGS_NP';echo '</PMC>';"
+			expectedInput := "echo '<date>';date +%s.%N;echo '</date>';"
+			expectedInput += "echo '<PMC>';pmc -u -f /var/run/ptp4l.0.config  'GET GRANDMASTER_SETTINGS_NP';echo '</PMC>';"
 
 			expectedOutput := strings.Join([]string{
+				"<date>",
+				"1686916187.0584",
+				"</date>",
 				"<PMC>",
 				"sending: GET GRANDMASTER_SETTINGS_NP",
 				"	507c6f.fffe.30fbe8-0 seq 0 RESPONSE MANAGEMENT GRANDMASTER_SETTINGS_NP",
@@ -65,6 +69,7 @@ var _ = Describe("GetPMC", func() {
 
 			pmcInfo, err := devices.GetPMC(ctx)
 			Expect(err).NotTo(HaveOccurred())
+			Expect(pmcInfo.Timestamp).To(Equal("2023-06-16T11:49:47.0584Z"))
 			Expect(pmcInfo.ClockAccuracy).To(Equal("0xfe"))
 			Expect(pmcInfo.ClockClass).To(Equal(248))
 			Expect(pmcInfo.OffsetScaledLogVariance).To(Equal("0xffff"))
