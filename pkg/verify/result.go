@@ -4,6 +4,7 @@ package verify
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/callbacks"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/utils"
@@ -54,4 +55,8 @@ func (res *ValidationResult) IsInvalidEnv() bool {
 		}
 	}
 	return false
+}
+
+func (res *ValidationResult) GetPrefixedError() error {
+	return fmt.Errorf("%s: %w", res.valdation.GetID(), res.err)
 }
