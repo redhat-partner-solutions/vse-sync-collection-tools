@@ -15,10 +15,11 @@ import (
 )
 
 type PMCInfo struct {
+	Timestamp               string `fetcherKey:"date"                    json:"timestamp" `
 	TimeSource              string `fetcherKey:"timeSource"              json:"timeSource"`
 	ClockAccuracy           string `fetcherKey:"clockAccuracy"           json:"clockAccuracy"`
 	OffsetScaledLogVariance string `fetcherKey:"offsetScaledLogVariance" json:"offsetScaledLogVariance"`
-	ClockClass              int    `fetcherKey:"clockClass"              json:"clockClass"`
+	ClockClass              int    `fetcherKey:"clockClass"              json:"clock_class"` //nolint:tagliatelle // needs to match the parser in vse-sync-pp
 	CurrentUtcOffset        int    `fetcherKey:"currentUtcOffset"        json:"currentUtcOffset"`
 	Leap61                  int    `fetcherKey:"leap61"                  json:"leap61"`
 	Leap59                  int    `fetcherKey:"leap59"                  json:"leap59"`
@@ -31,20 +32,8 @@ type PMCInfo struct {
 // GetAnalyserFormat returns the json expected by the analysers
 func (gmSetting *PMCInfo) GetAnalyserFormat() ([]*callbacks.AnalyserFormatType, error) {
 	formatted := callbacks.AnalyserFormatType{
-		ID: "pmc",
-		Data: []any{
-			gmSetting.TimeSource,
-			gmSetting.ClockAccuracy,
-			gmSetting.OffsetScaledLogVariance,
-			gmSetting.ClockClass,
-			gmSetting.CurrentUtcOffset,
-			gmSetting.Leap61,
-			gmSetting.Leap59,
-			gmSetting.CurrentUtcOffsetValid,
-			gmSetting.PtpTimescale,
-			gmSetting.TimeTraceable,
-			gmSetting.FrequencyTraceable,
-		},
+		ID:   "phc/gm-settings",
+		Data: gmSetting,
 	}
 	return []*callbacks.AnalyserFormatType{&formatted}, nil
 }
@@ -97,6 +86,7 @@ var (
 func init() {
 	pmcFetcher = fetcher.NewFetcher()
 	pmcFetcher.SetPostProcessor(processPMC)
+	pmcFetcher.AddCommand(getDateCommand())
 	err := pmcFetcher.AddNewCommand(
 		"PMC",
 		"pmc -u -f /var/run/ptp4l.0.config  'GET GRANDMASTER_SETTINGS_NP'",
