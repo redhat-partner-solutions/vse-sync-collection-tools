@@ -72,3 +72,10 @@ func (verCheck *VersionWithErrorCheck) MarshalJSON() ([]byte, error) {
 		Error:   verCheck.Error,
 	})
 }
+
+func (verCheck *VersionWithErrorCheck) Verify() error {
+	if verCheck.Error != nil {
+		return verCheck.Error
+	}
+	return verCheck.VersionCheck.Verify()
+}
