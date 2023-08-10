@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	gnssProtID      = "GNSS protocol version is valid"
+	gnssProtID      = TGMIdBaseURI + "/version/gnss/protocol/wpc/"
 	MinProtoVersion = "29.20"
 )
 

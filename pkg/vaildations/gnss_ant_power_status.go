@@ -11,7 +11,7 @@ import (
 
 const (
 	expectedAntStatus = 2
-	gnsssAntStatusID  = "GNSS Module is connected to an antenna"
+	gnsssAntStatusID  = TGMIdBaseURI + "/status/gnss/antenna-connected/wpc/"
 )
 
 type GNSSAntStatus struct {

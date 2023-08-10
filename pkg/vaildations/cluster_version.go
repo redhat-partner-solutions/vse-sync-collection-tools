@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	clusterVersionID  = "Opensift Cluster Version is valid"
+	clusterVersionID  = TGMIdBaseURI + "/version/ocp/"
 	MinClusterVersion = "4.14.0-0" // trailing -0 is required to allow preGA version
 )
 

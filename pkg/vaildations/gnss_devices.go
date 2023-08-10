@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	hadGNSSDevices = "Has GNSS Devices"
+	hadGNSSDevices = TGMIdBaseURI + "/status/gnss/device-detected/wpc/"
 )
 
 type GNSDevices struct {
