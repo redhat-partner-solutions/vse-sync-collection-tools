@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	gnsssStatusID = "GNSS Module reciving data"
+	gnsssStatusID = TGMIdBaseURI + "/status/gnss/gpsfix-valid/wpc/"
 )
 
 type GNSSNavStatus struct {

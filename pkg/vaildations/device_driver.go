@@ -11,7 +11,7 @@ import (
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors/devices"
 )
 
-const deviceDriverVersionID = "Card driver is valid"
+const deviceDriverVersionID = TGMIdBaseURI + "/version/nic/driver/wpc/"
 
 var (
 	MinDriverVersion           = "5.14.0"

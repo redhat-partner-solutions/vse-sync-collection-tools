@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	configuredForGrandMaster = "Configured for grand master"
+	configuredForGrandMaster = TGMIdBaseURI + "/status/ptp-operator/"
 	gmFlag                   = "ts2phc.master 1"
 )
 

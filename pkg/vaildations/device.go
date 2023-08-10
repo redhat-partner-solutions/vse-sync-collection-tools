@@ -9,7 +9,7 @@ import (
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/utils"
 )
 
-const deviceDetailsID = "Card is valid NIC"
+const deviceDetailsID = TGMIdBaseURI + "/version/nic/model/wpc/"
 
 var (
 	VendorIntel = "0x8086"

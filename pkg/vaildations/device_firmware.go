@@ -8,7 +8,7 @@ import (
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors/devices"
 )
 
-const deviceFirmwareID = "Card firmware is valid"
+const deviceFirmwareID = TGMIdBaseURI + "/version/nic/firmware/wpc/"
 
 var (
 	MinFirmwareVersion = "4.20"

@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	gpsdID         = "GPSD Version is valid"
+	gpsdID         = TGMIdBaseURI + "/version/gnss/gpsd/wpc/"
 	MinGSPDVersion = "3.25"
 )
 

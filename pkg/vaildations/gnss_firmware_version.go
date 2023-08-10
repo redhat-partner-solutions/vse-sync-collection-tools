@@ -8,7 +8,7 @@ import (
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors/devices"
 )
 
-const gnssID = "GNSS Version is valid"
+const gnssID = TGMIdBaseURI + "/version/gnss/firmware/wpc/"
 
 var (
 	MinGNSSVersion = "2.20"
