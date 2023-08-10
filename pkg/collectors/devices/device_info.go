@@ -17,13 +17,13 @@ import (
 )
 
 type PTPDeviceInfo struct {
-	Timestamp       string        `json:"date" fetcherKey:"date"`
-	VendorID        string        `json:"vendorId" fetcherKey:"vendorID"`
-	DeviceID        string        `json:"deviceInfo" fetcherKey:"devID"`
-	GNSSDev         string        `json:"GNSSDev" fetcherKey:"gnss"`
-	FirmwareVersion string        `json:"firmwareVersion" fetcherKey:"firmwareVersion"`
-	DriverVersion   string        `json:"driverVersion" fetcherKey:"driverVersion"`
-	Timeoffset      time.Duration `json:"timeOffset" fetcherKey:"timeOffset"`
+	Timestamp       string        `fetcherKey:"date"            json:"date"`
+	VendorID        string        `fetcherKey:"vendorID"        json:"vendorId"`
+	DeviceID        string        `fetcherKey:"devID"           json:"deviceInfo"`
+	GNSSDev         string        `fetcherKey:"gnss"            json:"GNSSDev"`
+	FirmwareVersion string        `fetcherKey:"firmwareVersion" json:"firmwareVersion"`
+	DriverVersion   string        `fetcherKey:"driverVersion"   json:"driverVersion"`
+	Timeoffset      time.Duration `fetcherKey:"timeOffset"      json:"timeOffset"`
 }
 
 // AnalyserJSON returns the json expected by the analysers

@@ -17,9 +17,9 @@ import (
 )
 
 type GPSDetails struct {
-	NavStatus      GPSNavStatus         `json:"navStatus" fetcherKey:"navStatus"`
-	AntennaDetails []*GPSAntennaDetails `json:"antennaDetails" fetcherKey:"antennaDetails"`
-	NavClock       GPSNavClock          `json:"navClock" fetcherKey:"navClock"`
+	NavStatus      GPSNavStatus         `fetcherKey:"navStatus"      json:"navStatus"`
+	AntennaDetails []*GPSAntennaDetails `fetcherKey:"antennaDetails" json:"antennaDetails"`
+	NavClock       GPSNavClock          `fetcherKey:"navClock"       json:"navClock"`
 }
 
 type GPSNavStatus struct {

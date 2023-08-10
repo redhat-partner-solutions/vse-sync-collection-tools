@@ -17,13 +17,13 @@ import (
 )
 
 type GPSVersions struct {
-	Timestamp       string   `json:"timestamp" fetcherKey:"timestamp"`
-	FirmwareVersion string   `json:"firmwareVersion" fetcherKey:"firmwareVersion"`
-	ProtoVersion    string   `json:"protocolVersion" fetcherKey:"protocolVersion"`
-	Module          string   `json:"module" fetcherKey:"module"`
-	UBXVersion      string   `json:"ubxVersion" fetcherKey:"UBXVersion"`
-	GPSDVersion     string   `json:"gpsdVersion" fetcherKey:"GPSDVersion"`
-	GNSSDevices     []string `json:"gnssDevices" fetcherKey:"GNSSDevices"`
+	Timestamp       string   `fetcherKey:"timestamp"       json:"timestamp"`
+	FirmwareVersion string   `fetcherKey:"firmwareVersion" json:"firmwareVersion"`
+	ProtoVersion    string   `fetcherKey:"protocolVersion" json:"protocolVersion"`
+	Module          string   `fetcherKey:"module"          json:"module"`
+	UBXVersion      string   `fetcherKey:"UBXVersion"      json:"ubxVersion"`
+	GPSDVersion     string   `fetcherKey:"GPSDVersion"     json:"gpsdVersion"`
+	GNSSDevices     []string `fetcherKey:"GNSSDevices"     json:"gnssDevices"`
 }
 
 func (gpsVer *GPSVersions) GetAnalyserFormat() ([]*callbacks.AnalyserFormatType, error) {

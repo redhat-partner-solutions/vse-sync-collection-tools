@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-package vaildations
+package validations
 
 import (
 	"errors"
@@ -11,7 +11,7 @@ import (
 
 const (
 	expectedAntStatus = 2
-	gnsssAntStatusID  = TGMIdBaseURI + "/status/gnss/antenna-connected/wpc/"
+	gnssAntStatusID   = TGMIdBaseURI + "/status/gnss/antenna-connected/wpc/"
 )
 
 type GNSSAntStatus struct {
@@ -28,7 +28,7 @@ func (gnssAnt *GNSSAntStatus) Verify() error {
 }
 
 func (gnssAnt *GNSSAntStatus) GetID() string {
-	return gnsssAntStatusID
+	return gnssAntStatusID
 }
 
 func (gnssAnt *GNSSAntStatus) GetData() any { //nolint:ireturn // data will vary for each validation

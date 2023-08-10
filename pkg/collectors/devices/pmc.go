@@ -15,7 +15,7 @@ import (
 )
 
 type PMCInfo struct {
-	Timestamp               string `fetcherKey:"date"                    json:"timestamp" `
+	Timestamp               string `fetcherKey:"date"                    json:"timestamp"`
 	TimeSource              string `fetcherKey:"timeSource"              json:"timeSource"`
 	ClockAccuracy           string `fetcherKey:"clockAccuracy"           json:"clockAccuracy"`
 	OffsetScaledLogVariance string `fetcherKey:"offsetScaledLogVariance" json:"offsetScaledLogVariance"`

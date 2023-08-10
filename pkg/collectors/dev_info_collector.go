@@ -17,7 +17,7 @@ import (
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors/contexts"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors/devices"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/utils"
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/vaildations"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/validations"
 )
 
 type DevInfoCollector struct {
@@ -136,10 +136,10 @@ func (ptpDev *DevInfoCollector) GetPollCount() int {
 
 func verify(ptpDevInfo *devices.PTPDeviceInfo, constructor *CollectionConstructor) error {
 	checkErrors := make([]error, 0)
-	checks := []vaildations.Validation{
-		vaildations.NewDeviceDetails(ptpDevInfo),
-		vaildations.NewDeviceDriver(ptpDevInfo),
-		vaildations.NewDeviceFirmware(ptpDevInfo),
+	checks := []validations.Validation{
+		validations.NewDeviceDetails(ptpDevInfo),
+		validations.NewDeviceDriver(ptpDevInfo),
+		validations.NewDeviceFirmware(ptpDevInfo),
 	}
 
 	for _, check := range checks {
