@@ -13,55 +13,55 @@ import (
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors/contexts"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors/devices"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/utils"
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/vaildations"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/validations"
 )
 
 //nolint:ireturn // this needs to be an interface
 func getDevInfoValidations(
 	clientset *clients.Clientset,
 	interfaceName string,
-) []vaildations.Validation {
+) []validations.Validation {
 	ctx, err := contexts.GetPTPDaemonContext(clientset)
 	utils.IfErrorExitOrPanic(err)
 	devInfo, err := devices.GetPTPDeviceInfo(interfaceName, ctx)
 	utils.IfErrorExitOrPanic(err)
-	devDetails := vaildations.NewDeviceDetails(&devInfo)
-	devFirmware := vaildations.NewDeviceFirmware(&devInfo)
-	devDriver := vaildations.NewDeviceDriver(&devInfo)
-	return []vaildations.Validation{devDetails, devFirmware, devDriver}
+	devDetails := validations.NewDeviceDetails(&devInfo)
+	devFirmware := validations.NewDeviceFirmware(&devInfo)
+	devDriver := validations.NewDeviceDriver(&devInfo)
+	return []validations.Validation{devDetails, devFirmware, devDriver}
 }
 
 func getGPSVersionValidations(
 	clientset *clients.Clientset,
-) []vaildations.Validation {
+) []validations.Validation {
 	ctx, err := contexts.GetPTPDaemonContext(clientset)
 	utils.IfErrorExitOrPanic(err)
 	gnssVersions, err := devices.GetGPSVersions(ctx)
 	utils.IfErrorExitOrPanic(err)
-	return []vaildations.Validation{
-		vaildations.NewGNSS(&gnssVersions),
-		vaildations.NewGPSDVersion(&gnssVersions),
-		vaildations.NewGNSDevices(&gnssVersions),
-		vaildations.NewGNSSModule(&gnssVersions),
-		vaildations.NewGNSSProtocol(&gnssVersions),
+	return []validations.Validation{
+		validations.NewGNSS(&gnssVersions),
+		validations.NewGPSDVersion(&gnssVersions),
+		validations.NewGNSDevices(&gnssVersions),
+		validations.NewGNSSModule(&gnssVersions),
+		validations.NewGNSSProtocol(&gnssVersions),
 	}
 }
 
 func getGPSStatusValidation(
 	clientset *clients.Clientset,
-) []vaildations.Validation {
+) []validations.Validation {
 	ctx, err := contexts.GetPTPDaemonContext(clientset)
 	utils.IfErrorExitOrPanic(err)
 	gpsDetails, err := devices.GetGPSNav(ctx)
 	utils.IfErrorExitOrPanic(err)
-	return []vaildations.Validation{
-		vaildations.NewGNSSAntStatus(&gpsDetails),
-		vaildations.NewGNSSNavStatus(&gpsDetails),
+	return []validations.Validation{
+		validations.NewGNSSAntStatus(&gpsDetails),
+		validations.NewGNSSNavStatus(&gpsDetails),
 	}
 }
 
-func getValidations(interfaceName, kubeConfig string) []vaildations.Validation {
-	checks := make([]vaildations.Validation, 0)
+func getValidations(interfaceName, kubeConfig string) []validations.Validation {
+	checks := make([]validations.Validation, 0)
 	clientset, err := clients.GetClientset(kubeConfig)
 	utils.IfErrorExitOrPanic(err)
 	checks = append(checks, getDevInfoValidations(clientset, interfaceName)...)
@@ -69,9 +69,9 @@ func getValidations(interfaceName, kubeConfig string) []vaildations.Validation {
 	checks = append(checks, getGPSStatusValidation(clientset)...)
 	checks = append(
 		checks,
-		vaildations.NewIsGrandMaster(clientset),
-		vaildations.NewOperatorVersion(clientset),
-		vaildations.NewClusterVersion(clientset),
+		validations.NewIsGrandMaster(clientset),
+		validations.NewOperatorVersion(clientset),
+		validations.NewClusterVersion(clientset),
 	)
 	return checks
 }

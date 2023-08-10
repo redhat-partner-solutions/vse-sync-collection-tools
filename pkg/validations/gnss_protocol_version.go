@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-package vaildations
+package validations
 
 import (
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors/devices"

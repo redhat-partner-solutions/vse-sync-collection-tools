@@ -19,10 +19,10 @@ const (
 )
 
 type DevDPLLInfo struct {
-	Timestamp string  `json:"timestamp" fetcherKey:"date"`
-	EECState  string  `json:"eecstate" fetcherKey:"dpll_0_state"`
-	PPSState  string  `json:"state" fetcherKey:"dpll_1_state"`
-	PPSOffset float64 `json:"terror" fetcherKey:"dpll_1_offset"`
+	Timestamp string  `fetcherKey:"date"          json:"timestamp"`
+	EECState  string  `fetcherKey:"dpll_0_state"  json:"eecstate"`
+	PPSState  string  `fetcherKey:"dpll_1_state"  json:"state"`
+	PPSOffset float64 `fetcherKey:"dpll_1_offset" json:"terror"`
 }
 
 // AnalyserJSON returns the json expected by the analysers

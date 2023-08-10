@@ -7,7 +7,7 @@ import (
 
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/callbacks"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/utils"
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/vaildations"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/validations"
 )
 
 const (
@@ -17,7 +17,7 @@ const (
 )
 
 type ValidationResult struct {
-	valdation vaildations.Validation
+	valdation validations.Validation
 	err       error
 }
 
