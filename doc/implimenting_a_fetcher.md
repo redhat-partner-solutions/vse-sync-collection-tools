@@ -43,7 +43,7 @@ func GetUptime(ctx clients.ContainerContext) (MyUptime, error) {
     uptime := MyUptime{}
     uptimeFetcher.Fetch(ctx, &uptime)
     	if err != nil {
-		log.Errorf("failed to fetch uptime %s", err.Error())
+		log.Debugf("failed to fetch uptime %s", err.Error())
 		return gpsNav, err
 	}
 	return uptime, nil

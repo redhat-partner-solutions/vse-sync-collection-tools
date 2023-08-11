@@ -230,7 +230,7 @@ func (runner *CollectorRunner) Run( //nolint:funlen // allow a slightly long fun
 		case pollRes := <-runner.pollResults:
 			log.Infof("Received %v", pollRes)
 			if len(pollRes.Errors) > 0 {
-				log.Warnf("Poll %s failed: %v", pollRes.CollectorName, pollRes.Errors)
+				log.Warnf("Poll %s had issues: %v. Will retry next poll", pollRes.CollectorName, pollRes.Errors)
 				// If erroredPolls blocks it could cause pollResults to fill and
 				// block the execution of the collectors.
 				runner.erroredPolls <- pollRes
