@@ -237,7 +237,7 @@ func processUBX(result map[string]string) (map[string]any, error) { //nolint:fun
 
 	processedUBXNavStatus, err := processUBXNavStatus(result)
 	if err != nil {
-		log.Errorf("processUBXNav Failed: %s", err.Error())
+		log.Debugf("processUBXNav Failed: %s", err.Error())
 		errors = append(errors, err)
 	}
 	for key, value := range processedUBXNavStatus {
@@ -245,7 +245,7 @@ func processUBX(result map[string]string) (map[string]any, error) { //nolint:fun
 	}
 	processedUBXNavClock, err := processUBXNavClock(result)
 	if err != nil {
-		log.Errorf("processUBXNav Failed: %s", err.Error())
+		log.Debugf("processUBXNav Failed: %s", err.Error())
 		errors = append(errors, err)
 	}
 	for key, value := range processedUBXNavClock {
@@ -254,7 +254,7 @@ func processUBX(result map[string]string) (map[string]any, error) { //nolint:fun
 
 	processedUBXMonRF, err := processUBXMonRF(result)
 	if err != nil {
-		log.Errorf("processUBXMon Failed: %s", err.Error())
+		log.Debugf("processUBXMon Failed: %s", err.Error())
 		errors = append(errors, err)
 	}
 	for key, value := range processedUBXMonRF {
