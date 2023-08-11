@@ -233,10 +233,12 @@ func processUBXMonRF(result map[string]string) (map[string]any, error) { //nolin
 
 func processUBX(result map[string]string) (map[string]any, error) { //nolint:funlen // allow slightly long function
 	processedResult := make(map[string]any)
+	errors := make([]error, 0)
+
 	processedUBXNavStatus, err := processUBXNavStatus(result)
 	if err != nil {
 		log.Errorf("processUBXNav Failed: %s", err.Error())
-		return processedResult, err
+		errors = append(errors, err)
 	}
 	for key, value := range processedUBXNavStatus {
 		processedResult[key] = value
@@ -244,7 +246,7 @@ func processUBX(result map[string]string) (map[string]any, error) { //nolint:fun
 	processedUBXNavClock, err := processUBXNavClock(result)
 	if err != nil {
 		log.Errorf("processUBXNav Failed: %s", err.Error())
-		return processedResult, err
+		errors = append(errors, err)
 	}
 	for key, value := range processedUBXNavClock {
 		processedResult[key] = value
@@ -253,12 +255,19 @@ func processUBX(result map[string]string) (map[string]any, error) { //nolint:fun
 	processedUBXMonRF, err := processUBXMonRF(result)
 	if err != nil {
 		log.Errorf("processUBXMon Failed: %s", err.Error())
-		return processedResult, err
+		errors = append(errors, err)
 	}
 	for key, value := range processedUBXMonRF {
 		processedResult[key] = value
 	}
 
+	if len(errors) > 0 {
+		return processedResult,
+			fmt.Errorf(
+				"the following errors occurred fetching the GNSS values: %w",
+				utils.MakeCompositeError("", errors),
+			)
+	}
 	return processedResult, nil
 }
 
