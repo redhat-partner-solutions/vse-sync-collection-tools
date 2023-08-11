@@ -69,7 +69,10 @@ func MakeCompositeError(prefix string, errSlice []error) error {
 	for _, err := range errSlice {
 		values = append(values, err.Error())
 	}
-	return fmt.Errorf(prefix+":\n"+pattern, values...)
+	if len(prefix) > 0 {
+		return fmt.Errorf(prefix+":\n"+pattern, values...)
+	}
+	return fmt.Errorf(pattern, values...)
 }
 
 func MakeCompositeInvalidEnvError(errSlice []error) error {
