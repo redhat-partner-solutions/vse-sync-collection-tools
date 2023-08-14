@@ -14,8 +14,9 @@ import (
 )
 
 const (
-	configuredForGrandMaster = TGMIdBaseURI + "/status/ptp-operator/"
-	gmFlag                   = "ts2phc.master 1"
+	configuredForGrandMaster            = TGMIdBaseURI + "/status/ptp-operator/"
+	configuredForGrandMasterDescription = "Configured for grand master"
+	gmFlag                              = "ts2phc.master 1"
 )
 
 type GMProfiles struct {
@@ -73,6 +74,10 @@ func (gm *GMProfiles) Verify() error {
 
 func (gm *GMProfiles) GetID() string {
 	return configuredForGrandMaster
+}
+
+func (gm *GMProfiles) GetDescription() string {
+	return configuredForGrandMasterDescription
 }
 
 func (gm *GMProfiles) GetData() any { //nolint:ireturn // data will vary for each validation

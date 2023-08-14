@@ -18,6 +18,7 @@ type VersionCheck struct {
 	Version      string `json:"version"`
 	checkVersion string `json:"-"`
 	minVersion   string `json:"-"`
+	description  string `json:"-"`
 }
 
 func (verCheck *VersionCheck) Verify() error {
@@ -35,6 +36,10 @@ func (verCheck *VersionCheck) Verify() error {
 
 func (verCheck *VersionCheck) GetID() string {
 	return verCheck.id
+}
+
+func (verCheck *VersionCheck) GetDescription() string {
+	return verCheck.description
 }
 
 func (verCheck *VersionCheck) GetData() any { //nolint:ireturn // data will vary for each validation

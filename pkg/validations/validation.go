@@ -5,5 +5,6 @@ package validations
 type Validation interface {
 	Verify() error
 	GetID() string
+	GetDescription() string
 	GetData() any
 }

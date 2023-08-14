@@ -8,7 +8,10 @@ import (
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors/devices"
 )
 
-const gnssID = TGMIdBaseURI + "/version/gnss/firmware/wpc/"
+const (
+	gnssID          = TGMIdBaseURI + "/version/gnss/firmware/wpc/"
+	gnssDescription = "GNSS Version is valid"
+)
 
 var (
 	MinGNSSVersion = "2.20"
@@ -21,5 +24,6 @@ func NewGNSS(gnss *devices.GPSVersions) *VersionCheck {
 		Version:      gnss.FirmwareVersion,
 		checkVersion: parts[1],
 		minVersion:   MinGNSSVersion,
+		description:  gnssDescription,
 	}
 }

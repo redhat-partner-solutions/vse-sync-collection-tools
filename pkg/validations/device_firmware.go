@@ -8,7 +8,10 @@ import (
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors/devices"
 )
 
-const deviceFirmwareID = TGMIdBaseURI + "/version/nic/firmware/wpc/"
+const (
+	deviceFirmwareID          = TGMIdBaseURI + "/version/nic/firmware/wpc/"
+	deviceFirmwareDescription = "Card firmware is valid"
+)
 
 var (
 	MinFirmwareVersion = "4.20"
@@ -21,5 +24,6 @@ func NewDeviceFirmware(ptpDevInfo *devices.PTPDeviceInfo) *VersionCheck {
 		Version:      ptpDevInfo.FirmwareVersion,
 		checkVersion: parts[0],
 		minVersion:   MinFirmwareVersion,
+		description:  deviceFirmwareDescription,
 	}
 }

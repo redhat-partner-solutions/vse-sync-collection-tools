@@ -10,7 +10,8 @@ import (
 )
 
 const (
-	gnsssStatusID = TGMIdBaseURI + "/status/gnss/gpsfix-valid/wpc/"
+	gnssStatusID          = TGMIdBaseURI + "/status/gnss/gpsfix-valid/wpc/"
+	gnssStatusDescription = "GNSS Module reciving data"
 )
 
 type GNSSNavStatus struct {
@@ -25,7 +26,11 @@ func (gnss *GNSSNavStatus) Verify() error {
 }
 
 func (gnss *GNSSNavStatus) GetID() string {
-	return gnsssStatusID
+	return gnssStatusID
+}
+
+func (gnss *GNSSNavStatus) GetDescription() string {
+	return gnssStatusDescription
 }
 
 func (gnss *GNSSNavStatus) GetData() any { //nolint:ireturn // data will vary for each validation

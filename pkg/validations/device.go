@@ -9,7 +9,10 @@ import (
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/utils"
 )
 
-const deviceDetailsID = TGMIdBaseURI + "/version/nic/model/wpc/"
+const (
+	deviceDetailsID          = TGMIdBaseURI + "/version/nic/model/wpc/"
+	deviceDetailsDescription = "Card is valid NIC"
+)
 
 var (
 	VendorIntel = "0x8086"
@@ -30,6 +33,10 @@ func (dev *DeviceDetails) Verify() error {
 
 func (dev *DeviceDetails) GetID() string {
 	return deviceDetailsID
+}
+
+func (dev *DeviceDetails) GetDescription() string {
+	return deviceDetailsDescription
 }
 
 func (dev *DeviceDetails) GetData() any { //nolint:ireturn // data will very for each validation

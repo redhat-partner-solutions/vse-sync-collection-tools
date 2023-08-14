@@ -10,8 +10,9 @@ import (
 )
 
 const (
-	expectedModuleName  = "ZED-F9T"
-	gnssModuleIsCorrect = TGMIdBaseURI + "/version/gnss/model/wpc/"
+	expectedModuleName             = "ZED-F9T"
+	gnssModuleIsCorrect            = TGMIdBaseURI + "/version/gnss/model/wpc/"
+	gnssModuleIsCorrectDescription = "GNSS module is valid"
 )
 
 type GNSSModule struct {
@@ -29,6 +30,10 @@ func (gnssModule *GNSSModule) Verify() error {
 
 func (gnssModule *GNSSModule) GetID() string {
 	return gnssModuleIsCorrect
+}
+
+func (gnssModule *GNSSModule) GetDescription() string {
+	return gnssModuleIsCorrectDescription
 }
 
 func (gnssModule *GNSSModule) GetData() any { //nolint:ireturn // data will vary for each validation
