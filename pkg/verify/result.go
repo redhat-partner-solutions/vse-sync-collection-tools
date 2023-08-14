@@ -58,5 +58,5 @@ func (res *ValidationResult) IsInvalidEnv() bool {
 }
 
 func (res *ValidationResult) GetPrefixedError() error {
-	return fmt.Errorf("%s: %w", res.valdation.GetID(), res.err)
+	return fmt.Errorf("%s: %w", res.valdation.GetDescription(), res.err)
 }

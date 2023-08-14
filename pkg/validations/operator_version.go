@@ -17,9 +17,10 @@ import (
 )
 
 const (
-	ptpOperatorVersionID  = TGMIdBaseURI + "/version/ptp-operator/"
-	MinOperatorVersion    = "4.14.0-0" // trailing -0 is required to allow preGA version
-	ptpOperatorDiplayName = "PTP Operator"
+	ptpOperatorVersionID          = TGMIdBaseURI + "/version/ptp-operator/"
+	ptpOperatorVersionDescription = "PTP Operactor Version is valid"
+	MinOperatorVersion            = "4.14.0-0" // trailing -0 is required to allow preGA version
+	ptpOperatorDiplayName         = "PTP Operator"
 )
 
 type CSV struct {
@@ -82,6 +83,7 @@ func NewOperatorVersion(client *clients.Clientset) *VersionWithErrorCheck {
 			Version:      version,
 			checkVersion: version,
 			minVersion:   MinOperatorVersion,
+			description:  ptpOperatorVersionDescription,
 		},
 		Error: err,
 	}

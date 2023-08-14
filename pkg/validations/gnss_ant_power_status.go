@@ -10,8 +10,9 @@ import (
 )
 
 const (
-	expectedAntStatus = 2
-	gnssAntStatusID   = TGMIdBaseURI + "/status/gnss/antenna-connected/wpc/"
+	expectedAntStatus        = 2
+	gnssAntStatusID          = TGMIdBaseURI + "/status/gnss/antenna-connected/wpc/"
+	gnssAntStatusDescription = "GNSS Module is connected to an antenna"
 )
 
 type GNSSAntStatus struct {
@@ -29,6 +30,10 @@ func (gnssAnt *GNSSAntStatus) Verify() error {
 
 func (gnssAnt *GNSSAntStatus) GetID() string {
 	return gnssAntStatusID
+}
+
+func (gnssAnt *GNSSAntStatus) GetDescription() string {
+	return gnssAntStatusDescription
 }
 
 func (gnssAnt *GNSSAntStatus) GetData() any { //nolint:ireturn // data will vary for each validation

@@ -11,7 +11,10 @@ import (
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors/devices"
 )
 
-const deviceDriverVersionID = TGMIdBaseURI + "/version/nic/driver/wpc/"
+const (
+	deviceDriverVersionID          = TGMIdBaseURI + "/version/nic/driver/wpc/"
+	deviceDriverVersionDescription = "Card driver is valid"
+)
 
 var (
 	MinDriverVersion           = "5.14.0"
@@ -36,6 +39,7 @@ func NewDeviceDriver(ptpDevInfo *devices.PTPDeviceInfo) *VersionWithErrorCheck {
 			Version:      ptpDevInfo.DriverVersion,
 			checkVersion: ptpDevInfo.DriverVersion,
 			minVersion:   MinDriverVersion,
+			description:  deviceDriverVersionDescription,
 		},
 		Error: err,
 	}

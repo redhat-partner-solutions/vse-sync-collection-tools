@@ -9,8 +9,9 @@ import (
 )
 
 const (
-	gpsdID         = TGMIdBaseURI + "/version/gnss/gpsd/wpc/"
-	MinGSPDVersion = "3.25"
+	gpsdID          = TGMIdBaseURI + "/version/gnss/gpsd/wpc/"
+	gpsdDescription = "GPSD Version is valid"
+	MinGSPDVersion  = "3.25"
 )
 
 func NewGPSDVersion(gpsdVer *devices.GPSVersions) *VersionCheck {
@@ -20,5 +21,6 @@ func NewGPSDVersion(gpsdVer *devices.GPSVersions) *VersionCheck {
 		Version:      gpsdVer.GPSDVersion,
 		checkVersion: strings.ReplaceAll(parts[0], "~", "-"),
 		minVersion:   MinGSPDVersion,
+		description:  gpsdDescription,
 	}
 }

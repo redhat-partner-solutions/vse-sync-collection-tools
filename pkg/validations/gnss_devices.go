@@ -10,7 +10,8 @@ import (
 )
 
 const (
-	hadGNSSDevices = TGMIdBaseURI + "/status/gnss/device-detected/wpc/"
+	hadGNSSDevices            = TGMIdBaseURI + "/status/gnss/device-detected/wpc/"
+	hadGNSSDevicesDescription = "Has GNSS Devices"
 )
 
 type GNSDevices struct {
@@ -26,6 +27,9 @@ func (gnssDevices *GNSDevices) Verify() error {
 
 func (gnssDevices *GNSDevices) GetID() string {
 	return hadGNSSDevices
+}
+func (gnssDevices *GNSDevices) GetDescription() string {
+	return hadGNSSDevicesDescription
 }
 
 func (gnssDevices *GNSDevices) GetData() any { //nolint:ireturn // data will vary for each validation

@@ -7,8 +7,9 @@ import (
 )
 
 const (
-	gnssProtID      = TGMIdBaseURI + "/version/gnss/protocol/wpc/"
-	MinProtoVersion = "29.20"
+	gnssProtID           = TGMIdBaseURI + "/version/gnss/protocol/wpc/"
+	gnssProtIDescription = "GNSS protocol version is valid"
+	MinProtoVersion      = "29.20"
 )
 
 func NewGNSSProtocol(gnss *devices.GPSVersions) *VersionCheck {
@@ -17,5 +18,6 @@ func NewGNSSProtocol(gnss *devices.GPSVersions) *VersionCheck {
 		Version:      gnss.ProtoVersion,
 		checkVersion: gnss.ProtoVersion,
 		minVersion:   MinProtoVersion,
+		description:  gnssProtIDescription,
 	}
 }

@@ -149,7 +149,7 @@ func verify(ptpDevInfo *devices.PTPDeviceInfo, constructor *CollectionConstructo
 			if errors.As(err, &invalidEnv) {
 				checkErrors = append(checkErrors, err)
 			} else {
-				log.Warningf("failed to verify %s: %s", check.GetID(), err.Error())
+				log.Warningf("failed to verify %s: %s", check.GetDescription(), err.Error())
 			}
 		}
 	}
