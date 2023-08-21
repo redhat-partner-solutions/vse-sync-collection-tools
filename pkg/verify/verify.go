@@ -146,8 +146,8 @@ func Verify(interfaceName, kubeConfig string, useAnalyserJSON bool) {
 	for _, check := range checks {
 		err := check.Verify()
 		res := &ValidationResult{
-			err:       err,
-			valdation: check,
+			err:        err,
+			validation: check,
 		}
 		if err != nil {
 			if res.IsInvalidEnv() {

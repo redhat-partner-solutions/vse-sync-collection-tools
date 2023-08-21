@@ -18,8 +18,8 @@ const (
 )
 
 type ValidationResult struct {
-	valdation validations.Validation
-	err       error
+	validation validations.Validation
+	err        error
 }
 
 func (res *ValidationResult) GetAnalyserFormat() ([]*callbacks.AnalyserFormatType, error) {
@@ -38,10 +38,10 @@ func (res *ValidationResult) GetAnalyserFormat() ([]*callbacks.AnalyserFormatTyp
 	formatted := callbacks.AnalyserFormatType{
 		ID: "environment-check",
 		Data: map[string]any{
-			"id":       res.valdation.GetID(),
+			"id":       res.validation.GetID(),
 			"result":   result,
 			"reason":   msg,
-			"analysis": res.valdation.GetData(),
+			"analysis": res.validation.GetData(),
 		},
 	}
 	return []*callbacks.AnalyserFormatType{&formatted}, nil
@@ -58,5 +58,5 @@ func (res *ValidationResult) IsInvalidEnv() bool {
 }
 
 func (res *ValidationResult) GetPrefixedError() error {
-	return fmt.Errorf("%s: %w", res.valdation.GetDescription(), res.err)
+	return fmt.Errorf("%s: %w", res.validation.GetDescription(), res.err)
 }
