@@ -11,7 +11,7 @@ import (
 
 const (
 	gnssStatusID          = TGMIdBaseURI + "/status/gnss/gpsfix-valid/wpc/"
-	gnssStatusDescription = "GNSS Module reciving data"
+	gnssStatusDescription = "GNSS Module receiving data"
 )
 
 type GNSSNavStatus struct {
@@ -20,7 +20,7 @@ type GNSSNavStatus struct {
 
 func (gnss *GNSSNavStatus) Verify() error {
 	if gnss.Status.GPSFix <= 0 {
-		return utils.NewInvalidEnvError(errors.New("GNSS module is not reciving data"))
+		return utils.NewInvalidEnvError(errors.New("GNSS module is not receiving data"))
 	}
 	return nil
 }
