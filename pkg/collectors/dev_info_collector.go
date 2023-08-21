@@ -57,7 +57,7 @@ func (ptpDev *DevInfoCollector) Start() error {
 // monitorErrored Polls will process errors placed on
 // the erredPolls and if required will populate requiresFetch
 //
-//	if it recives an error:
+//	if it receives an error:
 //		if requiresFetch is empty a value will be inserted.
 //		if requiresFetch is not empty it will process errors in an attempt to clear any backlog.
 //			We do not want a backlog because if erroredPolls becomes full will block the main
