@@ -5,6 +5,7 @@ package verify
 import (
 	"fmt"
 	"os"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 
@@ -16,7 +17,10 @@ import (
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/validations"
 )
 
-const unknownMsgPrefix = "The following error occurred when trying to gather environment data for the following validations"
+const (
+	unknownMsgPrefix = "The following error occurred when trying to gather environment data for the following validations"
+	antPowerRetries  = 3
+)
 
 //nolint:ireturn // this needs to be an interface
 func getDevInfoValidations(
@@ -54,10 +58,21 @@ func getGPSStatusValidation(
 ) []validations.Validation {
 	ctx, err := contexts.GetPTPDaemonContext(clientset)
 	utils.IfErrorExitOrPanic(err)
-	gpsDetails, err := devices.GetGPSNav(ctx)
-	utils.IfErrorExitOrPanic(err)
+
+	// If we need to do this for more validations then consider a generic
+	var antCheck *validations.GNSSAntStatus
+	var gpsDetails devices.GPSDetails
+	for i := 0; i < antPowerRetries; i++ {
+		gpsDetails, err = devices.GetGPSNav(ctx)
+		utils.IfErrorExitOrPanic(err)
+		if check := validations.NewGNSSAntStatus(&gpsDetails); check.Verify() == nil {
+			antCheck = check
+			break
+		}
+		time.Sleep(time.Second)
+	}
 	return []validations.Validation{
-		validations.NewGNSSAntStatus(&gpsDetails),
+		antCheck,
 		validations.NewGNSSNavStatus(&gpsDetails),
 	}
 }
