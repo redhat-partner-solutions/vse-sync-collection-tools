@@ -39,7 +39,7 @@ var _ = Describe("GetGPSNav", func() {
 
 	When("called GetGPSNav", func() {
 		It("should return a valid GPSNav", func() {
-			expectedInput := "echo '<UBXMonVer>';ubxtool -t -p MON-VER;echo '</UBXMonVer>';"
+			expectedInput := "echo '<UBXMonVer>';ubxtool -t -p MON-VER -P 29.20;echo '</UBXMonVer>';"
 			expectedInput += "echo '<UBXVersion>';ubxtool -V;echo '</UBXVersion>';"
 			expectedInput += "echo '<GPSDVersion>';gpsd --version;echo '</GPSDVersion>';"
 			expectedInput += "echo '<GNSSDevices>';ls -1 /dev | grep gnss;echo '</GNSSDevices>';"
@@ -57,8 +57,6 @@ var _ = Describe("GetGPSNav", func() {
 				"  extension GPS;GLO;GAL;BDS",
 				"  extension SBAS;QZSS",
 				"  extension NAVIC",
-				"",
-				`WARNING:  protVer is 10.00, should be 29.20.  Hint: use option "-P 29.20"`,
 				"",
 				"</UBXMonVer>",
 				"<UBXVersion>",
