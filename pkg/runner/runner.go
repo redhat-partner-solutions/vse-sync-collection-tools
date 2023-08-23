@@ -67,6 +67,7 @@ func (runner *CollectorRunner) initialise(
 	pollInterval int,
 	requestedDuration time.Duration,
 	devInfoAnnouceInterval int,
+	logsOutputFile string,
 ) {
 	runner.pollInterval = pollInterval
 	runner.endTime = time.Now().Add(requestedDuration)
@@ -79,6 +80,7 @@ func (runner *CollectorRunner) initialise(
 		PollInterval:           pollInterval,
 		DevInfoAnnouceInterval: devInfoAnnouceInterval,
 		ErroredPolls:           runner.erroredPolls,
+		LogsOutputFile:         logsOutputFile,
 	}
 
 	registry := collectors.GetRegistry()
@@ -151,6 +153,15 @@ func (runner *CollectorRunner) poller(
 			runningPolls.Wait()
 			return
 		default:
+			log.Debug(
+				"Collector GoRoutine:",
+				collectorName,
+				lastPoll, pollInterval,
+				lastPoll.IsZero(),
+				time.Since(lastPoll),
+				time.Since(lastPoll) > pollInterval,
+				lastPoll.IsZero() || time.Since(lastPoll) > pollInterval,
+			)
 			if lastPoll.IsZero() || time.Since(lastPoll) > pollInterval {
 				lastPoll = time.Now()
 				log.Debugf("poll %s", collectorName)
@@ -208,6 +219,7 @@ func (runner *CollectorRunner) Run( //nolint:funlen // allow a slightly long fun
 	devInfoAnnouceInterval int,
 	ptpInterface string,
 	useAnalyserJSON bool,
+	logsOutputFile string,
 ) {
 	clientset, err := clients.GetClientset(kubeConfig)
 	utils.IfErrorExitOrPanic(err)
@@ -219,7 +231,15 @@ func (runner *CollectorRunner) Run( //nolint:funlen // allow a slightly long fun
 
 	callback, err := callbacks.SetupCallback(outputFile, outputFormat)
 	utils.IfErrorExitOrPanic(err)
-	runner.initialise(callback, ptpInterface, clientset, pollInterval, requestedDuration, devInfoAnnouceInterval)
+	runner.initialise(
+		callback,
+		ptpInterface,
+		clientset,
+		pollInterval,
+		requestedDuration,
+		devInfoAnnouceInterval,
+		logsOutputFile,
+	)
 	runner.start()
 
 	// Use wg count to know if any collectors are running.

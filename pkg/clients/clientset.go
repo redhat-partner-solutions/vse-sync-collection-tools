@@ -18,12 +18,13 @@ import (
 
 // A Clientset contains clients for the different k8s API groups in one place
 type Clientset struct {
-	RestConfig    *rest.Config
-	DynamicClient dynamic.Interface
-	OcpClient     ocpconfig.Interface
-	K8sClient     kubernetes.Interface
-	K8sRestClient rest.Interface
-	ready         bool
+	RestConfig      *rest.Config
+	DynamicClient   dynamic.Interface
+	OcpClient       ocpconfig.Interface
+	K8sClient       kubernetes.Interface
+	K8sRestClient   rest.Interface
+	KubeConfigPaths []string
+	ready           bool
 }
 
 var clientset = Clientset{}
@@ -51,6 +52,7 @@ func GetClientset(kubeconfigPaths ...string) (*Clientset, error) {
 // newClientset will initialise the singleton clientset using provided kubeconfigPath
 func newClientset(kubeconfigPaths ...string) (*Clientset, error) {
 	log.Infof("creating new Clientset from %v", kubeconfigPaths)
+	clientset.KubeConfigPaths = kubeconfigPaths
 	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
 
 	loadingRules.Precedence = kubeconfigPaths // This means it will not load the value from $KUBECONFIG

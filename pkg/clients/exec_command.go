@@ -27,7 +27,7 @@ type ContainerContext struct {
 	podNamePrefix string
 }
 
-func (clientsholder *Clientset) findPodNameFromPrefix(namespace, prefix string) (string, error) {
+func (clientsholder *Clientset) FindPodNameFromPrefix(namespace, prefix string) (string, error) {
 	podList, err := clientsholder.K8sClient.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return "", fmt.Errorf("failed to getting pod list: %w", err)
@@ -53,7 +53,7 @@ func (clientsholder *Clientset) findPodNameFromPrefix(namespace, prefix string) 
 }
 
 func (c *ContainerContext) Refresh() error {
-	newPodname, err := c.clientset.findPodNameFromPrefix(c.namespace, c.podNamePrefix)
+	newPodname, err := c.clientset.FindPodNameFromPrefix(c.namespace, c.podNamePrefix)
 	if err != nil {
 		return err
 	}
@@ -65,7 +65,7 @@ func NewContainerContext(
 	clientset *Clientset,
 	namespace, podNamePrefix, containerName string,
 ) (ContainerContext, error) {
-	podName, err := clientset.findPodNameFromPrefix(namespace, podNamePrefix)
+	podName, err := clientset.FindPodNameFromPrefix(namespace, podNamePrefix)
 	if err != nil {
 		return ContainerContext{}, err
 	}
