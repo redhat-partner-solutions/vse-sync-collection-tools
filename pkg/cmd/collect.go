@@ -3,6 +3,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -10,6 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/runner"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/utils"
 )
@@ -25,6 +27,7 @@ var (
 	pollInterval           int
 	devInfoAnnouceInterval int
 	collectorNames         []string
+	logsOutputFile         string
 )
 
 // collectCmd represents the collect command
@@ -41,6 +44,14 @@ var collectCmd = &cobra.Command{
 		}
 		utils.IfErrorExitOrPanic(err)
 
+		for _, c := range collectorNames {
+			if c == collectors.LogsCollectorName && logsOutputFile == "" {
+				utils.IfErrorExitOrPanic(utils.NewMissingInputError(
+					errors.New("if Logs collector is selected you must also provide a log output file")),
+				)
+			}
+		}
+
 		collectionRunner.Run(
 			kubeConfig,
 			outputFile,
@@ -49,6 +60,7 @@ var collectCmd = &cobra.Command{
 			devInfoAnnouceInterval,
 			ptpInterface,
 			useAnalyserJSON,
+			logsOutputFile,
 		)
 	},
 }
@@ -98,5 +110,11 @@ func init() { //nolint:funlen // Allow this to get a little long
 			strings.Join(runner.RequiredCollectorNames, ", "),
 			strings.Join(runner.OptionalCollectorNames, ", "),
 		),
+	)
+
+	collectCmd.Flags().StringVarP(
+		&logsOutputFile,
+		"logs-output", "l", "",
+		"Path to the logs output file. This is required when using the opt in logs collector",
 	)
 }
