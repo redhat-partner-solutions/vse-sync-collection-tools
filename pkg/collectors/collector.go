@@ -12,7 +12,6 @@ type Collector interface {
 	Start() error                                // Setups any internal state required for collection to happen
 	Poll(chan PollResult, *utils.WaitGroupCount) // Poll for collectables
 	CleanUp() error                              // Stops the collector and cleans up any internal state. It should result in a state that can be started again
-	GetPollCount() int                           // Returns the number of completed poll
 	GetPollInterval() int                        // Returns the collectors polling interval
 	IsAnnouncer() bool
 }

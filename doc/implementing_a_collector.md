@@ -100,7 +100,6 @@ func  (annMsg *AnnouncementMessage)  GetAnalyserFormat() (*callbacks.AnalyserFor
 
 type AnnouncementCollector struct {
 	callback callbacks.Callback
-	count        int
 	msg          string
 	pollInterval int
 }
@@ -120,7 +119,6 @@ func (announcer *AnnouncementCollector) Start() error {
 func (announcer *AnnouncementCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCount) {
 	defer func() {
 		wg.Done()
-		atomic.AddUint32(&announcer.count, 1)
 	}()
 
 	msg := &AnnouncementMessage{Msg: announcer.msg}
