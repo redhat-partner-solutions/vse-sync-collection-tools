@@ -72,7 +72,7 @@ func init() {
 		[]fetcher.AddCommandArgs{
 			{
 				Key:     "UBXMonVer",
-				Command: "ubxtool -t -p MON-VER",
+				Command: "ubxtool -t -p MON-VER -P 29.20",
 				Trim:    true,
 			},
 			{
