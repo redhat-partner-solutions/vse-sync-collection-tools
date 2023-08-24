@@ -99,5 +99,5 @@ func NewDPLLCollector(constructor *CollectionConstructor) (Collector, error) {
 }
 
 func init() {
-	RegisterCollector(DPLLCollectorName, NewDPLLCollector, false)
+	RegisterCollector(DPLLCollectorName, NewDPLLCollector, false, true)
 }
