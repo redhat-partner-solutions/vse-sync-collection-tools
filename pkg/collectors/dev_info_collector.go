@@ -204,5 +204,5 @@ func NewDevInfoCollector(constructor *CollectionConstructor) (Collector, error) 
 }
 
 func init() {
-	RegisterCollector(DevInfoCollectorName, NewDevInfoCollector, true, true)
+	RegisterCollector(DevInfoCollectorName, NewDevInfoCollector, required)
 }
