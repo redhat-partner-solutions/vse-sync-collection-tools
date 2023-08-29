@@ -77,7 +77,7 @@ var (
 	)
 	ubxNavClockRegex = regexp.MustCompile(
 		timeStampPattern +
-			`\nUBX-NAV-CLOCK:\n\s+iTOW (\d+) clkB (\d+) clkD (\d+) tAcc (\d+) fAcc (\d+)`,
+			`\nUBX-NAV-CLOCK:\n\s+iTOW (\d+) clkB (-?\d+) clkD (-?\d+) tAcc (\d+) fAcc (\d+)`,
 		// 1686916187.0586
 		// UBX-NAV-CLOCK:
 		//   iTOW 474605000 clkB 61594 clkD 56 tAcc 5 fAcc 164
@@ -86,7 +86,7 @@ var (
 	ubxAntFullBlockRegex = regexp.MustCompile(
 		timeStampPattern +
 			`\nUBX-MON-RF:\n` +
-			`\s+version \d nBlocks (\d) reserved1 \d \d\n(?s:([^UBX-]*)[UBX-]?)`,
+			`\s+version \d nBlocks (\d) reserved1 \d \d\n(?s:([^UBX]*))`,
 		// 1686916187.0584
 		// UBX-MON-RF:
 		//  version 0 nBlocks 2 reserved1 0 0
@@ -94,18 +94,18 @@ var (
 		//     noisePerMS 82 agcCnt 6318 jamInd 3 ofsI 15 magI 154 ofsQ 2 magQ 145
 		//     reserved3 0 0 0
 		//    blockId 1 flags x0 antStatus 2 antPower 1 postStatus 0 reserved2 0 0 0 0
-		//     noisePerMS 49 agcCnt 6669 jamInd 2 ofsI 11 magI 146 ofsQ 1 magQ 139
+		//     noisePerMS 49 agcCnt 6669 jamInd 2 ofsI -11 magI 146 ofsQ -1 magQ 139
 		//     reserved3 0 0 0
 	)
 	ubxAntInternalBlockRegex = regexp.MustCompile(
 		`\s+blockId (\d) flags \w+ antStatus (\d) antPower (\d+) postStatus \d reserved2 \d \d \d \d\n` +
-			`\s+noisePerMS \d+ agcCnt \d+ jamInd \d ofsI \d+ magI \d+ ofsQ \d magQ \d+\n` +
+			`\s+noisePerMS \d+ agcCnt \d+ jamInd \d ofsI -?\d+ magI \d+ ofsQ -?\d magQ \d+\n` +
 			`\s+reserved3 \d \d \d\n`,
 		//    blockId 0 flags x0 antStatus 2 antPower 1 postStatus 0 reserved2 0 0 0 0
 		//     noisePerMS 82 agcCnt 6318 jamInd 3 ofsI 15 magI 154 ofsQ 2 magQ 145
 		//     reserved3 0 0 0
 		//    blockId 1 flags x0 antStatus 2 antPower 1 postStatus 0 reserved2 0 0 0 0
-		//     noisePerMS 49 agcCnt 6669 jamInd 2 ofsI 11 magI 146 ofsQ 1 magQ 139
+		//     noisePerMS 49 agcCnt 6669 jamInd 2 ofsI -11 magI 146 ofsQ -1 magQ 139
 		//     reserved3 0 0 0
 	)
 
