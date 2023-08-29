@@ -145,6 +145,6 @@ func NewAnnouncementCollector(constuctor *CollectionConstuctor) (Collector, erro
 
 func init(){
 	// We'll make this a required collector
-	RegisterCollector(AnnouncementCollectorName, NewAnnouncementCollector, true)
+	RegisterCollector(AnnouncementCollectorName, NewAnnouncementCollector, required)
 }
 ```
