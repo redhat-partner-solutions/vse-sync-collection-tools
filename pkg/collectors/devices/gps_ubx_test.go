@@ -50,7 +50,7 @@ var _ = Describe("GetGPSNav", func() {
 				"    noisePerMS 82 agcCnt 6318 jamInd 3 ofsI 15 magI 154 ofsQ 2 magQ 145",
 				"    reserved3 0 0 0",
 				"   blockId 1 flags x0 antStatus 2 antPower 1 postStatus 0 reserved2 0 0 0 0",
-				"    noisePerMS 49 agcCnt 6669 jamInd 2 ofsI 11 magI 146 ofsQ 1 magQ 139",
+				"    noisePerMS 49 agcCnt 6669 jamInd 2 ofsI -11 magI 146 ofsQ -1 magQ 139",
 				"    reserved3 0 0 0",
 				"",
 				"1686916187.0584",
@@ -60,7 +60,7 @@ var _ = Describe("GetGPSNav", func() {
 				"",
 				"1686916187.0586",
 				"UBX-NAV-CLOCK:",
-				"  iTOW 474605000 clkB 61594 clkD 56 tAcc 5 fAcc 164",
+				"  iTOW 474605000 clkB -61594 clkD -56 tAcc 5 fAcc 164",
 				"</GPS>",
 			}, "\n")
 			response[expectedInput] = []byte(expectedOutput)
