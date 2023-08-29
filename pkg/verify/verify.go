@@ -64,13 +64,16 @@ func getGPSStatusValidation(
 	var gpsDetails devices.GPSDetails
 	for i := 0; i < antPowerRetries; i++ {
 		gpsDetails, err = devices.GetGPSNav(ctx)
-		utils.IfErrorExitOrPanic(err)
+		if err != nil {
+			continue
+		}
 		if check := validations.NewGNSSAntStatus(&gpsDetails); check.Verify() == nil {
 			antCheck = check
 			break
 		}
 		time.Sleep(time.Second)
 	}
+	utils.IfErrorExitOrPanic(err)
 	return []validations.Validation{
 		antCheck,
 		validations.NewGNSSNavStatus(&gpsDetails),
