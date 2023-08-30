@@ -23,26 +23,74 @@ const (
 	lineChanLength      = 100
 	lineDelim           = '\n'
 	streamingBufferSize = 2000
-	logPollInterval     = 2
+	logPollInterval     = 5
 	logFilePermissions  = 0666
+	keepGenerations     = 10
 )
 
 var (
 	followDuration = logPollInterval * time.Second
-	keepDuration   = 10 * followDuration
-	followTimeout  = 2 * followDuration
+	followTimeout  = 30 * followDuration
 )
 
+type ProcessedLine struct {
+	Timestamp  time.Time
+	Raw        string
+	Content    string
+	Generation uint32
+}
+
+type GenerationalLockedTime struct {
+	time       time.Time
+	lock       sync.RWMutex
+	generation uint32
+}
+
+func (lt *GenerationalLockedTime) Time() time.Time {
+	lt.lock.RLock()
+	defer lt.lock.RUnlock()
+	return lt.time
+}
+
+func (lt *GenerationalLockedTime) Generation() uint32 {
+	lt.lock.RLock()
+	defer lt.lock.RUnlock()
+	return lt.generation
+}
+
+func (lt *GenerationalLockedTime) Update(update time.Time) {
+	lt.lock.Lock()
+	defer lt.lock.Unlock()
+	lt.time = update
+	lt.generation += 1
+}
+
+// LogsCollector collects logs from repeated calls to the kubeapi with overlapping query times,
+// the lines are then fed into a channel, in another gorotine they are de-duplicated and written to an output file.
+//
+// Overlap:
+// cmd       followDuration
+// |---------------|
+// since          cmd        followDuration
+// |---------------|---------------|
+// .............. since           cmd        followDuration
+// ..............  |---------------|---------------|
+//
+// This was done because oc logs and the kubeapi endpoint which it uses does not look back
+// over a log rotation event, nor does it continue to follow.
+//
+// Log aggregators would be preferred over this method however this requires extra infra
+// which might not be present in the environment.
 type LogsCollector struct {
-	lastPoll           time.Time
 	quit               chan os.Signal
-	lines              chan string
+	lines              chan *ProcessedLine
 	seenLines          map[time.Time][]string
+	generations        map[uint32]time.Time
 	client             *clients.Clientset
 	logsOutputFileName string
+	lastPoll           GenerationalLockedTime
 	wg                 sync.WaitGroup
 	pollInterval       int
-	lpLock             sync.RWMutex
 	withTimeStamps     bool
 	running            bool
 	pruned             bool
@@ -61,12 +109,8 @@ func (logs *LogsCollector) IsAnnouncer() bool {
 	return false
 }
 
-func (logs *LogsCollector) SetLastPool() {
-	if !logs.lpLock.TryLock() {
-		return
-	}
-	defer logs.lpLock.Unlock()
-	logs.lastPoll = time.Now()
+func (logs *LogsCollector) SetLastPoll(pollTime time.Time) {
+	logs.lastPoll.Update(pollTime)
 }
 
 // Start sets up the collector so it is ready to be polled
@@ -76,37 +120,42 @@ func (logs *LogsCollector) Start() error {
 	return nil
 }
 
-func (logs *LogsCollector) consumeLine(line string, writer io.StringWriter) {
-	splitLine := strings.SplitN(line, " ", 2) //nolint:gomnd // moving this to a var would make the code less clear
-	if len(splitLine) < 2 {                   //nolint:gomnd // moving this to a var would make the code less clear
-		return
-	}
-	timestampPart := splitLine[0]
-	lineContent := splitLine[1]
-	timestamp, err := time.Parse(time.RFC3339, timestampPart)
-	if err != nil {
-		// This is not a value line something went wrong
-		return
+func (logs *LogsCollector) consumeLine(line *ProcessedLine, writer io.StringWriter) {
+	if genTimestamp, ok := logs.generations[line.Generation]; !ok || line.Timestamp.Sub(genTimestamp) < 0 {
+		logs.generations[line.Generation] = line.Timestamp
 	}
 
-	if seen, ok := logs.seenLines[timestamp]; ok {
+	if seen, ok := logs.seenLines[line.Timestamp]; ok {
 		for _, seenContent := range seen {
-			if seenContent == lineContent {
+			if seenContent == line.Content {
 				// Already have this line skip it
 				return
 			}
 		}
 	}
-	logs.seenLines[timestamp] = append(logs.seenLines[timestamp], lineContent)
-	logs.pruned = false
+	logs.seenLines[line.Timestamp] = append(logs.seenLines[line.Timestamp], line.Content)
+	var err error
 	if logs.withTimeStamps {
-		_, err = writer.WriteString(line + "\n")
+		_, err = writer.WriteString(line.Raw + "\n")
 	} else {
-		_, err = writer.WriteString(lineContent + "\n")
+		_, err = writer.WriteString(line.Content + "\n")
 	}
 	if err != nil {
 		log.Error(fmt.Errorf("failed to write log output to file"))
 	}
+}
+
+func (logs *LogsCollector) prune(currentGenSeen uint32) {
+	log.Debug("logs: pruning seen lines")
+	removeGen := currentGenSeen - keepGenerations
+	keepTime := logs.generations[removeGen]
+	for key := range logs.seenLines {
+		if key.Sub(keepTime) < 0 {
+			delete(logs.seenLines, key)
+		}
+	}
+	delete(logs.generations, removeGen)
+	logs.pruned = true
 }
 
 func (logs *LogsCollector) writeToLogFile() {
@@ -116,7 +165,7 @@ func (logs *LogsCollector) writeToLogFile() {
 	fileHandle, err := os.OpenFile(logs.logsOutputFileName, os.O_CREATE|os.O_WRONLY, logFilePermissions)
 	utils.IfErrorExitOrPanic(err)
 	defer fileHandle.Close()
-
+	var currentGenSeen uint32 = 0
 	for {
 		select {
 		case <-logs.quit:
@@ -127,16 +176,14 @@ func (logs *LogsCollector) writeToLogFile() {
 			}
 			return
 		case line := <-logs.lines:
+			if line.Generation > currentGenSeen {
+				currentGenSeen = line.Generation
+				logs.pruned = false
+			}
 			logs.consumeLine(line, fileHandle)
 		default:
-			if !logs.pruned {
-				log.Info("pruning seen lines")
-				for key := range logs.seenLines {
-					if time.Since(key) > keepDuration {
-						delete(logs.seenLines, key)
-					}
-				}
-				logs.pruned = true
+			if !logs.pruned && currentGenSeen >= keepGenerations {
+				logs.prune(currentGenSeen)
 			} else {
 				time.Sleep(time.Microsecond)
 			}
@@ -144,21 +191,107 @@ func (logs *LogsCollector) writeToLogFile() {
 	}
 }
 
-func (logs *LogsCollector) processLines(line string) string {
+func processLine(line string, generation uint32) (*ProcessedLine, error) {
+	splitLine := strings.SplitN(line, " ", 2) //nolint:gomnd // moving this to a var would make the code less clear
+	if len(splitLine) < 2 {                   //nolint:gomnd // moving this to a var would make the code less clear
+		return nil, fmt.Errorf("failed to split line %s", line)
+	}
+	timestampPart := splitLine[0]
+	lineContent := splitLine[1]
+	timestamp, err := time.Parse(time.RFC3339, timestampPart)
+	if err != nil {
+		// This is not a value line something went wrong
+		return nil, fmt.Errorf("failed to process timestamp from line: '%s'", line)
+	}
+	processed := &ProcessedLine{
+		Timestamp:  timestamp,
+		Content:    lineContent,
+		Raw:        line,
+		Generation: generation,
+	}
+	return processed, nil
+}
+
+func (logs *LogsCollector) processLines(line string, generation uint32) (string, time.Time) {
+	var lastTimestamp time.Time
 	if strings.ContainsRune(line, lineDelim) {
 		lines := strings.Split(line, "\n")
-		for n := 0; n < len(lines)-2; n++ {
-			logs.lines <- lines[n]
+		for index := 0; index < len(lines)-2; index++ {
+			log.Debug("logs: lines: ", lines[index])
+			processed, err := processLine(lines[index], generation)
+			if err != nil {
+				log.Warning("logs: error when processing lines: ", err)
+			} else {
+				logs.lines <- processed
+				lastTimestamp = processed.Timestamp
+			}
 		}
 		line = lines[len(lines)-1]
 	}
-	return line
+	return line, lastTimestamp
+}
+
+func durationPassed(first, current time.Time, duration time.Duration) bool {
+	if first.IsZero() {
+		return false
+	}
+	if current.IsZero() {
+		return false
+	}
+	return duration <= current.Sub(first)
+}
+
+//nolint:funlen // allow long function
+func processStream(logs *LogsCollector, stream io.ReadCloser, sinceTime time.Duration) error {
+	line := ""
+	generation := logs.lastPoll.Generation()
+	lastTimestamp := time.Time{}
+	firstTimestamp := time.Time{}
+	timestamp := time.Time{}
+	buf := make([]byte, streamingBufferSize)
+	expectedDuration := sinceTime + followDuration
+
+	for !durationPassed(firstTimestamp, lastTimestamp, expectedDuration) {
+		nBytes, err := stream.Read(buf)
+		if err == io.EOF { //nolint:errorlint // No need for Is or As check as this should just be EOF
+			log.Warning("log stream ended unexpectedly, possible log rotation detected at ", lastTimestamp)
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("failed reading buffer: %w", err)
+		}
+		if nBytes == 0 {
+			continue
+		}
+		line += string(buf[:nBytes])
+		line, timestamp = logs.processLines(line, generation)
+		// set First legitimate timestamp
+
+		if !timestamp.IsZero() {
+			if firstTimestamp.IsZero() {
+				firstTimestamp = timestamp
+			}
+			lastTimestamp = timestamp
+		}
+	}
+	if len(line) > 0 {
+		processed, err := processLine(line, generation)
+		if err == nil {
+			logs.lines <- processed
+		}
+	}
+	log.Debug("logs: Finish stream")
+	return nil
 }
 
 func (logs *LogsCollector) poll() error {
-	logs.lpLock.RLock()
-	defer logs.lpLock.RUnlock()
-	sinceSeconds := int64(time.Since(logs.lastPoll).Seconds())
+	podName, err := logs.client.FindPodNameFromPrefix(contexts.PTPNamespace, contexts.PTPPodNamePrefix)
+	if err != nil {
+		return fmt.Errorf("failed to poll: %w", err)
+	}
+	sinceTime := time.Since(logs.lastPoll.Time())
+	sinceSeconds := int64(sinceTime.Seconds())
+
 	podLogOptions := v1.PodLogOptions{
 		SinceSeconds: &sinceSeconds,
 		Container:    contexts.PTPContainer,
@@ -166,40 +299,26 @@ func (logs *LogsCollector) poll() error {
 		Previous:     false,
 		Timestamps:   true,
 	}
-	podName, err := logs.client.FindPodNameFromPrefix(contexts.PTPNamespace, contexts.PTPPodNamePrefix)
-	if err != nil {
-		return fmt.Errorf("failed to poll: %w", err)
-	}
-	logs.SetLastPool()
 	podLogRequest := logs.client.K8sClient.CoreV1().
 		Pods(contexts.PTPNamespace).
 		GetLogs(podName, &podLogOptions).
 		Timeout(followTimeout)
 	stream, err := podLogRequest.Stream(context.TODO())
 	if err != nil {
-		return fmt.Errorf("failed to poll: %w", err)
+		return fmt.Errorf("failed to poll when r: %w", err)
 	}
 	defer stream.Close()
 
-	line := ""
 	start := time.Now()
-	buf := make([]byte, streamingBufferSize)
-	for time.Since(start) <= followDuration {
-		nBytes, err := stream.Read(buf)
-		if err != nil {
-			return fmt.Errorf("failed to poll: %w", err)
-		}
-		line += string(buf[:nBytes])
-		line = logs.processLines(line)
+	err = processStream(logs, stream, sinceTime)
+	if err != nil {
+		return err
 	}
-	if len(line) > 0 {
-		logs.lines <- line
-	}
+	logs.SetLastPoll(start)
 	return nil
 }
 
-// Poll collects information from the cluster then
-// calls the callback.Call to allow that to persist it
+// Poll collects log lines
 func (logs *LogsCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCount) {
 	defer func() {
 		wg.Done()
@@ -231,17 +350,17 @@ func NewLogsCollector(constructor *CollectionConstructor) (Collector, error) {
 		quit:               make(chan os.Signal),
 		pollInterval:       logPollInterval,
 		pruned:             true,
-		lines:              make(chan string, lineChanLength),
+		lines:              make(chan *ProcessedLine, lineChanLength),
 		seenLines:          make(map[time.Time][]string),
-		lastPoll:           time.Now().Add(-time.Second), // Stop initial since seconds from being 0 as its invalid
-		withTimeStamps:     false,
+		generations:        make(map[uint32]time.Time),
+		lastPoll:           GenerationalLockedTime{time: time.Now().Add(-time.Second)}, // Stop initial since seconds from being 0 as its invalid
+		withTimeStamps:     constructor.IncludeLogTimestamps,
 		logsOutputFileName: constructor.LogsOutputFile,
 	}
-
 	return &collector, nil
 }
 
 func init() {
 	// Make log opt in as in may lose some data.
-	RegisterCollector(LogsCollectorName, NewLogsCollector, optIn)
+	RegisterCollector(LogsCollectorName, NewLogsCollector, includeByDefault)
 }
