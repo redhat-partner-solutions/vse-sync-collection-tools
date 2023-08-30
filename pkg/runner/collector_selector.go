@@ -14,6 +14,7 @@ var (
 	OptionalCollectorNames []string
 	RequiredCollectorNames []string
 	OptInCollectorNames    []string
+	Default                string = "defaults"
 	All                    string = "all"
 )
 
@@ -53,8 +54,9 @@ func GetCollectorsToRun(selectedCollectors []string) []string {
 		switch {
 		case strings.EqualFold(name, "all"):
 			collectorNames = append(collectorNames, OptionalCollectorNames...)
-			collectorNames = removeDuplicates(collectorNames)
-			return collectorNames
+			collectorNames = append(collectorNames, OptInCollectorNames...)
+		case strings.EqualFold(name, "defaults"):
+			collectorNames = append(collectorNames, OptionalCollectorNames...)
 		case isIn(name, collectorNames):
 			continue
 		case isIn(name, OptionalCollectorNames):
@@ -65,5 +67,6 @@ func GetCollectorsToRun(selectedCollectors []string) []string {
 			log.Errorf("Unknown collector %s. Ignored", name)
 		}
 	}
+	collectorNames = removeDuplicates(collectorNames)
 	return collectorNames
 }
