@@ -57,11 +57,8 @@ Run the following command  (check help string for more details):
 ```
 
 ### Fetching logs
-Run the following command (check help string for more details):
-
-```shell
-./vse-sync-collection-tools logs --kubeconfig="${KUBECONFIG}"
-```
+The log subcommand has been removed. Instead we have implimented at collector which is enabled by default.
+If possible you should use a log aggregator. You can control the collectors running using the `--collector` flag.
 
 ## Running tests
 
