@@ -82,8 +82,9 @@ func NewOperatorVersion(client *clients.Clientset) *VersionWithErrorCheck {
 			id:           ptpOperatorVersionID,
 			Version:      version,
 			checkVersion: version,
-			minVersion:   MinOperatorVersion,
+			MinVersion:   MinOperatorVersion,
 			description:  ptpOperatorVersionDescription,
+			order:        ptpOperatorVersionOrdering,
 		},
 		Error: err,
 	}

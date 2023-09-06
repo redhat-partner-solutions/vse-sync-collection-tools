@@ -23,7 +23,8 @@ func NewDeviceFirmware(ptpDevInfo *devices.PTPDeviceInfo) *VersionCheck {
 		id:           deviceFirmwareID,
 		Version:      ptpDevInfo.FirmwareVersion,
 		checkVersion: parts[0],
-		minVersion:   MinFirmwareVersion,
+		MinVersion:   MinFirmwareVersion,
 		description:  deviceFirmwareDescription,
+		order:        deviceFirmwareOrdering,
 	}
 }

@@ -5,6 +5,7 @@ package verify
 import (
 	"fmt"
 	"os"
+	"sort"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -95,37 +96,48 @@ func getValidations(interfaceName, kubeConfig string) []validations.Validation {
 	return checks
 }
 
-func reportAnalyserJSON(failures, successes, unknown []*ValidationResult) {
+func reportAnalyserJSON(results []*ValidationResult) {
 	callback, err := callbacks.SetupCallback("-", callbacks.AnalyserJSON)
 	utils.IfErrorExitOrPanic(err)
 
-	for _, unknownCheck := range unknown {
-		err := callback.Call(unknownCheck, "env-check-unknown")
+	sort.Slice(results, func(i, j int) bool {
+		return results[i].validation.GetOrder() < results[j].validation.GetOrder()
+	})
+
+	anyHasFailed := false
+	for _, res := range results {
+		if res.resType == resTypeFailure {
+			anyHasFailed = true
+		}
+		err := callback.Call(res, "env-check")
 		if err != nil {
 			log.Errorf("callback failed during validation %s", err.Error())
 		}
 	}
-	for _, failure := range failures {
-		err := callback.Call(failure, "env-check-failure")
-		if err != nil {
-			log.Errorf("callback failed during validation %s", err.Error())
-		}
-	}
-	for _, success := range successes {
-		err := callback.Call(success, "env-check-success")
-		if err != nil {
-			log.Errorf("callback failed during validation %s", err.Error())
-		}
+
+	if anyHasFailed {
+		os.Exit(int(utils.InvalidEnv))
 	}
 }
 
-func report(failures, successes, unknown []*ValidationResult, useAnalyserJSON bool) {
+//nolint:funlen,cyclop // allow slightly long function
+func report(results []*ValidationResult, useAnalyserJSON bool) {
 	if useAnalyserJSON {
-		reportAnalyserJSON(failures, successes, unknown)
-		if len(failures) > 0 {
-			os.Exit(int(utils.InvalidEnv))
-		}
+		reportAnalyserJSON(results)
 		return
+	}
+
+	failures := make([]*ValidationResult, 0)
+	unknown := make([]*ValidationResult, 0)
+
+	for _, res := range results {
+		//nolint:exhaustive // Not reporting successes so no need to gather them
+		switch res.resType {
+		case resTypeFailure:
+			failures = append(failures, res)
+		case resTypeUnknown:
+			unknown = append(unknown, res)
+		}
 	}
 
 	// Report unknowns along side failures
@@ -147,7 +159,7 @@ func report(failures, successes, unknown []*ValidationResult, useAnalyserJSON bo
 		utils.IfErrorExitOrPanic(err)
 	case len(unknown) > 0:
 		// If only unknowns print this message
-		fmt.Println("Some checks failed, it is likely something is not correct in the environment") //nolint:forbidigo // This to print out to the user
+		fmt.Println("Some checks did not complete, it is likely something is not correct in the environment") //nolint:forbidigo // This to print out to the user
 	default:
 		fmt.Println("No issues found.") //nolint:forbidigo // This to print out to the user
 	}
@@ -156,26 +168,10 @@ func report(failures, successes, unknown []*ValidationResult, useAnalyserJSON bo
 func Verify(interfaceName, kubeConfig string, useAnalyserJSON bool) {
 	checks := getValidations(interfaceName, kubeConfig)
 
-	failures := make([]*ValidationResult, 0)
-	successes := make([]*ValidationResult, 0)
-	unknown := make([]*ValidationResult, 0)
-
+	results := make([]*ValidationResult, 0)
 	for _, check := range checks {
-		err := check.Verify()
-		res := &ValidationResult{
-			err:        err,
-			validation: check,
-		}
-		if err != nil {
-			if res.IsInvalidEnv() {
-				failures = append(failures, res)
-			} else {
-				unknown = append(unknown, res)
-			}
-		} else {
-			successes = append(successes, res)
-		}
+		results = append(results, NewValidationResult(check))
 	}
 
-	report(failures, successes, unknown, useAnalyserJSON)
+	report(results, useAnalyserJSON)
 }

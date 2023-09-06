@@ -40,6 +40,10 @@ func (gnssAnt *GNSSAntStatus) GetData() any { //nolint:ireturn // data will vary
 	return gnssAnt
 }
 
+func (gnssAnt *GNSSAntStatus) GetOrder() int {
+	return gnssAntStatusOrdering
+}
+
 func NewGNSSAntStatus(gpsSatus *devices.GPSDetails) *GNSSAntStatus {
 	return &GNSSAntStatus{Blocks: gpsSatus.AntennaDetails}
 }

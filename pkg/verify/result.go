@@ -11,28 +11,33 @@ import (
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/validations"
 )
 
+type resType int
+
 const (
-	resUnk   = "error"
-	resTrue  = true
-	resFalse = false
+	resTypeUnknown resType = iota
+	resTypeSuccess
+	resTypeFailure
 )
 
 type ValidationResult struct {
 	validation validations.Validation
 	err        error
+	resType    resType
 }
 
 func (res *ValidationResult) GetAnalyserFormat() ([]*callbacks.AnalyserFormatType, error) {
 	var result any
 	msg := ""
-	result = resUnk
-	if res.err != nil {
+
+	switch res.resType {
+	case resTypeSuccess:
+		result = true
+	case resTypeFailure:
+		result = false
 		msg = res.err.Error()
-		if res.IsInvalidEnv() {
-			result = resFalse
-		}
-	} else {
-		result = resTrue
+	case resTypeUnknown:
+		result = "error" //nolint:goconst // making it a constant would be an obfuscation
+		msg = res.err.Error()
 	}
 
 	formatted := callbacks.AnalyserFormatType{
@@ -47,10 +52,10 @@ func (res *ValidationResult) GetAnalyserFormat() ([]*callbacks.AnalyserFormatTyp
 	return []*callbacks.AnalyserFormatType{&formatted}, nil
 }
 
-func (res *ValidationResult) IsInvalidEnv() bool {
-	if res.err != nil {
+func isInvalidEnv(err error) bool {
+	if err != nil {
 		var invalidEnv *utils.InvalidEnvError
-		if errors.As(res.err, &invalidEnv) {
+		if errors.As(err, &invalidEnv) {
 			return true
 		}
 	}
@@ -59,4 +64,22 @@ func (res *ValidationResult) IsInvalidEnv() bool {
 
 func (res *ValidationResult) GetPrefixedError() error {
 	return fmt.Errorf("%s: %w", res.validation.GetDescription(), res.err)
+}
+
+func NewValidationResult(validation validations.Validation) *ValidationResult {
+	result := resTypeUnknown
+	err := validation.Verify()
+	if err != nil {
+		if isInvalidEnv(err) {
+			result = resTypeFailure
+		}
+	} else {
+		result = resTypeSuccess
+	}
+
+	return &ValidationResult{
+		validation: validation,
+		err:        err,
+		resType:    result,
+	}
 }

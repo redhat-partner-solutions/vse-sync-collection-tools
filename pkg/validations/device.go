@@ -43,6 +43,10 @@ func (dev *DeviceDetails) GetData() any { //nolint:ireturn // data will very for
 	return dev
 }
 
+func (dev *DeviceDetails) GetOrder() int {
+	return deviceDetailsOrdering
+}
+
 func NewDeviceDetails(ptpDevInfo *devices.PTPDeviceInfo) *DeviceDetails {
 	return &DeviceDetails{
 		VendorID: ptpDevInfo.VendorID,

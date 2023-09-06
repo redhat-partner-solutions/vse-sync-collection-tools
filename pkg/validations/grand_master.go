@@ -84,6 +84,10 @@ func (gm *GMProfiles) GetData() any { //nolint:ireturn // data will vary for eac
 	return gm
 }
 
+func (gm *GMProfiles) GetOrder() int {
+	return configuredForGrandMasterOrdering
+}
+
 func NewIsGrandMaster(client *clients.Clientset) *GMProfiles {
 	ptpConfigList, err := fetchPTPConfigs(client)
 	gmProfiles := &GMProfiles{

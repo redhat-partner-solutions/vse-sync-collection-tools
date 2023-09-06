@@ -20,7 +20,8 @@ func NewGPSDVersion(gpsdVer *devices.GPSVersions) *VersionCheck {
 		id:           gpsdID,
 		Version:      gpsdVer.GPSDVersion,
 		checkVersion: strings.ReplaceAll(parts[0], "~", "-"),
-		minVersion:   MinGSPDVersion,
+		MinVersion:   MinGSPDVersion,
 		description:  gpsdDescription,
+		order:        gpsdVersionOrdering,
 	}
 }

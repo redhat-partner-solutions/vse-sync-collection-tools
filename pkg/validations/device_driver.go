@@ -47,8 +47,9 @@ func NewDeviceDriver(ptpDevInfo *devices.PTPDeviceInfo) *VersionWithErrorCheck {
 			id:           deviceDriverVersionID,
 			Version:      ptpDevInfo.DriverVersion,
 			checkVersion: ptpDevInfo.DriverVersion,
-			minVersion:   minDriverVersion,
+			MinVersion:   minDriverVersion,
 			description:  deviceDriverVersionDescription,
+			order:        deviceDriverVersionOrdering,
 		},
 		Error: err,
 	}
