@@ -23,7 +23,8 @@ func NewGNSS(gnss *devices.GPSVersions) *VersionCheck {
 		id:           gnssID,
 		Version:      gnss.FirmwareVersion,
 		checkVersion: parts[1],
-		minVersion:   MinGNSSVersion,
+		MinVersion:   MinGNSSVersion,
 		description:  gnssDescription,
+		order:        gnssVersionOrdering,
 	}
 }

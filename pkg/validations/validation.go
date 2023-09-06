@@ -7,4 +7,5 @@ type Validation interface {
 	GetID() string
 	GetDescription() string
 	GetData() any
+	GetOrder() int
 }

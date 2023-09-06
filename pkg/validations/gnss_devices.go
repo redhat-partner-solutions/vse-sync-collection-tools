@@ -36,6 +36,10 @@ func (gnssDevices *GNSDevices) GetData() any { //nolint:ireturn // data will var
 	return gnssDevices
 }
 
+func (gnssDevices *GNSDevices) GetOrder() int {
+	return hadGNSSDevicesOrdering
+}
+
 func NewGNSDevices(gpsdVer *devices.GPSVersions) *GNSDevices {
 	return &GNSDevices{Paths: gpsdVer.GNSSDevices}
 }

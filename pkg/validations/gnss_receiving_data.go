@@ -37,6 +37,10 @@ func (gnss *GNSSNavStatus) GetData() any { //nolint:ireturn // data will vary fo
 	return gnss
 }
 
+func (gnss *GNSSNavStatus) GetOrder() int {
+	return gnssStatusOrdering
+}
+
 func NewGNSSNavStatus(gpsDatails *devices.GPSDetails) *GNSSNavStatus {
 	return &GNSSNavStatus{Status: &gpsDatails.NavStatus}
 }

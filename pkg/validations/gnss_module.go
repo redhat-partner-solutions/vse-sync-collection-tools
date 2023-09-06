@@ -40,6 +40,10 @@ func (gnssModule *GNSSModule) GetData() any { //nolint:ireturn // data will vary
 	return gnssModule
 }
 
+func (gnssModule *GNSSModule) GetOrder() int {
+	return gnssModuleOrdering
+}
+
 func NewGNSSModule(gpsdVer *devices.GPSVersions) *GNSSModule {
 	return &GNSSModule{Module: gpsdVer.Module}
 }

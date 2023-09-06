@@ -18,12 +18,29 @@ const (
 	TGMSyncEnvPath  = TGMTestIDBase + "/sync/G.8272/environment/status"
 )
 
+const (
+	clusterVersionOrdering int = iota
+	ptpOperatorVersionOrdering
+	deviceDriverVersionOrdering
+	deviceFirmwareOrdering
+	deviceDetailsOrdering
+	gnssAntStatusOrdering
+	hadGNSSDevicesOrdering
+	gnssVersionOrdering
+	gnssModuleOrdering
+	gnssProtOrdering
+	gnssStatusOrdering
+	gpsdVersionOrdering
+	configuredForGrandMasterOrdering
+)
+
 type VersionCheck struct {
 	id           string `json:"-"`
 	Version      string `json:"version"`
 	checkVersion string `json:"-"`
-	minVersion   string `json:"-"`
+	MinVersion   string `json:"expected"`
 	description  string `json:"-"`
+	order        int    `json:"-"`
 }
 
 func (verCheck *VersionCheck) Verify() error {
@@ -31,9 +48,9 @@ func (verCheck *VersionCheck) Verify() error {
 	if !semver.IsValid(ver) {
 		return fmt.Errorf("could not parse version %s", ver)
 	}
-	if semver.Compare(ver, fmt.Sprintf("v%s", verCheck.minVersion)) < 0 {
+	if semver.Compare(ver, fmt.Sprintf("v%s", verCheck.MinVersion)) < 0 {
 		return utils.NewInvalidEnvError(
-			fmt.Errorf("invalid version: %s < %s", verCheck.checkVersion, verCheck.minVersion),
+			fmt.Errorf("unexpected version: %s < %s", verCheck.checkVersion, verCheck.MinVersion),
 		)
 	}
 	return nil
@@ -49,6 +66,10 @@ func (verCheck *VersionCheck) GetDescription() string {
 
 func (verCheck *VersionCheck) GetData() any { //nolint:ireturn // data will vary for each validation
 	return verCheck
+}
+
+func (verCheck *VersionCheck) GetOrder() int {
+	return verCheck.order
 }
 
 type VersionWithError struct {
