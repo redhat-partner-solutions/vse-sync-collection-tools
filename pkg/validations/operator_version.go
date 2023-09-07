@@ -17,8 +17,8 @@ import (
 )
 
 const (
-	ptpOperatorVersionID          = TGMIdBaseURI + "/version/ptp-operator/"
-	ptpOperatorVersionDescription = "PTP Operactor Version is valid"
+	ptpOperatorVersionID          = TGMEnvVerPath + "/openshift/ptp-operator/"
+	ptpOperatorVersionDescription = "PTP Operator Version is valid"
 	MinOperatorVersion            = "4.14.0-0" // trailing -0 is required to allow preGA version
 	ptpOperatorDiplayName         = "PTP Operator"
 )

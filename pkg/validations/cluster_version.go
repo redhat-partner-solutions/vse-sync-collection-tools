@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	clusterVersionID  = TGMIdBaseURI + "/version/ocp/"
+	clusterVersionID  = TGMEnvVerPath + "/RHOCP/"
 	MinClusterVersion = "4.14.0-0" // trailing -0 is required to allow preGA version
 )
 
