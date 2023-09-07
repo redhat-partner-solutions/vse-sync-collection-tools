@@ -243,5 +243,5 @@ func NewLogsCollector(constructor *CollectionConstructor) (Collector, error) {
 
 func init() {
 	// Make log opt in as in may lose some data.
-	RegisterCollector(LogsCollectorName, NewLogsCollector, optIn)
+	RegisterCollector(LogsCollectorName, NewLogsCollector, false, false)
 }

@@ -4,17 +4,9 @@ package collectors
 
 import (
 	"fmt"
-	"log"
 )
 
 type collectonBuilderFunc func(*CollectionConstructor) (Collector, error)
-type collectorInclusionType int
-
-const (
-	required collectorInclusionType = iota
-	includeByDefault
-	optIn
-)
 
 type CollectorRegistry struct {
 	registry map[string]collectonBuilderFunc
@@ -32,18 +24,17 @@ func GetRegistry() *CollectorRegistry {
 func (reg *CollectorRegistry) register(
 	collectorName string,
 	builderFunc collectonBuilderFunc,
-	inclusionType collectorInclusionType,
+	reqiuired bool,
+	includedByDefault bool,
 ) {
 	reg.registry[collectorName] = builderFunc
-	switch inclusionType {
-	case required:
+	switch {
+	case reqiuired:
 		reg.required = append(reg.required, collectorName)
-	case includeByDefault:
+	case includedByDefault:
 		reg.optional = append(reg.optional, collectorName)
-	case optIn:
-		reg.optIn = append(reg.optIn, collectorName)
 	default:
-		log.Panic("Incorrect collector inclusion type")
+		reg.optIn = append(reg.optIn, collectorName)
 	}
 }
 
@@ -67,7 +58,7 @@ func (reg *CollectorRegistry) GetOptInNames() []string {
 	return reg.optIn
 }
 
-func RegisterCollector(collectorName string, builderFunc collectonBuilderFunc, inclusionType collectorInclusionType) {
+func RegisterCollector(collectorName string, builderFunc collectonBuilderFunc, required, includedByDefault bool) {
 	if registry == nil {
 		registry = &CollectorRegistry{
 			registry: make(map[string]collectonBuilderFunc, 0),
@@ -76,5 +67,5 @@ func RegisterCollector(collectorName string, builderFunc collectonBuilderFunc, i
 			optIn:    make([]string, 0),
 		}
 	}
-	registry.register(collectorName, builderFunc, inclusionType)
+	registry.register(collectorName, builderFunc, required, includedByDefault)
 }

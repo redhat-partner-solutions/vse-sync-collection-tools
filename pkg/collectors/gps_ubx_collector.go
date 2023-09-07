@@ -94,5 +94,5 @@ func NewGPSCollector(constructor *CollectionConstructor) (Collector, error) {
 }
 
 func init() {
-	RegisterCollector(GPSCollectorName, NewGPSCollector, includeByDefault)
+	RegisterCollector(GPSCollectorName, NewGPSCollector, false, true)
 }
