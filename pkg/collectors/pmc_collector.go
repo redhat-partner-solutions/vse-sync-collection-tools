@@ -4,6 +4,7 @@ package collectors //nolint:dupl // new collector
 
 import (
 	"fmt"
+	"sync/atomic"
 
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/callbacks"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/clients"
@@ -21,6 +22,7 @@ type PMCCollector struct {
 	callback     callbacks.Callback
 	ctx          clients.ContainerContext
 	running      bool
+	count        uint32
 	pollInterval int
 }
 
@@ -55,6 +57,7 @@ func (pmc *PMCCollector) poll() error {
 func (pmc *PMCCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCount) {
 	defer func() {
 		wg.Done()
+		atomic.AddUint32(&pmc.count, 1)
 	}()
 
 	errorsToReturn := make([]error, 0)
@@ -72,6 +75,10 @@ func (pmc *PMCCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCo
 func (pmc *PMCCollector) CleanUp() error {
 	pmc.running = false
 	return nil
+}
+
+func (pmc *PMCCollector) GetPollCount() int {
+	return int(atomic.LoadUint32(&pmc.count))
 }
 
 // Returns a new PMCCollector based on values in the CollectionConstructor

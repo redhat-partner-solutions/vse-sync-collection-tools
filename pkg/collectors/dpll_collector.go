@@ -4,6 +4,7 @@ package collectors
 
 import (
 	"fmt"
+	"sync/atomic"
 
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/callbacks"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/clients"
@@ -16,6 +17,7 @@ type DPLLCollector struct {
 	callback      callbacks.Callback
 	ctx           clients.ContainerContext
 	interfaceName string
+	count         uint32
 	running       bool
 	pollInterval  int
 }
@@ -58,6 +60,7 @@ func (dpll *DPLLCollector) poll() error {
 func (dpll *DPLLCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCount) {
 	defer func() {
 		wg.Done()
+		atomic.AddUint32(&dpll.count, 1)
 	}()
 	errorsToReturn := make([]error, 0)
 	err := dpll.poll()
@@ -74,6 +77,10 @@ func (dpll *DPLLCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroup
 func (dpll *DPLLCollector) CleanUp() error {
 	dpll.running = false
 	return nil
+}
+
+func (dpll *DPLLCollector) GetPollCount() int {
+	return int(atomic.LoadUint32(&dpll.count))
 }
 
 // Returns a new DPLLCollector from the CollectionConstuctor Factory

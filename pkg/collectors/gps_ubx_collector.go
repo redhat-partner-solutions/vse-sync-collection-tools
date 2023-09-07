@@ -4,6 +4,7 @@ package collectors //nolint:dupl // new collector
 
 import (
 	"fmt"
+	"sync/atomic"
 
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/callbacks"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/clients"
@@ -22,6 +23,7 @@ type GPSCollector struct {
 	ctx           clients.ContainerContext
 	interfaceName string
 	running       bool
+	count         uint32
 	pollInterval  int
 }
 
@@ -56,6 +58,7 @@ func (gps *GPSCollector) poll() error {
 func (gps *GPSCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCount) {
 	defer func() {
 		wg.Done()
+		atomic.AddUint32(&gps.count, 1)
 	}()
 
 	errorsToReturn := make([]error, 0)
@@ -73,6 +76,10 @@ func (gps *GPSCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCo
 func (gps *GPSCollector) CleanUp() error {
 	gps.running = false
 	return nil
+}
+
+func (gps *GPSCollector) GetPollCount() int {
+	return int(atomic.LoadUint32(&gps.count))
 }
 
 // Returns a new GPSCollector based on values in the CollectionConstructor
