@@ -17,10 +17,9 @@ import (
 )
 
 const (
-	defaultDuration             string = "1000s"
-	defaultPollInterval         int    = 1
-	defaultDevInfoInterval      int    = 60
-	defaultIncludeLogTimestamps bool   = false
+	defaultDuration        string = "1000s"
+	defaultPollInterval    int    = 1
+	defaultDevInfoInterval int    = 60
 )
 
 var (
@@ -29,7 +28,6 @@ var (
 	devInfoAnnouceInterval int
 	collectorNames         []string
 	logsOutputFile         string
-	includeLogTimestamps   bool
 )
 
 // collectCmd represents the collect command
@@ -63,7 +61,6 @@ var collectCmd = &cobra.Command{
 			ptpInterface,
 			useAnalyserJSON,
 			logsOutputFile,
-			includeLogTimestamps,
 		)
 	},
 }
@@ -121,10 +118,5 @@ func init() { //nolint:funlen // Allow this to get a little long
 		&logsOutputFile,
 		"logs-output", "l", "",
 		"Path to the logs output file. This is required when using the opt in logs collector",
-	)
-	collectCmd.Flags().BoolVar(
-		&includeLogTimestamps,
-		"log-timestamps", defaultIncludeLogTimestamps,
-		"Specifies if collected logs should include timestamps or not. (default is false)",
 	)
 }

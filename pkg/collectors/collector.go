@@ -26,7 +26,6 @@ type CollectionConstructor struct {
 	LogsOutputFile         string
 	PollInterval           int
 	DevInfoAnnouceInterval int
-	IncludeLogTimestamps   bool
 }
 
 type PollResult struct {
