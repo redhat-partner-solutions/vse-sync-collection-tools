@@ -37,7 +37,7 @@ func (gnssDevices *GNSDevices) GetData() any { //nolint:ireturn // data will var
 }
 
 func (gnssDevices *GNSDevices) GetOrder() int {
-	return hadGNSSDevicesOrdering
+	return hasGNSSDevicesOrdering
 }
 
 func NewGNSDevices(gpsdVer *devices.GPSVersions) *GNSDevices {

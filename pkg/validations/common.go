@@ -21,16 +21,16 @@ const (
 const (
 	clusterVersionOrdering int = iota
 	ptpOperatorVersionOrdering
+	gpsdVersionOrdering
+	deviceDetailsOrdering
 	deviceDriverVersionOrdering
 	deviceFirmwareOrdering
-	deviceDetailsOrdering
-	gnssAntStatusOrdering
-	hadGNSSDevicesOrdering
-	gnssVersionOrdering
 	gnssModuleOrdering
+	gnssVersionOrdering
 	gnssProtOrdering
-	gnssStatusOrdering
-	gpsdVersionOrdering
+	hasGNSSDevicesOrdering
+	gnssConnectedToAntOrdering
+	gnssRecivingDataOrdering
 	configuredForGrandMasterOrdering
 )
 

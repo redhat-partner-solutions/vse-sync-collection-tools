@@ -41,7 +41,7 @@ func (gnssAnt *GNSSAntStatus) GetData() any { //nolint:ireturn // data will vary
 }
 
 func (gnssAnt *GNSSAntStatus) GetOrder() int {
-	return gnssAntStatusOrdering
+	return gnssConnectedToAntOrdering
 }
 
 func NewGNSSAntStatus(gpsSatus *devices.GPSDetails) *GNSSAntStatus {
