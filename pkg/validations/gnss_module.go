@@ -11,7 +11,7 @@ import (
 
 const (
 	expectedModuleName             = "ZED-F9T"
-	gnssModuleIsCorrect            = TGMIdBaseURI + "/version/gnss/model/wpc/"
+	gnssModuleIsCorrect            = TGMEnvModelPath + "/gnss/"
 	gnssModuleIsCorrectDescription = "GNSS module is valid"
 )
 

@@ -11,7 +11,7 @@ import (
 
 const (
 	expectedAntStatus        = 2
-	gnssAntStatusID          = TGMIdBaseURI + "/status/gnss/antenna-connected/wpc/"
+	gnssAntStatusID          = TGMSyncEnvPath + "/gnss/antenna-connected/wpc/"
 	gnssAntStatusDescription = "GNSS Module is connected to an antenna"
 )
 

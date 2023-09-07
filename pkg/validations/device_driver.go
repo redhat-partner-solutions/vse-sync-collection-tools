@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	deviceDriverVersionID          = TGMIdBaseURI + "/version/nic/driver/wpc/"
+	deviceDriverVersionID          = TGMEnvVerPath + "/ice-driver/"
 	deviceDriverVersionDescription = "Card driver is valid"
 )
 

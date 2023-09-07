@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	deviceFirmwareID          = TGMIdBaseURI + "/version/nic/firmware/wpc/"
+	deviceFirmwareID          = TGMEnvVerPath + "/nic-firmware/"
 	deviceFirmwareDescription = "Card firmware is valid"
 )
 

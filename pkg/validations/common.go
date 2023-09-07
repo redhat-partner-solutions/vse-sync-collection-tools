@@ -11,7 +11,12 @@ import (
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/utils"
 )
 
-const TGMIdBaseURI = "https://github.com/redhat-partner-solutions/vse-sync-test/tree/main/tests/sync/G.8272/environment"
+const (
+	TGMTestIDBase   = "https://github.com/redhat-partner-solutions/vse-sync-test/tree/main/tests"
+	TGMEnvModelPath = TGMTestIDBase + "/environment/model"
+	TGMEnvVerPath   = TGMTestIDBase + "/environment/version"
+	TGMSyncEnvPath  = TGMTestIDBase + "/sync/G.8272/environment/status"
+)
 
 type VersionCheck struct {
 	id           string `json:"-"`

@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	gnssStatusID          = TGMIdBaseURI + "/status/gnss/gpsfix-valid/wpc/"
+	gnssStatusID          = TGMSyncEnvPath + "/gnss/gpsfix-valid/wpc/"
 	gnssStatusDescription = "GNSS Module receiving data"
 )
 

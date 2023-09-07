@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	deviceDetailsID          = TGMIdBaseURI + "/version/nic/model/wpc/"
+	deviceDetailsID          = TGMEnvModelPath + "/nic/"
 	deviceDetailsDescription = "Card is valid NIC"
 )
 
