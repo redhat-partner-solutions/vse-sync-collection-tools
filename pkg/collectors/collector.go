@@ -23,7 +23,6 @@ type CollectionConstructor struct {
 	ErroredPolls           chan PollResult
 	PTPInterface           string
 	Msg                    string
-	LogsOutputFile         string
 	PollInterval           int
 	DevInfoAnnouceInterval int
 }
