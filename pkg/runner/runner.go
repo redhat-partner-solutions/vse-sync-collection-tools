@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	maxRunningPolls      = 3
+	maxRunningPolls      = 1
 	pollResultsQueueSize = 10
 )
 

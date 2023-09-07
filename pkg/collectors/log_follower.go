@@ -61,8 +61,10 @@ func (lt *GenerationalLockedTime) Generation() uint32 {
 func (lt *GenerationalLockedTime) Update(update time.Time) {
 	lt.lock.Lock()
 	defer lt.lock.Unlock()
-	lt.time = update
-	lt.generation += 1
+	if update.Sub(lt.time) > 0 {
+		lt.time = update
+		lt.generation += 1
+	}
 }
 
 // LogsCollector collects logs from repeated calls to the kubeapi with overlapping query times,
@@ -273,14 +275,18 @@ func processStream(logs *LogsCollector, stream io.ReadCloser, sinceTime time.Dur
 			}
 			lastTimestamp = timestamp
 		}
+		log.Info(firstTimestamp, lastTimestamp, timestamp, expectedDuration)
 	}
-	if len(line) > 0 {
-		processed, err := processLine(line, generation)
-		if err == nil {
-			logs.lines <- processed
-		}
-	}
+	// if len(line) > 0 {
+	// 	processed, err := processLine(line, generation)
+	// 	if err == nil {
+	// 		logs.lines <- processed
+	// 	}
+	// }
 	log.Debug("logs: Finish stream")
+	if !lastTimestamp.IsZero() {
+		logs.SetLastPoll(lastTimestamp)
+	}
 	return nil
 }
 
@@ -293,11 +299,17 @@ func (logs *LogsCollector) poll() error {
 	sinceSeconds := int64(sinceTime.Seconds())
 
 	podLogOptions := v1.PodLogOptions{
-		SinceSeconds: &sinceSeconds,
-		Container:    contexts.PTPContainer,
-		Follow:       true,
-		Previous:     false,
-		Timestamps:   true,
+		Container:  contexts.PTPContainer,
+		Follow:     true,
+		Previous:   false,
+		Timestamps: true,
+	}
+	if sinceSeconds > 0 {
+		podLogOptions.SinceSeconds = &sinceSeconds
+	} else {
+		log.Info("Short SinceSeconds Duration:", sinceTime.Seconds())
+		x := int64(1)
+		podLogOptions.SinceSeconds = &x
 	}
 	podLogRequest := logs.client.K8sClient.CoreV1().
 		Pods(contexts.PTPNamespace).
@@ -309,12 +321,12 @@ func (logs *LogsCollector) poll() error {
 	}
 	defer stream.Close()
 
-	start := time.Now()
+	// start := time.Now()
 	err = processStream(logs, stream, sinceTime)
 	if err != nil {
 		return err
 	}
-	logs.SetLastPoll(start)
+	// logs.SetLastPoll(start)
 	return nil
 }
 
