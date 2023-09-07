@@ -12,6 +12,7 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
+
 	v1 "k8s.io/api/core/v1"
 
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/clients"
@@ -242,6 +243,5 @@ func NewLogsCollector(constructor *CollectionConstructor) (Collector, error) {
 }
 
 func init() {
-	// Make log opt in as in may lose some data.
-	RegisterCollector(LogsCollectorName, NewLogsCollector, false, false)
+	RegisterCollector(LogsCollectorName, NewLogsCollector, false)
 }
