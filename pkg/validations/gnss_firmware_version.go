@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	gnssID          = TGMIdBaseURI + "/version/gnss/firmware/wpc/"
+	gnssID          = TGMEnvVerPath + "/gnss-firmware/"
 	gnssDescription = "GNSS Version is valid"
 )
 

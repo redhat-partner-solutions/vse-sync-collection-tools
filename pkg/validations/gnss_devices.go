@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	hadGNSSDevices            = TGMIdBaseURI + "/status/gnss/device-detected/wpc/"
+	hadGNSSDevices            = TGMSyncEnvPath + "/gnss/device-detected/wpc/"
 	hadGNSSDevicesDescription = "Has GNSS Devices"
 )
 
