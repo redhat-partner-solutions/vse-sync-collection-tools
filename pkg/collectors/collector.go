@@ -24,9 +24,11 @@ type CollectionConstructor struct {
 	PTPInterface           string
 	Msg                    string
 	LogsOutputFile         string
+	TempDir                string
 	PollInterval           int
 	DevInfoAnnouceInterval int
 	IncludeLogTimestamps   bool
+	KeepDebugFiles         bool
 }
 
 type PollResult struct {
