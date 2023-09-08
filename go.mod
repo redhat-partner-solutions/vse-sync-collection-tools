@@ -3,6 +3,8 @@ module github.com/redhat-partner-solutions/vse-sync-collection-tools
 go 1.18
 
 require (
+	github.com/Netflix/go-expect v0.0.0-20220104043353-73e0943537d2
+	github.com/icza/backscanner v0.0.0-20230330133933-bf6beb754c70
 	github.com/onsi/ginkgo/v2 v2.9.0
 	github.com/onsi/gomega v1.27.1
 	github.com/openshift/client-go v0.0.0-20230120202327-72f107311084
@@ -16,6 +18,7 @@ require (
 )
 
 require (
+	github.com/creack/pty v1.1.17 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/emicklei/go-restful/v3 v3.10.1 // indirect
 	github.com/evanphx/json-patch v4.12.0+incompatible // indirect
