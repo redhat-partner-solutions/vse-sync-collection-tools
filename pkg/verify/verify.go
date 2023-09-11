@@ -67,8 +67,7 @@ func getGPSStatusValidation(
 		if err != nil {
 			continue
 		}
-		if check := validations.NewGNSSAntStatus(&gpsDetails); check.Verify() == nil {
-			antCheck = check
+		if antCheck = validations.NewGNSSAntStatus(&gpsDetails); antCheck.Verify() == nil {
 			break
 		}
 		time.Sleep(time.Second)
