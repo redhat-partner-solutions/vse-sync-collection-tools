@@ -190,7 +190,7 @@ func scanFileInReverseToTime(fileName string, targetTime time.Time, output *os.F
 }
 
 func buildSingleLog(fromFiles []string, since time.Time) {
-	reverseFilename := fmt.Sprintf("%s.gol", outputPath)
+	reverseFilename := fmt.Sprintf("%s/logs.gol", tmpOutputPath)
 	reverseFinalLogFile, err := os.Create(reverseFilename)
 	check(err)
 	defer reverseFinalLogFile.Close()
@@ -217,7 +217,9 @@ func buildSingleLog(fromFiles []string, since time.Time) {
 	cmd := exec.Command("tac", reverseFilename)
 	finalLogFile, err := os.Create(outputPath)
 	check(err)
+	log.Debugf("%s > %s", cmd.Args, finalLogFile.Name())
 	cmd.Stdout = finalLogFile
+	log.Infof("Writing final logs to %s", finalLogFile.Name())
 	err = cmd.Run()
 	check(err)
 }
@@ -251,6 +253,7 @@ func main() {
 	}
 
 	sinceTime := time.Now().Add(-logWindow)
+	log.Infof("Getting logs since %s", sinceTime)
 	nodeName := getNodeName()
 	logFiles := getLogsFileNamesForNode(nodeName)
 	time.Sleep(podSafetyWait)
