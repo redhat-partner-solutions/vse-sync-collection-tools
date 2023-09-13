@@ -30,7 +30,7 @@ const (
 	gnssProtOrdering
 	hasGNSSDevicesOrdering
 	gnssConnectedToAntOrdering
-	gnssRecivingDataOrdering
+	gnssReceivingDataOrdering
 	configuredForGrandMasterOrdering
 )
 
