@@ -48,6 +48,21 @@ func NewMissingInputError(err error) *MissingInputError {
 	return &MissingInputError{err: err}
 }
 
+type RequirementsNotMetError struct {
+	err error
+}
+
+func (err RequirementsNotMetError) Error() string {
+	return err.err.Error()
+}
+func (err RequirementsNotMetError) Unwrap() error {
+	return err.err
+}
+
+func NewRequirementsNotMetError(err error) *RequirementsNotMetError {
+	return &RequirementsNotMetError{err: err}
+}
+
 func checkError(err error) (exitCode, bool) {
 	var invalidEnv *InvalidEnvError
 	if errors.As(err, &invalidEnv) {
