@@ -3,6 +3,7 @@
 package runner
 
 import (
+	"errors"
 	"os"
 	"os/signal"
 	"syscall"
@@ -90,9 +91,16 @@ func (runner *CollectorRunner) initialise(
 		}
 
 		newCollector, err := builderFunc(constructor)
-		utils.IfErrorExitOrPanic(err)
-		runner.collectorInstances[collectorName] = newCollector
-		log.Debugf("Added collector %T, %v", newCollector, newCollector)
+		var missingRequirements *utils.RequirementsNotMetError
+		if errors.As(err, &missingRequirements) {
+			// Requirements are missing so don't add the collector to collectorInstance
+			// so that it doesn't get ran
+			log.Warning(err.Error())
+		} else {
+			utils.IfErrorExitOrPanic(err)
+			runner.collectorInstances[collectorName] = newCollector
+			log.Debugf("Added collector %T, %v", newCollector, newCollector)
+		}
 	}
 	log.Debugf("Collectors %v", runner.collectorInstances)
 	runner.setOnlyAnnouncers()

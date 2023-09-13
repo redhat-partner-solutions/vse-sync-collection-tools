@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 
@@ -109,4 +110,47 @@ func GetDevDPLLInfo(ctx clients.ContainerContext, interfaceName string) (DevDPLL
 		return dpllInfo, fmt.Errorf("failed to fetch dpllInfo %w", err)
 	}
 	return dpllInfo, nil
+}
+
+func IsDPLLFileSystemPresent(ctx clients.ContainerContext, interfaceName string) (bool, error) {
+	fetcherInst, err := fetcher.FetcherFactory(
+		[]*clients.Cmd{},
+		[]fetcher.AddCommandArgs{
+			{
+				Key:     "paths",
+				Command: fmt.Sprintf("ls -1 /sys/class/net/%s/device/", interfaceName),
+				Trim:    true,
+			},
+		},
+	)
+	if err != nil {
+		return false, fmt.Errorf("failed to build fetcher to check DPLL FS  %w", err)
+	}
+	type Paths struct {
+		Paths string `fetcherKey:"paths"`
+	}
+	paths := Paths{}
+	expected := map[string]bool{
+		"dpll_0_state":  false,
+		"dpll_1_state":  false,
+		"dpll_1_offset": false,
+	}
+
+	err = fetcherInst.Fetch(ctx, &paths)
+	if err != nil {
+		return false, fmt.Errorf("failed to check DPLL FS  %w", err)
+	}
+	for _, p := range strings.Split(paths.Paths, "\n") {
+		for expectedPath := range expected {
+			if strings.Trim(p, " ") == expectedPath {
+				expected[expectedPath] = true
+			}
+		}
+	}
+	for _, value := range expected {
+		if !value {
+			return false, nil
+		}
+	}
+	return true, nil
 }

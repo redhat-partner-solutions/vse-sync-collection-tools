@@ -3,6 +3,7 @@
 package collectors
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/callbacks"
@@ -93,6 +94,14 @@ func NewDPLLCollector(constructor *CollectionConstructor) (Collector, error) {
 		running:       false,
 		callback:      constructor.Callback,
 		pollInterval:  constructor.PollInterval,
+	}
+
+	dpllFSExists, err := devices.IsDPLLFileSystemPresent(collector.ctx, collector.interfaceName)
+	if err != nil {
+		return &collector, utils.NewRequirementsNotMetError(fmt.Errorf("check for DPLL requirments failed %w", err))
+	}
+	if !dpllFSExists {
+		return &collector, utils.NewRequirementsNotMetError(errors.New("DPLL requirments not present"))
 	}
 
 	return &collector, nil
