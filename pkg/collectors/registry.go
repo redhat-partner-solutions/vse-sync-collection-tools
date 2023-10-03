@@ -12,15 +12,13 @@ type collectorInclusionType int
 
 const (
 	required collectorInclusionType = iota
-	includeByDefault
-	optIn
+	optional
 )
 
 type CollectorRegistry struct {
 	registry map[string]collectonBuilderFunc
 	required []string
 	optional []string
-	optIn    []string
 }
 
 var registry *CollectorRegistry
@@ -38,10 +36,8 @@ func (reg *CollectorRegistry) register(
 	switch inclusionType {
 	case required:
 		reg.required = append(reg.required, collectorName)
-	case includeByDefault:
+	case optional:
 		reg.optional = append(reg.optional, collectorName)
-	case optIn:
-		reg.optIn = append(reg.optIn, collectorName)
 	default:
 		log.Panic("Incorrect collector inclusion type")
 	}
@@ -63,17 +59,12 @@ func (reg *CollectorRegistry) GetOptionalNames() []string {
 	return reg.optional
 }
 
-func (reg *CollectorRegistry) GetOptInNames() []string {
-	return reg.optIn
-}
-
 func RegisterCollector(collectorName string, builderFunc collectonBuilderFunc, inclusionType collectorInclusionType) {
 	if registry == nil {
 		registry = &CollectorRegistry{
 			registry: make(map[string]collectonBuilderFunc, 0),
 			required: make([]string, 0),
 			optional: make([]string, 0),
-			optIn:    make([]string, 0),
 		}
 	}
 	registry.register(collectorName, builderFunc, inclusionType)
