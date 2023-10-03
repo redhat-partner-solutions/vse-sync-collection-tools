@@ -65,7 +65,7 @@ var collectCmd = &cobra.Command{
 		if strings.Contains(tempDir, "~") {
 			usr, err := user.Current()
 			if err != nil {
-				log.Fatal("Failed to result homedir for current user in --tempdir")
+				log.Fatal("Failed to fetch current user so could not resolve tempdir")
 			}
 			if tempDir == "~" {
 				tempDir = usr.HomeDir
