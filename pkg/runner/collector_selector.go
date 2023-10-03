@@ -13,8 +13,6 @@ import (
 var (
 	OptionalCollectorNames []string
 	RequiredCollectorNames []string
-	OptInCollectorNames    []string
-	Default                string = "defaults"
 	All                    string = "all"
 )
 
@@ -22,7 +20,6 @@ func init() {
 	registry := collectors.GetRegistry()
 	OptionalCollectorNames = registry.GetOptionalNames()
 	RequiredCollectorNames = registry.GetRequiredNames()
-	OptInCollectorNames = registry.GetOptInNames()
 }
 
 func isIn(name string, arr []string) bool {
@@ -54,14 +51,11 @@ func GetCollectorsToRun(selectedCollectors []string) []string {
 		switch {
 		case strings.EqualFold(name, "all"):
 			collectorNames = append(collectorNames, OptionalCollectorNames...)
-			collectorNames = append(collectorNames, OptInCollectorNames...)
 		case strings.EqualFold(name, "defaults"):
 			collectorNames = append(collectorNames, OptionalCollectorNames...)
 		case isIn(name, collectorNames):
 			continue
 		case isIn(name, OptionalCollectorNames):
-			collectorNames = append(collectorNames, name)
-		case isIn(name, OptInCollectorNames):
 			collectorNames = append(collectorNames, name)
 		default:
 			log.Errorf("Unknown collector %s. Ignored", name)

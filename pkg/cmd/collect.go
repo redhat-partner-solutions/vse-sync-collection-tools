@@ -126,7 +126,7 @@ func init() { //nolint:funlen // Allow this to get a little long
 		"interval at which to emit the device info summary to the targeted output.",
 	)
 	defaultCollectorNames := make([]string, 0)
-	defaultCollectorNames = append(defaultCollectorNames, runner.Default)
+	defaultCollectorNames = append(defaultCollectorNames, runner.All)
 	collectCmd.Flags().StringSliceVarP(
 		&collectorNames,
 		"collector",
@@ -135,11 +135,9 @@ func init() { //nolint:funlen // Allow this to get a little long
 		fmt.Sprintf(
 			"the collectors you wish to run (case-insensitive):\n"+
 				"\trequired collectors: %s (will be automatically added)\n"+
-				"\toptional collectors: %s\n"+
-				"\topt in collectors: %s (note: these are not included by default)",
+				"\toptional collectors: %s",
 			strings.Join(runner.RequiredCollectorNames, ", "),
 			strings.Join(runner.OptionalCollectorNames, ", "),
-			strings.Join(runner.OptInCollectorNames, ", "),
 		),
 	)
 
