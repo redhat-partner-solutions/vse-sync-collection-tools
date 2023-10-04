@@ -98,7 +98,7 @@ func NewDPLLCollector(constructor *CollectionConstructor) (Collector, error) {
 
 	dpllFSExists, err := devices.IsDPLLFileSystemPresent(collector.ctx, collector.interfaceName)
 	if err != nil {
-		return &collector, utils.NewRequirementsNotMetError(fmt.Errorf("checking DPLL filesystem not found %w", err))
+		return &collector, utils.NewRequirementsNotMetError(fmt.Errorf("checking for the DPLL filesystem failed: %w", err))
 	}
 	if !dpllFSExists {
 		return &collector, utils.NewRequirementsNotMetError(errors.New("filesystem with DPLL stats not present"))
