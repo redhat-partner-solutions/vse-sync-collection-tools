@@ -5,6 +5,7 @@ package validations
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"golang.org/x/mod/semver"
 
@@ -44,7 +45,7 @@ type VersionCheck struct {
 }
 
 func (verCheck *VersionCheck) Verify() error {
-	ver := fmt.Sprintf("v%s", verCheck.checkVersion)
+	ver := fmt.Sprintf("v%s", strings.ReplaceAll(verCheck.checkVersion, "_", "-"))
 	if !semver.IsValid(ver) {
 		return fmt.Errorf("could not parse version %s", ver)
 	}
