@@ -90,23 +90,23 @@ var (
 		// 1686916187.0584
 		// UBX-MON-RF:
 		//  version 0 nBlocks 2 reserved1 0 0
-		//    blockId 0 flags x0 antStatus 2 antPower 1 postStatus 0 reserved2 0 0 0 0
-		//     noisePerMS 82 agcCnt 6318 jamInd 3 ofsI 15 magI 154 ofsQ 2 magQ 145
-		//     reserved3 0 0 0
-		//    blockId 1 flags x0 antStatus 2 antPower 1 postStatus 0 reserved2 0 0 0 0
-		//     noisePerMS 49 agcCnt 6669 jamInd 2 ofsI -11 magI 146 ofsQ -1 magQ 139
-		//     reserved3 0 0 0
+		//		blockId 0 flags x0 antStatus 2 antPower 1 postStatus 0 reserved2 0 0 0 0
+		//		noisePerMS 90 agcCnt 4914 jamInd 14 ofsI 15 magI 147 ofsQ 25 magQ 148
+		//		reserved3 0 0 0
+		//	   blockId 1 flags x0 antStatus 2 antPower 1 postStatus 0 reserved2 0 0 0 0
+		//		noisePerMS 47 agcCnt 6318 jamInd 6 ofsI 17 magI 151 ofsQ 3 magQ 149
+		//		reserved3 0 0 0
 	)
 	ubxAntInternalBlockRegex = regexp.MustCompile(
 		`\s+blockId (\d) flags \w+ antStatus (\d) antPower (\d+) postStatus \d reserved2 \d \d \d \d\n` +
-			`\s+noisePerMS \d+ agcCnt \d+ jamInd \d ofsI -?\d+ magI \d+ ofsQ -?\d magQ \d+\n` +
-			`\s+reserved3 \d \d \d\n`,
-		//    blockId 0 flags x0 antStatus 2 antPower 1 postStatus 0 reserved2 0 0 0 0
-		//     noisePerMS 82 agcCnt 6318 jamInd 3 ofsI 15 magI 154 ofsQ 2 magQ 145
-		//     reserved3 0 0 0
+			`\s+noisePerMS \d+ agcCnt \d+ jamInd \d+ ofsI -?\d+ magI \d+ ofsQ -?\d+ magQ \d+\n` +
+			`\s+reserved3 \d \d \d\n?`,
+		// 	blockId 0 flags x0 antStatus 2 antPower 1 postStatus 0 reserved2 0 0 0 0
+		// 	noisePerMS 90 agcCnt 4914 jamInd 14 ofsI 15 magI 147 ofsQ 25 magQ 148
+		// 	reserved3 0 0 0
 		//    blockId 1 flags x0 antStatus 2 antPower 1 postStatus 0 reserved2 0 0 0 0
-		//     noisePerMS 49 agcCnt 6669 jamInd 2 ofsI -11 magI 146 ofsQ -1 magQ 139
-		//     reserved3 0 0 0
+		// 	noisePerMS 47 agcCnt 6318 jamInd 6 ofsI 17 magI 151 ofsQ 3 magQ 149
+		// 	reserved3 0 0 0
 	)
 
 	gpsFetcher *fetcher.Fetcher
