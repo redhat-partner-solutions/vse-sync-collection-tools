@@ -15,8 +15,9 @@ const (
 )
 
 var (
-	VendorIntel = "0x8086"
-	DeviceE810  = "0x1593"
+	VendorIntel        = "0x8086"
+	E810WesportChannel = "0x1593"
+	E810LoganBeach     = "0x1592"
 )
 
 type DeviceDetails struct {
@@ -25,7 +26,7 @@ type DeviceDetails struct {
 }
 
 func (dev *DeviceDetails) Verify() error {
-	if dev.VendorID != VendorIntel || dev.DeviceID != DeviceE810 {
+	if dev.VendorID != VendorIntel || (dev.DeviceID != E810WesportChannel && dev.DeviceID != E810LoganBeach) {
 		return utils.NewInvalidEnvError(fmt.Errorf("NIC device is not based on E810"))
 	}
 	return nil
