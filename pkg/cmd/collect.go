@@ -55,7 +55,7 @@ var collectCmd = &cobra.Command{
 		utils.IfErrorExitOrPanic(err)
 
 		for _, c := range collectorNames {
-			if c == collectors.LogsCollectorName && logsOutputFile == "" {
+			if (c == collectors.LogsCollectorName || c == runner.All) && logsOutputFile == "" {
 				utils.IfErrorExitOrPanic(utils.NewMissingInputError(
 					errors.New("if Logs collector is selected you must also provide a log output file")),
 				)
