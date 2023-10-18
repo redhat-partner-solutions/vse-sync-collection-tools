@@ -65,68 +65,14 @@ func (c *ContainerContext) GetContainerName() string {
 	return c.containerName
 }
 
-// ExecCommand runs command in a container and returns output buffers
-//
-//nolint:lll,funlen // allow slightly long function definition and allow a slightly long function
-func (c *ContainerContext) ExecCommandContainer(command []string) (stdout, stderr string, err error) {
+//nolint:lll,funlen // allow slightly long function definition and function length
+func (c *ContainerContext) execCommand(command []string, buffInPtr *bytes.Buffer) (stdout, stderr string, err error) {
 	commandStr := command
 	var buffOut bytes.Buffer
 	var buffErr bytes.Buffer
-	log.Debugf(
-		"execute command on ns=%s, pod=%s container=%s, cmd: %s\n",
-		c.GetNamespace(),
-		c.GetPodName(),
-		c.GetContainerName(),
-		strings.Join(commandStr, " "),
-	)
-	req := c.clientset.K8sRestClient.Post().
-		Namespace(c.GetNamespace()).
-		Resource("pods").
-		Name(c.GetPodName()).
-		SubResource("exec").
-		VersionedParams(&corev1.PodExecOptions{
-			Container: c.GetContainerName(),
-			Command:   commandStr,
-			Stdin:     false,
-			Stdout:    true,
-			Stderr:    true,
-			TTY:       false,
-		}, scheme.ParameterCodec)
 
-	exec, err := NewSPDYExecutor(c.clientset.RestConfig, "POST", req.URL())
-	if err != nil {
-		log.Debug(err)
-		return stdout, stderr, fmt.Errorf("error setting up remote command: %w", err)
-	}
+	useBuffIn := buffInPtr != nil
 
-	err = exec.StreamWithContext(context.TODO(), remotecommand.StreamOptions{
-		Stdout: &buffOut,
-		Stderr: &buffErr,
-	})
-	stdout, stderr = buffOut.String(), buffErr.String()
-	if err != nil {
-		if errors.IsNotFound(err) {
-			log.Debugf("Pod %s was not found, likely restarted so refreshing context", c.GetPodName())
-			refreshErr := c.Refresh()
-			if refreshErr != nil {
-				log.Debug("Failed to refresh container context", refreshErr)
-			}
-		}
-		log.Debug(err)
-		log.Debug(req.URL())
-		log.Debug("command: ", command)
-		log.Debug("stderr: ", stderr)
-		log.Debug("stdout: ", stdout)
-		return stdout, stderr, fmt.Errorf("error running remote command: %w", err)
-	}
-	return stdout, stderr, nil
-}
-
-//nolint:lll // allow slightly long function definition
-func (c *ContainerContext) ExecCommandContainerStdIn(command []string, buffIn bytes.Buffer) (stdout, stderr string, err error) {
-	commandStr := command
-	var buffOut bytes.Buffer
-	var buffErr bytes.Buffer
 	log.Debugf(
 		"execute command on ns=%s, pod=%s container=%s, cmd: %s",
 		c.GetNamespace(),
@@ -142,7 +88,7 @@ func (c *ContainerContext) ExecCommandContainerStdIn(command []string, buffIn by
 		VersionedParams(&corev1.PodExecOptions{
 			Container: c.GetContainerName(),
 			Command:   command,
-			Stdin:     true,
+			Stdin:     useBuffIn,
 			Stdout:    true,
 			Stderr:    true,
 			TTY:       false,
@@ -154,20 +100,53 @@ func (c *ContainerContext) ExecCommandContainerStdIn(command []string, buffIn by
 		return stdout, stderr, fmt.Errorf("error setting up remote command: %w", err)
 	}
 
-	err = exec.StreamWithContext(context.TODO(), remotecommand.StreamOptions{
-		Stdin:  &buffIn,
-		Stdout: &buffOut,
-		Stderr: &buffErr,
-	})
-	stdin, stdout, stderr := buffIn.String(), buffOut.String(), buffErr.String()
+	var streamOptions remotecommand.StreamOptions
+
+	if useBuffIn {
+		streamOptions = remotecommand.StreamOptions{
+			Stdin:  buffInPtr,
+			Stdout: &buffOut,
+			Stderr: &buffErr,
+		}
+	} else {
+		streamOptions = remotecommand.StreamOptions{
+			Stdout: &buffOut,
+			Stderr: &buffErr,
+		}
+	}
+
+	err = exec.StreamWithContext(context.TODO(), streamOptions)
+	stdout, stderr = buffOut.String(), buffErr.String()
 	if err != nil {
+		if errors.IsNotFound(err) {
+			log.Debugf("Pod %s was not found, likely restarted so refreshing context", c.GetPodName())
+			refreshErr := c.Refresh()
+			if refreshErr != nil {
+				log.Debug("Failed to refresh container context", refreshErr)
+			}
+		}
+
 		log.Debug(err)
 		log.Debug(req.URL())
 		log.Debug("command: ", command)
-		log.Debug("stdin: ", stdin)
+		if useBuffIn {
+			log.Debug("stdin: ", buffInPtr.String())
+		}
 		log.Debug("stderr: ", stderr)
 		log.Debug("stdout: ", stdout)
 		return stdout, stderr, fmt.Errorf("error running remote command: %w", err)
 	}
 	return stdout, stderr, nil
+}
+
+// ExecCommand runs command in a container and returns output buffers
+//
+//nolint:lll,funlen // allow slightly long function definition and allow a slightly long function
+func (c *ContainerContext) ExecCommandContainer(command []string) (stdout, stderr string, err error) {
+	return c.execCommand(command, nil)
+}
+
+//nolint:lll // allow slightly long function definition
+func (c *ContainerContext) ExecCommandContainerStdIn(command []string, buffIn bytes.Buffer) (stdout, stderr string, err error) {
+	return c.execCommand(command, &buffIn)
 }
