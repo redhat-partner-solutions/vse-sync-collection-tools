@@ -3,11 +3,14 @@
 package clients
 
 import (
+	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	ocpconfig "github.com/openshift/client-go/config/clientset/versioned"
 	log "github.com/sirupsen/logrus"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -93,4 +96,29 @@ func newClientset(kubeconfigPaths ...string) (*Clientset, error) {
 
 func ClearClientSet() {
 	clientset = Clientset{}
+}
+
+func (clientsholder *Clientset) FindPodNameFromPrefix(namespace, prefix string) (string, error) {
+	podList, err := clientsholder.K8sClient.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return "", fmt.Errorf("failed to getting pod list: %w", err)
+	}
+	podNames := make([]string, 0)
+
+	for i := range podList.Items {
+		hasPrefix := strings.HasPrefix(podList.Items[i].Name, prefix)
+		isDebug := strings.HasSuffix(podList.Items[i].Name, "-debug")
+		if hasPrefix && !isDebug {
+			podNames = append(podNames, podList.Items[i].Name)
+		}
+	}
+
+	switch len(podNames) {
+	case 0:
+		return "", fmt.Errorf("no pod with prefix %v found in namespace %v", prefix, namespace)
+	case 1:
+		return podNames[0], nil
+	default:
+		return "", fmt.Errorf("too many (%v) pods with prefix %v found in namespace %v", len(podNames), prefix, namespace)
+	}
 }
