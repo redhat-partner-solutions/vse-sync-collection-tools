@@ -178,7 +178,7 @@ func processGPSVer(result map[string]string) (map[string]any, error) {
 }
 
 // GetGPSVersions returns GPSVersions of the host
-func GetGPSVersions(ctx clients.ContainerContext) (GPSVersions, error) {
+func GetGPSVersions(ctx clients.ExecContext) (GPSVersions, error) {
 	gpsVer := GPSVersions{}
 	err := gpsVerFetcher.Fetch(ctx, &gpsVer)
 	if err != nil {

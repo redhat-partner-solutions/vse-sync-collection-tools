@@ -91,7 +91,7 @@ func BuildDPLLInfoFetcher(interfaceName string) error { //nolint:dupl // Further
 }
 
 // GetDevDPLLInfo returns the device DPLL info for an interface.
-func GetDevDPLLInfo(ctx clients.ContainerContext, interfaceName string) (DevDPLLInfo, error) {
+func GetDevDPLLInfo(ctx clients.ExecContext, interfaceName string) (DevDPLLInfo, error) {
 	dpllInfo := DevDPLLInfo{}
 	fetcherInst, fetchedInstanceOk := dpllFetcher[interfaceName]
 	if !fetchedInstanceOk {
@@ -112,7 +112,7 @@ func GetDevDPLLInfo(ctx clients.ContainerContext, interfaceName string) (DevDPLL
 	return dpllInfo, nil
 }
 
-func IsDPLLFileSystemPresent(ctx clients.ContainerContext, interfaceName string) (bool, error) {
+func IsDPLLFileSystemPresent(ctx clients.ExecContext, interfaceName string) (bool, error) {
 	fetcherInst, err := fetcher.FetcherFactory(
 		[]*clients.Cmd{},
 		[]fetcher.AddCommandArgs{

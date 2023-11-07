@@ -65,7 +65,6 @@ var _ = Describe("NewContainerContext", func() {
 			Expect(ctx.GetPodName()).To(Equal("TestPod-8292"))
 		})
 	})
-
 })
 
 var _ = Describe("ExecCommandContainer", func() {
@@ -84,7 +83,7 @@ var _ = Describe("ExecCommandContainer", func() {
 			clients.NewSPDYExecutor = testutils.NewFakeNewSPDYExecutor(responder, nil)
 			ctx, _ := clients.NewContainerContext(clientset, "TestNamespace", "Test", "TestContainer")
 			cmd := []string{"my", "test", "command"}
-			stdout, stderr, err := ctx.ExecCommandContainer(cmd)
+			stdout, stderr, err := ctx.ExecCommand(cmd)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(stdout).To(Equal(expectedStdOut))
 			Expect(stderr).To(Equal(expectedStdErr))
@@ -103,7 +102,7 @@ var _ = Describe("ExecCommandContainer", func() {
 			clients.NewSPDYExecutor = testutils.NewFakeNewSPDYExecutor(responder, expectedErr)
 			ctx, _ := clients.NewContainerContext(clientset, "TestNamespace", "Test", "TestContainer")
 			cmd := []string{"my", "test", "command"}
-			stdout, stderr, err := ctx.ExecCommandContainer(cmd)
+			stdout, stderr, err := ctx.ExecCommand(cmd)
 			Expect(err).To(HaveOccurred())
 			Expect(expectedErr.Error()).To(ContainSubstring(expectedErr.Error()))
 			Expect(stdout).To(Equal(expectedStdOut))
@@ -122,7 +121,7 @@ var _ = Describe("ExecCommandContainer", func() {
 			clients.NewSPDYExecutor = testutils.NewFakeNewSPDYExecutor(responder, nil)
 			ctx, _ := clients.NewContainerContext(clientset, "TestNamespace", "Test", "TestContainer")
 			cmd := []string{"my", "test", "command"}
-			stdout, stderr, err := ctx.ExecCommandContainer(cmd)
+			stdout, stderr, err := ctx.ExecCommand(cmd)
 			Expect(err).To(HaveOccurred())
 			Expect(expectedErr.Error()).To(ContainSubstring(expectedErr.Error()))
 			Expect(stdout).To(Equal(expectedStdOut))

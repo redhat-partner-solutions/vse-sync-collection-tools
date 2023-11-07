@@ -18,7 +18,7 @@ var (
 
 type GPSCollector struct {
 	*baseCollector
-	ctx           clients.ContainerContext
+	ctx           clients.ExecContext
 	interfaceName string
 }
 
