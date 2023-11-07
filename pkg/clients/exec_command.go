@@ -10,15 +10,20 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/tools/remotecommand"
 	"k8s.io/kubectl/pkg/scheme"
 )
 
+type ExecContext interface {
+	ExecCommand([]string) (string, string, error)
+	ExecCommandStdIn([]string, bytes.Buffer) (string, string, error)
+}
+
 var NewSPDYExecutor = remotecommand.NewSPDYExecutor
 
-// ContainerContext encapsulates the context in which a command is run; the namespace, pod, and container.
-type ContainerContext struct {
+// ContainerExecContext encapsulates the context in which a command is run; the namespace, pod, and container.
+type ContainerExecContext struct {
 	clientset     *Clientset
 	namespace     string
 	podName       string
@@ -26,7 +31,7 @@ type ContainerContext struct {
 	podNamePrefix string
 }
 
-func (c *ContainerContext) Refresh() error {
+func (c *ContainerExecContext) refresh() error {
 	newPodname, err := c.clientset.FindPodNameFromPrefix(c.namespace, c.podNamePrefix)
 	if err != nil {
 		return err
@@ -38,35 +43,35 @@ func (c *ContainerContext) Refresh() error {
 func NewContainerContext(
 	clientset *Clientset,
 	namespace, podNamePrefix, containerName string,
-) (ContainerContext, error) {
+) (*ContainerExecContext, error) {
 	podName, err := clientset.FindPodNameFromPrefix(namespace, podNamePrefix)
 	if err != nil {
-		return ContainerContext{}, err
+		return &ContainerExecContext{}, err
 	}
-	ctx := ContainerContext{
+	ctx := ContainerExecContext{
 		namespace:     namespace,
 		podName:       podName,
 		containerName: containerName,
 		podNamePrefix: podNamePrefix,
 		clientset:     clientset,
 	}
-	return ctx, nil
+	return &ctx, nil
 }
 
-func (c *ContainerContext) GetNamespace() string {
+func (c *ContainerExecContext) GetNamespace() string {
 	return c.namespace
 }
 
-func (c *ContainerContext) GetPodName() string {
+func (c *ContainerExecContext) GetPodName() string {
 	return c.podName
 }
 
-func (c *ContainerContext) GetContainerName() string {
+func (c *ContainerExecContext) GetContainerName() string {
 	return c.containerName
 }
 
 //nolint:lll,funlen // allow slightly long function definition and function length
-func (c *ContainerContext) execCommand(command []string, buffInPtr *bytes.Buffer) (stdout, stderr string, err error) {
+func (c *ContainerExecContext) execCommand(command []string, buffInPtr *bytes.Buffer) (stdout, stderr string, err error) {
 	commandStr := command
 	var buffOut bytes.Buffer
 	var buffErr bytes.Buffer
@@ -118,9 +123,9 @@ func (c *ContainerContext) execCommand(command []string, buffInPtr *bytes.Buffer
 	err = exec.StreamWithContext(context.TODO(), streamOptions)
 	stdout, stderr = buffOut.String(), buffErr.String()
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if k8sErrors.IsNotFound(err) {
 			log.Debugf("Pod %s was not found, likely restarted so refreshing context", c.GetPodName())
-			refreshErr := c.Refresh()
+			refreshErr := c.refresh()
 			if refreshErr != nil {
 				log.Debug("Failed to refresh container context", refreshErr)
 			}
@@ -142,11 +147,11 @@ func (c *ContainerContext) execCommand(command []string, buffInPtr *bytes.Buffer
 // ExecCommand runs command in a container and returns output buffers
 //
 //nolint:lll,funlen // allow slightly long function definition and allow a slightly long function
-func (c *ContainerContext) ExecCommandContainer(command []string) (stdout, stderr string, err error) {
+func (c *ContainerExecContext) ExecCommand(command []string) (stdout, stderr string, err error) {
 	return c.execCommand(command, nil)
 }
 
 //nolint:lll // allow slightly long function definition
-func (c *ContainerContext) ExecCommandContainerStdIn(command []string, buffIn bytes.Buffer) (stdout, stderr string, err error) {
+func (c *ContainerExecContext) ExecCommandStdIn(command []string, buffIn bytes.Buffer) (stdout, stderr string, err error) {
 	return c.execCommand(command, &buffIn)
 }

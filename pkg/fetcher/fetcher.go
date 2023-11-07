@@ -12,9 +12,11 @@ import (
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/clients"
 )
 
+type PostProcessFuncType func(map[string]string) (map[string]any, error)
+
 type Fetcher struct {
 	cmdGrp        *clients.CmdGroup
-	postProcessor func(map[string]string) (map[string]any, error)
+	postProcessor PostProcessFuncType
 }
 
 func NewFetcher() *Fetcher {
@@ -27,7 +29,7 @@ func TrimSpace(s string) (string, error) {
 	return strings.TrimSpace(s), nil
 }
 
-func (inst *Fetcher) SetPostProcessor(ppFunc func(map[string]string) (map[string]any, error)) {
+func (inst *Fetcher) SetPostProcessor(ppFunc PostProcessFuncType) {
 	inst.postProcessor = ppFunc
 }
 
@@ -52,7 +54,7 @@ func (inst *Fetcher) AddCommand(cmdInst *clients.Cmd) {
 
 // Fetch executes the commands on the container passed as the ctx and
 // use the results to populate pack
-func (inst *Fetcher) Fetch(ctx clients.ContainerContext, pack any) error {
+func (inst *Fetcher) Fetch(ctx clients.ExecContext, pack any) error {
 	runResult, err := runCommands(ctx, inst.cmdGrp)
 	if err != nil {
 		return err
@@ -79,13 +81,13 @@ func (inst *Fetcher) Fetch(ctx clients.ContainerContext, pack any) error {
 
 // runCommands executes the commands on the container passed as the ctx
 // and extracts the results from the stdout
-func runCommands(ctx clients.ContainerContext, cmdGrp clients.Cmder) (result map[string]string, err error) { //nolint:lll // allow slightly long function definition
+func runCommands(ctx clients.ExecContext, cmdGrp clients.Cmder) (result map[string]string, err error) { //nolint:lll // allow slightly long function definition
 	cmd := cmdGrp.GetCommand()
 	command := []string{"/usr/bin/sh"}
 	var buffIn bytes.Buffer
 	buffIn.WriteString(cmd)
 
-	stdout, _, err := ctx.ExecCommandContainerStdIn(command, buffIn)
+	stdout, _, err := ctx.ExecCommandStdIn(command, buffIn)
 	if err != nil {
 		log.Debugf(
 			"command in container failed unexpectedly:\n\tcontext: %v\n\tcommand: %v\n\terror: %v",

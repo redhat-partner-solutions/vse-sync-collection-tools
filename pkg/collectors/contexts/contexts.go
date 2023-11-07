@@ -15,7 +15,7 @@ const (
 	GPSContainer     = "gpsd"
 )
 
-func GetPTPDaemonContext(clientset *clients.Clientset) (clients.ContainerContext, error) {
+func GetPTPDaemonContext(clientset *clients.Clientset) (clients.ExecContext, error) {
 	ctx, err := clients.NewContainerContext(clientset, PTPNamespace, PTPPodNamePrefix, PTPContainer)
 	if err != nil {
 		return ctx, fmt.Errorf("could not create container context %w", err)

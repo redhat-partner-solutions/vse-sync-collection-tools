@@ -18,7 +18,7 @@ const (
 
 type PMCCollector struct {
 	*baseCollector
-	ctx clients.ContainerContext
+	ctx clients.ExecContext
 }
 
 func (pmc *PMCCollector) poll() error {

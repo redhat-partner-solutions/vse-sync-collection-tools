@@ -137,7 +137,7 @@ func processPMC(result map[string]string) (map[string]any, error) { //nolint:fun
 }
 
 // GetPMC returns PMCInfo
-func GetPMC(ctx clients.ContainerContext) (PMCInfo, error) {
+func GetPMC(ctx clients.ExecContext) (PMCInfo, error) {
 	gmSetting := PMCInfo{}
 	err := pmcFetcher.Fetch(ctx, &gmSetting)
 	if err != nil {

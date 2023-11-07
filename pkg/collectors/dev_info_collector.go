@@ -20,7 +20,7 @@ import (
 
 type DevInfoCollector struct {
 	*baseCollector
-	ctx           clients.ContainerContext
+	ctx           clients.ExecContext
 	devInfo       *devices.PTPDeviceInfo
 	quit          chan os.Signal
 	erroredPolls  chan PollResult

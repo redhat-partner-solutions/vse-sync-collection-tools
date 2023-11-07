@@ -14,7 +14,7 @@ import (
 
 type DPLLCollector struct {
 	*baseCollector
-	ctx           clients.ContainerContext
+	ctx           clients.ExecContext
 	interfaceName string
 }
 
