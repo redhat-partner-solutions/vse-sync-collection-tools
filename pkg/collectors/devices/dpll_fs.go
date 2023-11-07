@@ -19,7 +19,7 @@ const (
 	unitConversionFactor = 100
 )
 
-type DevDPLLInfo struct {
+type DevFilesystemDPLLInfo struct {
 	Timestamp string  `fetcherKey:"date"          json:"timestamp"`
 	EECState  string  `fetcherKey:"dpll_0_state"  json:"eecstate"`
 	PPSState  string  `fetcherKey:"dpll_1_state"  json:"state"`
@@ -27,7 +27,7 @@ type DevDPLLInfo struct {
 }
 
 // AnalyserJSON returns the json expected by the analysers
-func (dpllInfo *DevDPLLInfo) GetAnalyserFormat() ([]*callbacks.AnalyserFormatType, error) {
+func (dpllInfo *DevFilesystemDPLLInfo) GetAnalyserFormat() ([]*callbacks.AnalyserFormatType, error) {
 	formatted := callbacks.AnalyserFormatType{
 		ID: "dpll/time-error",
 		Data: map[string]any{
@@ -41,14 +41,14 @@ func (dpllInfo *DevDPLLInfo) GetAnalyserFormat() ([]*callbacks.AnalyserFormatTyp
 }
 
 var (
-	dpllFetcher map[string]*fetcher.Fetcher
+	dpllFSFetcher map[string]*fetcher.Fetcher
 )
 
 func init() {
-	dpllFetcher = make(map[string]*fetcher.Fetcher)
+	dpllFSFetcher = make(map[string]*fetcher.Fetcher)
 }
 
-func postProcessDPLL(result map[string]string) (map[string]any, error) {
+func postProcessDPLLFilesystem(result map[string]string) (map[string]any, error) {
 	processedResult := make(map[string]any)
 	offset, err := strconv.ParseFloat(result["dpll_1_offset"], 32)
 	if err != nil {
@@ -58,9 +58,9 @@ func postProcessDPLL(result map[string]string) (map[string]any, error) {
 	return processedResult, nil
 }
 
-// BuildDPLLInfoFetcher popluates the fetcher required for
+// BuildFilesystemDPLLInfoFetcher popluates the fetcher required for
 // collecting the DPLLInfo
-func BuildDPLLInfoFetcher(interfaceName string) error { //nolint:dupl // Further dedup risks be too abstract or fragile
+func BuildFilesystemDPLLInfoFetcher(interfaceName string) error { //nolint:dupl // Further dedup risks be too abstract or fragile
 	fetcherInst, err := fetcher.FetcherFactory(
 		[]*clients.Cmd{dateCmd},
 		[]fetcher.AddCommandArgs{
@@ -85,21 +85,21 @@ func BuildDPLLInfoFetcher(interfaceName string) error { //nolint:dupl // Further
 		log.Errorf("failed to create fetcher for dpll: %s", err.Error())
 		return fmt.Errorf("failed to create fetcher for dpll: %w", err)
 	}
-	dpllFetcher[interfaceName] = fetcherInst
-	fetcherInst.SetPostProcessor(postProcessDPLL)
+	dpllFSFetcher[interfaceName] = fetcherInst
+	fetcherInst.SetPostProcessor(postProcessDPLLFilesystem)
 	return nil
 }
 
-// GetDevDPLLInfo returns the device DPLL info for an interface.
-func GetDevDPLLInfo(ctx clients.ExecContext, interfaceName string) (DevDPLLInfo, error) {
-	dpllInfo := DevDPLLInfo{}
-	fetcherInst, fetchedInstanceOk := dpllFetcher[interfaceName]
+// GetDevDPLLFilesystemInfo returns the device DPLL info for an interface.
+func GetDevDPLLFilesystemInfo(ctx clients.ExecContext, interfaceName string) (DevFilesystemDPLLInfo, error) {
+	dpllInfo := DevFilesystemDPLLInfo{}
+	fetcherInst, fetchedInstanceOk := dpllFSFetcher[interfaceName]
 	if !fetchedInstanceOk {
-		err := BuildDPLLInfoFetcher(interfaceName)
+		err := BuildFilesystemDPLLInfoFetcher(interfaceName)
 		if err != nil {
 			return dpllInfo, err
 		}
-		fetcherInst, fetchedInstanceOk = dpllFetcher[interfaceName]
+		fetcherInst, fetchedInstanceOk = dpllFSFetcher[interfaceName]
 		if !fetchedInstanceOk {
 			return dpllInfo, errors.New("failed to create fetcher for DPLLInfo")
 		}

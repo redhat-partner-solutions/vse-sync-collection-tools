@@ -186,6 +186,7 @@ func (runner *CollectorRunner) start() {
 	for collectorName, collector := range runner.collectorInstances {
 		log.Debugf("start collector %v", collector)
 		err := collector.Start()
+		log.Info("collector:", collectorName, " start error: ", err)
 		utils.IfErrorExitOrPanic(err)
 
 		log.Debugf("Spawning  collector: %v", collector)
