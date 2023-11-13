@@ -101,11 +101,11 @@ func  (annMsg *AnnouncementMessage)  GetAnalyserFormat() (*callbacks.AnalyserFor
 type AnnouncementCollector struct {
 	callback callbacks.Callback
 	msg          string
-	pollInterval int
+	pollInterval time.Duration
 }
 
-func (announcer *AnnouncementCollector) GetPollInterval() int {
-	return announcer.pollInterval
+func (announcer *AnnouncementCollector) GetName() string {
+	return AnnouncementCollectorName
 }
 
 func (announcer *AnnouncementCollector) IsAnnouncer() bool {
@@ -114,6 +114,18 @@ func (announcer *AnnouncementCollector) IsAnnouncer() bool {
 
 func (announcer *AnnouncementCollector) Start() error {
 	return nil
+}
+
+func (announcer *AnnouncementCollector) GetPollInterval() time.Duration {
+	return announcer.pollInterval.interval()
+}
+
+func (announcer *AnnouncementCollector) ScalePollInterval(factor float64) {
+	announcer.pollInterval.scale(factor)
+}
+
+func (announcer *AnnouncementCollector) ResetPollInterval() {
+	announcer.pollInterval.reset()
 }
 
 func (announcer *AnnouncementCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCount) {
@@ -139,7 +151,11 @@ func (announcer *AnnouncementCollector) CleanUp() error {
 }
 
 func NewAnnouncementCollector(constuctor *CollectionConstuctor) (Collector, error) {
-	announcer := AnnouncementCollector{callback:constructor.Callback, msg:constructor.Msg}
+	announcer := AnnouncementCollector{
+		callback: constructor.Callback,
+		msg: constructor.Msg
+		pollInterval: NewLockedInterval(constuctor.PollInterval)
+	}
 	return &announcer, nil
 }
 

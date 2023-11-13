@@ -81,8 +81,8 @@ func init(){
 }
 
 // Here we define something to take the raw result from MyUptimeValue and extracts values
-func processUptime(result map[string]string) (map[string]string, error) {
-    processedResult := make(map[string]string)
+func processUptime(result map[string]string) (map[string]any, error) {
+    processedResult := make(map[string]any)
     match := uptimeRegEx.FindStringSubmatch(result["MyUptimeValue"])
     if len(match) == 0 {
         return processedResult, fmt.Errorf("unable to to parse uptime output: %s", result["MyUptimeValue"])
