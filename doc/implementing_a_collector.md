@@ -4,48 +4,48 @@
 This sequance diagram shows the high level flow of data from the SUT to User and contains
 ```mermaid
 sequenceDiagram
-    participant User
-    participant Runner
-    participant Collector
-    participant Fetcher
-    participant SUT
-    participant callback
+	participant User
+	participant Runner
+	participant Collector
+	participant Fetcher
+	participant SUT
+	participant callback
 
-    User ->>+ Runner: Runs binary
-    note left of Runner: runner.Run()
+	User ->>+ Runner: Runs binary
+	note left of Runner: runner.Run()
 
-    Runner ->> Runner: Gather collectors
-    note right of Runner: GetCollectorsToRun()
+	Runner ->> Runner: Gather collectors
+	note right of Runner: GetCollectorsToRun()
 
-    Runner ->> Collector: Starts collector
-      note over Runner,Collector: Runner.start() calls Collector.Start()
+	Runner ->> Collector: Starts collector
+	  note over Runner,Collector: Runner.start() calls Collector.Start()
 
-    Runner ->> Runner: Spawns Runner.Poller() goroutine for collector
-    loop Runner.Poller(): Until user interupts or number of polls is reached
-        Runner ->>+ Collector: Calls Poll
-        note over Runner,Collector: Runner.Poller() calls Collector.Poll()
+	Runner ->> Runner: Spawns Runner.Poller() goroutine for collector
+	loop Runner.Poller(): Until user interupts or number of polls is reached
+		Runner ->>+ Collector: Calls Poll
+		note over Runner,Collector: Runner.Poller() calls Collector.Poll()
 
-        Collector ->>+ Fetcher: Requests Data
-        note over Collector,Fetcher: Collector.poll() calls function <br> in devices submodule which <br> inturn calls Fetcher.Fetch()
-        Fetcher ->>+ SUT: Runs commands
-        note left of SUT: Fetcher.Fetch() calls runCommands()
+		Collector ->>+ Fetcher: Requests Data
+		note over Collector,Fetcher: Collector.poll() calls function <br> in devices submodule which <br> inturn calls Fetcher.Fetch()
+		Fetcher ->>+ SUT: Runs commands
+		note left of SUT: Fetcher.Fetch() calls runCommands()
 
-        SUT ->>- Fetcher: Command result
-        note left of SUT: runCommands() returns result
-        Fetcher ->>- Collector: Returns results
-        note left of Fetcher: Fetcher.Fetch() unpacks results into a struct
+		SUT ->>- Fetcher: Command result
+		note left of SUT: runCommands() returns result
+		Fetcher ->>- Collector: Returns results
+		note left of Fetcher: Fetcher.Fetch() unpacks results into a struct
 
 
-        Collector ->> callback: sends data to callback
-        note left of callback: Callback.Call()
-        callback ->> User: Presents formatted data to user
-        Collector ->>- Runner: Sends poll sucess/failure via results channel
-        note left of Collector: resultsChan <- PollResult{CollectorName, Errors}
+		Collector ->> callback: sends data to callback
+		note left of callback: Callback.Call()
+		callback ->> User: Presents formatted data to user
+		Collector ->>- Runner: Sends poll sucess/failure via results channel
+		note left of Collector: resultsChan <- PollResult{CollectorName, Errors}
 
-        Runner ->> Runner: Reacts to failures
-    end
-    Runner ->>- Collector: Stops collector
-    note left of Collector: Runner.cleanUpAll() calls Collector.CleanUp()
+		Runner ->> Runner: Reacts to failures
+	end
+	Runner ->>- Collector: Stops collector
+	note left of Collector: Runner.cleanUpAll() calls Collector.CleanUp()
 ```
 
 ## Step by step
@@ -60,12 +60,10 @@ An example of a very simple collector:
 In `collectors/collectors.go` any arguments additional should be added to the `CollectionConstuctor`
 ```go
 ...
-
 type CollectionConstuctor struct {
-    ...
-    Msg string
+	...
+	Msg string
 }
-
 ...
 ```
 
@@ -84,6 +82,7 @@ const (
 	AnnouncementMsg = "custom-anouncement"
 )
 
+// Reporting message
 type AnnouncementMessage struct {
 	Msg string `json:"msg"`
 }
@@ -98,22 +97,10 @@ func  (annMsg *AnnouncementMessage)  GetAnalyserFormat() (*callbacks.AnalyserFor
 	return &formatted, nil
 }
 
+// Collector
 type AnnouncementCollector struct {
-	callback callbacks.Callback
+	*baseCollector
 	msg          string
-	pollInterval int
-}
-
-func (announcer *AnnouncementCollector) GetPollInterval() int {
-	return announcer.pollInterval
-}
-
-func (announcer *AnnouncementCollector) IsAnnouncer() bool {
-	return true
-}
-
-func (announcer *AnnouncementCollector) Start() error {
-	return nil
 }
 
 func (announcer *AnnouncementCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCount) {
@@ -134,12 +121,15 @@ func (announcer *AnnouncementCollector) Poll(resultsChan chan PollResult, wg *ut
 	}
 }
 
-func (announcer *AnnouncementCollector) CleanUp() error {
-	return nil
-}
-
 func NewAnnouncementCollector(constuctor *CollectionConstuctor) (Collector, error) {
-	announcer := AnnouncementCollector{callback:constructor.Callback, msg:constructor.Msg}
+	announcer := AnnouncementCollector{
+		baseCollector: newBaseCollector(
+			constructor.PollInterval,
+			false,
+			constructor.Callback,
+		),
+		msg:constructor.Msg,
+	}
 	return &announcer, nil
 }
 

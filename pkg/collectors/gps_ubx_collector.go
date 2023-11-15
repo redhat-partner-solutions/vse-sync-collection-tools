@@ -5,7 +5,6 @@ package collectors //nolint:dupl // new collector
 import (
 	"fmt"
 
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/callbacks"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/clients"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors/contexts"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors/devices"
@@ -18,25 +17,9 @@ var (
 )
 
 type GPSCollector struct {
-	callback      callbacks.Callback
+	*baseCollector
 	ctx           clients.ContainerContext
 	interfaceName string
-	running       bool
-	pollInterval  int
-}
-
-func (gps *GPSCollector) GetPollInterval() int {
-	return gps.pollInterval
-}
-
-func (gps *GPSCollector) IsAnnouncer() bool {
-	return false
-}
-
-// Start sets up the collector so it is ready to be polled
-func (gps *GPSCollector) Start() error {
-	gps.running = true
-	return nil
 }
 
 func (gps *GPSCollector) poll() error {
@@ -69,12 +52,6 @@ func (gps *GPSCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCo
 	}
 }
 
-// CleanUp stops a running collector
-func (gps *GPSCollector) CleanUp() error {
-	gps.running = false
-	return nil
-}
-
 // Returns a new GPSCollector based on values in the CollectionConstructor
 func NewGPSCollector(constructor *CollectionConstructor) (Collector, error) {
 	ctx, err := contexts.GetPTPDaemonContext(constructor.Clientset)
@@ -83,11 +60,13 @@ func NewGPSCollector(constructor *CollectionConstructor) (Collector, error) {
 	}
 
 	collector := GPSCollector{
-		interfaceName: constructor.PTPInterface,
+		baseCollector: newBaseCollector(
+			constructor.PollInterval,
+			false,
+			constructor.Callback,
+		),
 		ctx:           ctx,
-		running:       false,
-		callback:      constructor.Callback,
-		pollInterval:  constructor.PollInterval,
+		interfaceName: constructor.PTPInterface,
 	}
 
 	return &collector, nil
