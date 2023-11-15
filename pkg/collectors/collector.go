@@ -35,3 +35,41 @@ type PollResult struct {
 	CollectorName string
 	Errors        []error
 }
+
+type baseCollector struct {
+	callback     callbacks.Callback
+	isAnnouncer  bool
+	running      bool
+	pollInterval int
+}
+
+func (base *baseCollector) GetPollInterval() int {
+	return base.pollInterval
+}
+
+func (base *baseCollector) IsAnnouncer() bool {
+	return base.isAnnouncer
+}
+
+func (base *baseCollector) Start() error {
+	base.running = true
+	return nil
+}
+
+func (base *baseCollector) CleanUp() error {
+	base.running = false
+	return nil
+}
+
+func newBaseCollector(
+	pollInterval int,
+	isAnnouncer bool,
+	callback callbacks.Callback,
+) *baseCollector {
+	return &baseCollector{
+		callback:     callback,
+		isAnnouncer:  isAnnouncer,
+		running:      false,
+		pollInterval: pollInterval,
+	}
+}

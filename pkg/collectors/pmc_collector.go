@@ -5,7 +5,6 @@ package collectors //nolint:dupl // new collector
 import (
 	"fmt"
 
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/callbacks"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/clients"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors/contexts"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors/devices"
@@ -18,24 +17,8 @@ const (
 )
 
 type PMCCollector struct {
-	callback     callbacks.Callback
-	ctx          clients.ContainerContext
-	running      bool
-	pollInterval int
-}
-
-func (pmc *PMCCollector) GetPollInterval() int {
-	return pmc.pollInterval
-}
-
-func (pmc *PMCCollector) IsAnnouncer() bool {
-	return false
-}
-
-// Start sets up the collector so it is ready to be polled
-func (pmc *PMCCollector) Start() error {
-	pmc.running = true
-	return nil
+	*baseCollector
+	ctx clients.ContainerContext
 }
 
 func (pmc *PMCCollector) poll() error {
@@ -68,12 +51,6 @@ func (pmc *PMCCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCo
 	}
 }
 
-// CleanUp stops a running collector
-func (pmc *PMCCollector) CleanUp() error {
-	pmc.running = false
-	return nil
-}
-
 // Returns a new PMCCollector based on values in the CollectionConstructor
 func NewPMCCollector(constructor *CollectionConstructor) (Collector, error) {
 	ctx, err := contexts.GetPTPDaemonContext(constructor.Clientset)
@@ -82,10 +59,12 @@ func NewPMCCollector(constructor *CollectionConstructor) (Collector, error) {
 	}
 
 	collector := PMCCollector{
-		ctx:          ctx,
-		running:      false,
-		callback:     constructor.Callback,
-		pollInterval: constructor.PollInterval,
+		baseCollector: newBaseCollector(
+			constructor.PollInterval,
+			false,
+			constructor.Callback,
+		),
+		ctx: ctx,
 	}
 
 	return &collector, nil

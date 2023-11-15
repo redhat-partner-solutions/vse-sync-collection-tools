@@ -55,6 +55,7 @@ var (
 // Log aggregators would be preferred over this method however this requires extra infra
 // which might not be present in the environment.
 type LogsCollector struct {
+	*baseCollector
 	generations        loglines.Generations
 	writeQuit          chan os.Signal
 	lines              chan *loglines.ProcessedLine
@@ -64,9 +65,7 @@ type LogsCollector struct {
 	logsOutputFileName string
 	lastPoll           loglines.GenerationalLockedTime
 	wg                 sync.WaitGroup
-	pollInterval       int
 	withTimeStamps     bool
-	running            bool
 	pruned             bool
 }
 
@@ -74,14 +73,6 @@ const (
 	LogsCollectorName = "Logs"
 	LogsInfo          = "log-line"
 )
-
-func (logs *LogsCollector) GetPollInterval() int {
-	return logs.pollInterval
-}
-
-func (logs *LogsCollector) IsAnnouncer() bool {
-	return false
-}
 
 func (logs *LogsCollector) SetLastPoll(pollTime time.Time) {
 	logs.lastPoll.Update(pollTime)
@@ -273,11 +264,14 @@ func (logs *LogsCollector) CleanUp() error {
 // Returns a new LogsCollector from the CollectionConstuctor Factory
 func NewLogsCollector(constructor *CollectionConstructor) (Collector, error) {
 	collector := LogsCollector{
-		running:            false,
+		baseCollector: newBaseCollector(
+			logPollInterval,
+			false,
+			constructor.Callback,
+		),
 		client:             constructor.Clientset,
 		sliceQuit:          make(chan os.Signal),
 		writeQuit:          make(chan os.Signal),
-		pollInterval:       logPollInterval,
 		pruned:             true,
 		slices:             make(chan *loglines.LineSlice, lineSliceChanLength),
 		lines:              make(chan *loglines.ProcessedLine, lineChanLength),

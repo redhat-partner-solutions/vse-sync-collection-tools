@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/callbacks"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/clients"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors/contexts"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors/devices"
@@ -14,31 +13,15 @@ import (
 )
 
 type DPLLCollector struct {
-	callback      callbacks.Callback
+	*baseCollector
 	ctx           clients.ContainerContext
 	interfaceName string
-	running       bool
-	pollInterval  int
 }
 
 const (
 	DPLLCollectorName = "DPLL"
 	DPLLInfo          = "dpll-info"
 )
-
-func (dpll *DPLLCollector) GetPollInterval() int {
-	return dpll.pollInterval
-}
-
-func (dpll *DPLLCollector) IsAnnouncer() bool {
-	return false
-}
-
-// Start sets up the collector so it is ready to be polled
-func (dpll *DPLLCollector) Start() error {
-	dpll.running = true
-	return nil
-}
 
 // polls for the dpll info then passes it to the callback
 func (dpll *DPLLCollector) poll() error {
@@ -71,12 +54,6 @@ func (dpll *DPLLCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroup
 	}
 }
 
-// CleanUp stops a running collector
-func (dpll *DPLLCollector) CleanUp() error {
-	dpll.running = false
-	return nil
-}
-
 // Returns a new DPLLCollector from the CollectionConstuctor Factory
 func NewDPLLCollector(constructor *CollectionConstructor) (Collector, error) {
 	ctx, err := contexts.GetPTPDaemonContext(constructor.Clientset)
@@ -89,11 +66,13 @@ func NewDPLLCollector(constructor *CollectionConstructor) (Collector, error) {
 	}
 
 	collector := DPLLCollector{
-		interfaceName: constructor.PTPInterface,
+		baseCollector: newBaseCollector(
+			constructor.PollInterval,
+			false,
+			constructor.Callback,
+		),
 		ctx:           ctx,
-		running:       false,
-		callback:      constructor.Callback,
-		pollInterval:  constructor.PollInterval,
+		interfaceName: constructor.PTPInterface,
 	}
 
 	dpllFSExists, err := devices.IsDPLLFileSystemPresent(collector.ctx, collector.interfaceName)
