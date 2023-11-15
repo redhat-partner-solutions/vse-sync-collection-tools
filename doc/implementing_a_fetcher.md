@@ -42,8 +42,8 @@ func (uptime *MyUptime) GetAnalyserFormat() {
 func GetUptime(ctx clients.ContainerContext) (MyUptime, error) {
     uptime := MyUptime{}
     uptimeFetcher.Fetch(ctx, &uptime)
-    	if err != nil {
-		log.Debugf("failed to fetch uptime %s", err.Error())
+    if err != nil {
+        log.Debugf("failed to fetch uptime %s", err.Error())
 		return gpsNav, err
 	}
 	return uptime, nil
@@ -53,11 +53,11 @@ func GetUptime(ctx clients.ContainerContext) (MyUptime, error) {
 If you wish to extract/filter/transform the raw data you can define a post processing function as follows
 ```go
 type MyUptime struct {
-    Raw    string `fetcherKey:"MyUptimeValue"`
+    Raw      string `fetcherKey:"MyUptimeValue"`
     Uptime   string `fetcherKey:"Uptime"`
-    Load1  string `fetcherKey:"load1"`
-    Load5  string `fetcherKey:"load5"`
-    Load15 string `fetcherKey:"load15"`
+    Load1    string `fetcherKey:"load1"`
+    Load5    string `fetcherKey:"load5"`
+    Load15   string `fetcherKey:"load15"`
 }
 
 var (
@@ -71,7 +71,7 @@ var (
 )
 
 func init(){
-	uptimeFetcher = NewFetcher()
+    uptimeFetcher = NewFetcher()
     err := uptimeFetcher.AddNewCommand("MyUptimeValue", "uptime", true)
     if err != nil {
         panic("Failed to add uptime command to fetcher")
