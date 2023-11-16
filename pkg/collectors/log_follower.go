@@ -223,7 +223,7 @@ func (logs *LogsCollector) poll() error {
 
 	start := time.Now()
 	generation := logs.lastPoll.Generation()
-	lines, err := processStream(stream, time.Now().Add(followDuration))
+	lines, err := processStream(stream, time.Now().Add(logs.GetPollInterval()))
 	if err != nil {
 		return err
 	}
