@@ -3,6 +3,8 @@
 package collectors
 
 import (
+	"time"
+
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/callbacks"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/clients"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/utils"
@@ -12,7 +14,7 @@ type Collector interface {
 	Start() error                                // Setups any internal state required for collection to happen
 	Poll(chan PollResult, *utils.WaitGroupCount) // Poll for collectables
 	CleanUp() error                              // Stops the collector and cleans up any internal state. It should result in a state that can be started again
-	GetPollInterval() int                        // Returns the collectors polling interval
+	GetPollInterval() time.Duration              // Returns the collectors polling interval
 	IsAnnouncer() bool
 }
 
@@ -40,10 +42,10 @@ type baseCollector struct {
 	callback     callbacks.Callback
 	isAnnouncer  bool
 	running      bool
-	pollInterval int
+	pollInterval time.Duration
 }
 
-func (base *baseCollector) GetPollInterval() int {
+func (base *baseCollector) GetPollInterval() time.Duration {
 	return base.pollInterval
 }
 
@@ -70,6 +72,6 @@ func newBaseCollector(
 		callback:     callback,
 		isAnnouncer:  isAnnouncer,
 		running:      false,
-		pollInterval: pollInterval,
+		pollInterval: time.Duration(pollInterval) * time.Second,
 	}
 }
