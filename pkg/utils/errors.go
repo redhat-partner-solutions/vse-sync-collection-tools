@@ -13,6 +13,7 @@ type exitCode int
 const (
 	// Exitcodes
 	Success exitCode = iota
+	InvalidArgs
 	InvalidEnv
 	MissingInput
 	NotHandled
