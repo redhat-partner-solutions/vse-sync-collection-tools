@@ -183,7 +183,7 @@ type Volume struct {
 	MountPath    string
 }
 
-func (c *ContainerCreationExecContext) CreatePod() error {
+func (c *ContainerCreationExecContext) createPod() error {
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      c.podName,
@@ -250,16 +250,15 @@ func (c *ContainerCreationExecContext) refeshPod() error {
 	if err != nil {
 		return err
 	}
-	if len(pods.Items) == 0 || len(pods.Items) > 1 {
-		// I don't think k8s allows more than one pod with the same name
-		return errors.New("found multiple pods with the same name")
+	if len(pods.Items) == 0 {
+		return fmt.Errorf("failed to find pod: %s", c.podName)
 	}
 	c.pod = &pods.Items[0]
 
 	return nil
 }
 
-func (c *ContainerCreationExecContext) IsPodRunning() (bool, error) {
+func (c *ContainerCreationExecContext) isPodRunning() (bool, error) {
 	err := c.refeshPod()
 	if err != nil {
 		return false, err
@@ -270,39 +269,40 @@ func (c *ContainerCreationExecContext) IsPodRunning() (bool, error) {
 	return false, nil
 }
 
-func (c *ContainerCreationExecContext) WaitForPodToStart() error {
+func (c *ContainerCreationExecContext) waitForPodToStart() error {
 	start := time.Now()
 	for time.Since(start) <= startTimeout {
-		running, err := c.IsPodRunning()
+		running, err := c.isPodRunning()
 		if err != nil {
 			return err
 		}
 		if running {
 			return nil
 		}
+		time.Sleep(time.Microsecond)
 	}
 	return errors.New("timed out waiting for pod to start")
 }
 
-func (c *ContainerCreationExecContext) CreatePodAndWaitForStart() error {
+func (c *ContainerCreationExecContext) CreatePodAndWait() error {
 	var err error
 	running := false
 	if c.pod != nil {
-		running, err = c.IsPodRunning()
+		running, err = c.isPodRunning()
 		if err != nil {
 			return err
 		}
 	}
 	if !running {
-		err := c.CreatePod()
+		err := c.createPod()
 		if err != nil {
 			return err
 		}
 	}
-	return c.WaitForPodToStart()
+	return c.waitForPodToStart()
 }
 
-func (c *ContainerCreationExecContext) DeletePod() error {
+func (c *ContainerCreationExecContext) deletePod() error {
 	deletePolicy := metav1.DeletePropagationForeground
 	err := c.clientset.K8sClient.CoreV1().Pods(c.pod.Namespace).Delete(
 		context.TODO(),
@@ -316,7 +316,7 @@ func (c *ContainerCreationExecContext) DeletePod() error {
 	return nil
 }
 
-func (c *ContainerCreationExecContext) WaitForPodToDelete() error {
+func (c *ContainerCreationExecContext) waitForPodToDelete() error {
 	start := time.Now()
 	for time.Since(start) <= deletionTimeout {
 		pods, err := c.listPods(&metav1.ListOptions{})
@@ -332,16 +332,17 @@ func (c *ContainerCreationExecContext) WaitForPodToDelete() error {
 		if !found {
 			return nil
 		}
+		time.Sleep(time.Microsecond)
 	}
 	return errors.New("pod has not terminated within the timeout")
 }
 
 func (c *ContainerCreationExecContext) DeletePodAndWait() error {
-	err := c.DeletePod()
+	err := c.deletePod()
 	if err != nil {
 		return err
 	}
-	return c.WaitForPodToDelete()
+	return c.waitForPodToDelete()
 }
 
 func NewContainerCreationExecContext(
