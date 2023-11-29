@@ -28,7 +28,7 @@ const (
 // Start sets up the collector so it is ready to be polled
 func (dpll *DPLLNetlinkCollector) Start() error {
 	dpll.running = true
-	err := dpll.ctx.CreatePodAndWaitForStart()
+	err := dpll.ctx.CreatePodAndWait()
 	if err != nil {
 		return fmt.Errorf("dpll netlink collector failed to start pod: %w", err)
 	}
