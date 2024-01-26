@@ -14,8 +14,8 @@ import (
 	fakeK8s "k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/tools/remotecommand"
 
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/clients"
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/testutils"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/clients"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/testutils"
 )
 
 var notATestPod = &v1.Pod{

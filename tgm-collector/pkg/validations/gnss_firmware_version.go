@@ -5,7 +5,7 @@ package validations
 import (
 	"strings"
 
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors/devices"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/collectors/devices"
 )
 
 const (

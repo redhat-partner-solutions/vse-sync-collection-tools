@@ -17,10 +17,10 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/clients"
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors/contexts"
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/loglines"
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/utils"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/clients"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/collectors/contexts"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/loglines"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/utils"
 )
 
 const (

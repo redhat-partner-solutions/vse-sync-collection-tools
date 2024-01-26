@@ -9,9 +9,9 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/callbacks"
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/clients"
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/fetcher"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/callbacks"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/clients"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/fetcher"
 )
 
 type PMCInfo struct {

@@ -26,3 +26,15 @@ repos:
         language: system
         entry: bash -c 'cd tgm-collector && go mod tidy'
         pass_filenames: false
+
+      - id: golangci-lint
+        name: golangci-lint (collector-framework) must pass
+        language: system
+        entry: bash -c 'cd collector-framework && make lint'
+        pass_filenames: false
+
+      - id: go-mod-tidy
+        name: run go mod tidy (collector-framework)
+        language: system
+        entry: bash -c 'cd collector-framework && go mod tidy'
+        pass_filenames: false

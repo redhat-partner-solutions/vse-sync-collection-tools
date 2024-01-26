@@ -75,7 +75,7 @@ package collectors
 import (
 	"fmt"
 
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/callbacks"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/callbacks"
 )
 const (
 	AnnouncementCollectorName = "MyCustomerAnouncer"

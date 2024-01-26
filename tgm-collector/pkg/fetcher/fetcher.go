@@ -9,7 +9,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/clients"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/clients"
 )
 
 type PostProcessFuncType func(map[string]string) (map[string]any, error)

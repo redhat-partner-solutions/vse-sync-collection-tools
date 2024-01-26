@@ -14,9 +14,9 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors"
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/runner"
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/utils"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/collectors"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/runner"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/utils"
 )
 
 const (

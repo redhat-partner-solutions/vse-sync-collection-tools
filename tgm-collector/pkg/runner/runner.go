@@ -11,10 +11,10 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/callbacks"
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/clients"
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors"
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/utils"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/callbacks"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/clients"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/collectors"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/utils"
 )
 
 const (

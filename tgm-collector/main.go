@@ -3,7 +3,7 @@
 package main
 
 import (
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/cmd"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/cmd"
 )
 
 func main() {

@@ -1,4 +1,4 @@
-module github.com/redhat-partner-solutions/vse-sync-collection-tools
+module github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector
 
 go 1.18
 

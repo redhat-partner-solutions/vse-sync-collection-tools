@@ -5,7 +5,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/utils"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/utils"
 )
 
 var (
