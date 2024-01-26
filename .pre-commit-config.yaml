@@ -7,13 +7,6 @@ repos:
       - id: check-yaml
       - id: check-added-large-files
 
-  - repo: https://github.com/psf/black
-    rev: 23.3.0
-    hooks:
-      - id: black
-        types:
-          - python
-
   - repo: local
     hooks:
       - id: license-header
@@ -23,13 +16,13 @@ repos:
         pass_filenames: false
 
       - id: golangci-lint
-        name: golangci-lint must pass
+        name: golangci-lint (tgm-collector) must pass
         language: system
-        entry: make lint
+        entry: bash -c 'cd tgm-collector && make lint'
         pass_filenames: false
 
       - id: go-mod-tidy
-        name: run go mod tidy
+        name: run go mod tidy (tgm-collector)
         language: system
-        entry: go mod tidy
+        entry: bash -c 'cd tgm-collector && go mod tidy'
         pass_filenames: false
