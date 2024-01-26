@@ -73,7 +73,7 @@ func (lt *GenerationalLockedTime) Generation() uint32 {
 func (lt *GenerationalLockedTime) Update(update time.Time) {
 	lt.lock.Lock()
 	defer lt.lock.Unlock()
-	if update.Sub(lt.time) > 0 {
+	if update.After(lt.time) {
 		lt.time = update
 		lt.generation += 1
 	}

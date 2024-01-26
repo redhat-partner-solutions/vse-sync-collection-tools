@@ -7,6 +7,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	collectorsBase "github.com/redhat-partner-solutions/vse-sync-collection-tools/collector-framework/pkg/collectors"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/collectors/contexts"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/collectors/devices"
 )
@@ -16,12 +17,16 @@ const (
 )
 
 // Returns a new DPLLCollector from the CollectionConstuctor Factory
-func NewDPLLCollector(constructor *CollectionConstructor) (Collector, error) {
+func NewDPLLCollector(constructor *collectorsBase.CollectionConstructor) (collectorsBase.Collector, error) {
 	ctx, err := contexts.GetPTPDaemonContext(constructor.Clientset)
 	if err != nil {
 		return &DPLLNetlinkCollector{}, fmt.Errorf("failed to create DPLLCollector: %w", err)
 	}
-	dpllFSExists, err := devices.IsDPLLFileSystemPresent(ctx, constructor.PTPInterface)
+	ptpInterface, err := getPTPInterfaceName(constructor)
+	if err != nil {
+		return &DPLLNetlinkCollector{}, err
+	}
+	dpllFSExists, err := devices.IsDPLLFileSystemPresent(ctx, ptpInterface)
 	log.Debug("DPLL FS exists: ", dpllFSExists)
 	if dpllFSExists && err == nil {
 		return NewDPLLFilesystemCollector(constructor)
@@ -31,5 +36,5 @@ func NewDPLLCollector(constructor *CollectionConstructor) (Collector, error) {
 }
 
 func init() {
-	RegisterCollector(DPLLCollectorName, NewDPLLCollector, optional)
+	collectorsBase.RegisterCollector(DPLLCollectorName, NewDPLLCollector, collectorsBase.Optional)
 }

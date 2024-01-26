@@ -5,9 +5,8 @@ package runner
 import (
 	"strings"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/collector-framework/pkg/collectors"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -15,12 +14,6 @@ var (
 	RequiredCollectorNames []string
 	All                    string = "all"
 )
-
-func init() {
-	registry := collectors.GetRegistry()
-	OptionalCollectorNames = registry.GetOptionalNames()
-	RequiredCollectorNames = registry.GetRequiredNames()
-}
 
 func isIn(name string, arr []string) bool {
 	for _, arrVal := range arr {
@@ -45,6 +38,10 @@ func removeDuplicates(arr []string) []string {
 // collectors to be run it will enfore that required colletors
 // are returned
 func GetCollectorsToRun(selectedCollectors []string) []string {
+	registry := collectors.GetRegistry()
+	OptionalCollectorNames = registry.GetOptionalNames()
+	RequiredCollectorNames = registry.GetRequiredNames()
+
 	collectorNames := make([]string, 0)
 	collectorNames = append(collectorNames, RequiredCollectorNames...)
 	for _, name := range selectedCollectors {

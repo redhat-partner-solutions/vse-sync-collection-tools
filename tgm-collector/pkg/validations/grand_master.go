@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/clients"
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/utils"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/collector-framework/pkg/clients"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/collector-framework/pkg/utils"
 )
 
 const (

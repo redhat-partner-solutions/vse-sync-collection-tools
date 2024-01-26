@@ -15,9 +15,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/remotecommand"
 
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/clients"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/collector-framework/pkg/clients"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/collector-framework/testutils"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/collectors/devices"
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/testutils"
 )
 
 const ethtoolOutput = `<ethtoolOut>

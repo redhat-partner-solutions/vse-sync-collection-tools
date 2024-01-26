@@ -14,9 +14,9 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/collectors"
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/runner"
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/utils"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/collector-framework/pkg/collectors"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/collector-framework/pkg/runner"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/collector-framework/pkg/utils"
 )
 
 const (
@@ -78,18 +78,25 @@ var collectCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
+		collectorArgs := make(map[string]map[string]any)
+		collectorArgs["PTP"] = map[string]any{
+			"ptpInterface": ptpInterface,
+		}
+		collectorArgs["Logs"] = map[string]any{
+			"logsOutputFile":       logsOutputFile,
+			"includeLogTimestamps": includeLogTimestamps,
+			"tempDir":              tempDir,
+			"keepDebugFiles":       keepDebugFiles,
+		}
+
 		collectionRunner.Run(
 			kubeConfig,
 			outputFile,
 			requestedDuration,
 			pollInterval,
 			devInfoAnnouceInterval,
-			ptpInterface,
 			useAnalyserJSON,
-			logsOutputFile,
-			includeLogTimestamps,
-			tempDir,
-			keepDebugFiles,
+			collectorArgs,
 		)
 	},
 }

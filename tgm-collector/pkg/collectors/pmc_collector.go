@@ -5,10 +5,10 @@ package collectors //nolint:dupl // new collector
 import (
 	"fmt"
 
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/clients"
+	collectorsBase "github.com/redhat-partner-solutions/vse-sync-collection-tools/collector-framework/pkg/collectors"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/collector-framework/pkg/utils"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/collectors/contexts"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/collectors/devices"
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/utils"
 )
 
 const (
@@ -17,16 +17,15 @@ const (
 )
 
 type PMCCollector struct {
-	*baseCollector
-	ctx clients.ExecContext
+	*collectorsBase.ExecCollector
 }
 
 func (pmc *PMCCollector) poll() error {
-	gmSetting, err := devices.GetPMC(pmc.ctx)
+	gmSetting, err := devices.GetPMC(pmc.GetContext())
 	if err != nil {
 		return fmt.Errorf("failed to fetch  %s %w", PMCInfo, err)
 	}
-	err = pmc.callback.Call(&gmSetting, PMCInfo)
+	err = pmc.Callback.Call(&gmSetting, PMCInfo)
 	if err != nil {
 		return fmt.Errorf("callback failed %w", err)
 	}
@@ -35,7 +34,7 @@ func (pmc *PMCCollector) poll() error {
 
 // Poll collects information from the cluster then
 // calls the callback.Call to allow that to persist it
-func (pmc *PMCCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCount) {
+func (pmc *PMCCollector) Poll(resultsChan chan collectorsBase.PollResult, wg *utils.WaitGroupCount) {
 	defer func() {
 		wg.Done()
 	}()
@@ -45,31 +44,31 @@ func (pmc *PMCCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCo
 	if err != nil {
 		errorsToReturn = append(errorsToReturn, err)
 	}
-	resultsChan <- PollResult{
+	resultsChan <- collectorsBase.PollResult{
 		CollectorName: PMCCollectorName,
 		Errors:        errorsToReturn,
 	}
 }
 
 // Returns a new PMCCollector based on values in the CollectionConstructor
-func NewPMCCollector(constructor *CollectionConstructor) (Collector, error) {
+func NewPMCCollector(constructor *collectorsBase.CollectionConstructor) (collectorsBase.Collector, error) {
 	ctx, err := contexts.GetPTPDaemonContext(constructor.Clientset)
 	if err != nil {
 		return &PMCCollector{}, fmt.Errorf("failed to create PMCCollector: %w", err)
 	}
 
 	collector := PMCCollector{
-		baseCollector: newBaseCollector(
+		ExecCollector: collectorsBase.NewExecCollector(
 			constructor.PollInterval,
 			false,
 			constructor.Callback,
+			ctx,
 		),
-		ctx: ctx,
 	}
 
 	return &collector, nil
 }
 
 func init() {
-	RegisterCollector(PMCCollectorName, NewPMCCollector, optional)
+	collectorsBase.RegisterCollector(PMCCollectorName, NewPMCCollector, collectorsBase.Optional)
 }

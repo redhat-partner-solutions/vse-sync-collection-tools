@@ -9,7 +9,7 @@ import (
 
 	"golang.org/x/mod/semver"
 
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/utils"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/collector-framework/pkg/utils"
 )
 
 const (

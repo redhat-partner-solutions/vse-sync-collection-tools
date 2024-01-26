@@ -7,7 +7,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/clients"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/collector-framework/pkg/clients"
 )
 
 const (
@@ -20,7 +20,7 @@ const (
 	NetlinkDebugContainerImage = "quay.io/redhat-partner-solutions/dpll-debug:0.1"
 )
 
-func GetPTPDaemonContext(clientset *clients.Clientset) (clients.ExecContext, error) {
+func GetPTPDaemonContext(clientset *clients.Clientset) (*clients.ContainerExecContext, error) {
 	ctx, err := clients.NewContainerContext(clientset, PTPNamespace, PTPPodNamePrefix, PTPContainer)
 	if err != nil {
 		return ctx, fmt.Errorf("could not create container context %w", err)

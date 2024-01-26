@@ -6,9 +6,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/callbacks"
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/utils"
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/validations"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/collector-framework/pkg/callbacks"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/collector-framework/pkg/utils"
+	validationsBase "github.com/redhat-partner-solutions/vse-sync-collection-tools/collector-framework/pkg/validations"
 )
 
 type resType int
@@ -20,7 +20,7 @@ const (
 )
 
 type ValidationResult struct {
-	validation validations.Validation
+	validation validationsBase.Validation
 	err        error
 	resType    resType
 }
@@ -66,7 +66,7 @@ func (res *ValidationResult) GetPrefixedError() error {
 	return fmt.Errorf("%s: %w", res.validation.GetDescription(), res.err)
 }
 
-func NewValidationResult(validation validations.Validation) *ValidationResult {
+func NewValidationResult(validation validationsBase.Validation) *ValidationResult {
 	result := resTypeUnknown
 	err := validation.Verify()
 	if err != nil {

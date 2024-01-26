@@ -5,15 +5,14 @@ package collectors
 import (
 	"fmt"
 
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/clients"
+	collectorsBase "github.com/redhat-partner-solutions/vse-sync-collection-tools/collector-framework/pkg/collectors"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/collector-framework/pkg/utils"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/collectors/contexts"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/collectors/devices"
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/utils"
 )
 
 type DPLLFilesystemCollector struct {
-	*baseCollector
-	ctx           clients.ExecContext
+	*collectorsBase.ExecCollector
 	interfaceName string
 }
 
@@ -22,20 +21,14 @@ const (
 	DPLLInfo                    = "dpll-info-fs"
 )
 
-// Start sets up the collector so it is ready to be polled
-func (dpll *DPLLFilesystemCollector) Start() error {
-	dpll.running = true
-	return nil
-}
-
 // polls for the dpll info then passes it to the callback
 func (dpll *DPLLFilesystemCollector) poll() error {
-	dpllInfo, err := devices.GetDevDPLLFilesystemInfo(dpll.ctx, dpll.interfaceName)
+	dpllInfo, err := devices.GetDevDPLLFilesystemInfo(dpll.GetContext(), dpll.interfaceName)
 
 	if err != nil {
 		return fmt.Errorf("failed to fetch %s %w", DPLLInfo, err)
 	}
-	err = dpll.callback.Call(&dpllInfo, DPLLInfo)
+	err = dpll.Callback.Call(&dpllInfo, DPLLInfo)
 	if err != nil {
 		return fmt.Errorf("callback failed %w", err)
 	}
@@ -44,7 +37,7 @@ func (dpll *DPLLFilesystemCollector) poll() error {
 
 // Poll collects information from the cluster then
 // calls the callback.Call to allow that to persist it
-func (dpll *DPLLFilesystemCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCount) {
+func (dpll *DPLLFilesystemCollector) Poll(resultsChan chan collectorsBase.PollResult, wg *utils.WaitGroupCount) {
 	defer func() {
 		wg.Done()
 	}()
@@ -53,37 +46,35 @@ func (dpll *DPLLFilesystemCollector) Poll(resultsChan chan PollResult, wg *utils
 	if err != nil {
 		errorsToReturn = append(errorsToReturn, err)
 	}
-	resultsChan <- PollResult{
+	resultsChan <- collectorsBase.PollResult{
 		CollectorName: DPLLFilesystemCollectorName,
 		Errors:        errorsToReturn,
 	}
 }
 
-// CleanUp stops a running collector
-func (dpll *DPLLFilesystemCollector) CleanUp() error {
-	dpll.running = false
-	return nil
-}
-
 // Returns a new DPLLFilesystemCollector from the CollectionConstuctor Factory
-func NewDPLLFilesystemCollector(constructor *CollectionConstructor) (Collector, error) {
+func NewDPLLFilesystemCollector(constructor *collectorsBase.CollectionConstructor) (collectorsBase.Collector, error) {
 	ctx, err := contexts.GetPTPDaemonContext(constructor.Clientset)
 	if err != nil {
 		return &DPLLFilesystemCollector{}, fmt.Errorf("failed to create DPLLFilesystemCollector: %w", err)
 	}
-	err = devices.BuildFilesystemDPLLInfoFetcher(constructor.PTPInterface)
+	ptpInterface, err := getPTPInterfaceName(constructor)
+	if err != nil {
+		return &DPLLFilesystemCollector{}, err
+	}
+	err = devices.BuildFilesystemDPLLInfoFetcher(ptpInterface)
 	if err != nil {
 		return &DPLLFilesystemCollector{}, fmt.Errorf("failed to build fetcher for DPLLInfo %w", err)
 	}
 
 	collector := DPLLFilesystemCollector{
-		baseCollector: newBaseCollector(
+		ExecCollector: collectorsBase.NewExecCollector(
 			constructor.PollInterval,
 			false,
 			constructor.Callback,
+			ctx,
 		),
-		interfaceName: constructor.PTPInterface,
-		ctx:           ctx,
+		interfaceName: ptpInterface,
 	}
 	return &collector, nil
 }

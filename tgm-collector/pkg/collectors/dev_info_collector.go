@@ -11,19 +11,19 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/clients"
+	collectorsBase "github.com/redhat-partner-solutions/vse-sync-collection-tools/collector-framework/pkg/collectors"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/collector-framework/pkg/utils"
+	validationsBase "github.com/redhat-partner-solutions/vse-sync-collection-tools/collector-framework/pkg/validations"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/collectors/contexts"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/collectors/devices"
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/utils"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/validations"
 )
 
 type DevInfoCollector struct {
-	*baseCollector
-	ctx           clients.ExecContext
+	*collectorsBase.ExecCollector
 	devInfo       *devices.PTPDeviceInfo
 	quit          chan os.Signal
-	erroredPolls  chan PollResult
+	erroredPolls  chan collectorsBase.PollResult
 	requiresFetch chan bool
 	interfaceName string
 	wg            sync.WaitGroup
@@ -36,7 +36,10 @@ const (
 
 // Start sets up the collector so it is ready to be polled
 func (ptpDev *DevInfoCollector) Start() error {
-	ptpDev.running = true
+	err := ptpDev.ExecCollector.Start()
+	if err != nil {
+		return fmt.Errorf("failed to start dev info collector: %w", err)
+	}
 	go ptpDev.monitorErroredPolls()
 	return nil
 }
@@ -74,7 +77,7 @@ func (ptpDev *DevInfoCollector) poll() error {
 	var devInfo *devices.PTPDeviceInfo
 	select {
 	case <-ptpDev.requiresFetch:
-		fetchedDevInfo, err := devices.GetPTPDeviceInfo(ptpDev.interfaceName, ptpDev.ctx)
+		fetchedDevInfo, err := devices.GetPTPDeviceInfo(ptpDev.interfaceName, ptpDev.GetContext())
 		if err != nil {
 			return fmt.Errorf("failed to fetch %s %w", DeviceInfo, err)
 		}
@@ -84,7 +87,7 @@ func (ptpDev *DevInfoCollector) poll() error {
 		devInfo = ptpDev.devInfo
 	}
 
-	err := ptpDev.callback.Call(devInfo, DeviceInfo)
+	err := ptpDev.Callback.Call(devInfo, DeviceInfo)
 	if err != nil {
 		return fmt.Errorf("callback failed %w", err)
 	}
@@ -93,7 +96,7 @@ func (ptpDev *DevInfoCollector) poll() error {
 
 // Poll collects information from the cluster then
 // calls the callback.Call to allow that to persist it
-func (ptpDev *DevInfoCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCount) {
+func (ptpDev *DevInfoCollector) Poll(resultsChan chan collectorsBase.PollResult, wg *utils.WaitGroupCount) {
 	defer func() {
 		wg.Done()
 	}()
@@ -102,7 +105,7 @@ func (ptpDev *DevInfoCollector) Poll(resultsChan chan PollResult, wg *utils.Wait
 	if err != nil {
 		errorsToReturn = append(errorsToReturn, err)
 	}
-	resultsChan <- PollResult{
+	resultsChan <- collectorsBase.PollResult{
 		CollectorName: DPLLCollectorName,
 		Errors:        errorsToReturn,
 	}
@@ -110,15 +113,18 @@ func (ptpDev *DevInfoCollector) Poll(resultsChan chan PollResult, wg *utils.Wait
 
 // CleanUp stops a running collector
 func (ptpDev *DevInfoCollector) CleanUp() error {
-	ptpDev.running = false
+	err := ptpDev.ExecCollector.CleanUp()
+	if err != nil {
+		return fmt.Errorf("failed to cleanly stop ptp dev info collector: %w", err)
+	}
 	ptpDev.quit <- os.Kill
 	ptpDev.wg.Wait()
 	return nil
 }
 
-func verify(ptpDevInfo *devices.PTPDeviceInfo, constructor *CollectionConstructor) error {
+func verify(ptpDevInfo *devices.PTPDeviceInfo, constructor *collectorsBase.CollectionConstructor) error {
 	checkErrors := make([]error, 0)
-	checks := []validations.Validation{
+	checks := []validationsBase.Validation{
 		validations.NewDeviceDetails(ptpDevInfo),
 		validations.NewDeviceDriver(ptpDevInfo),
 		validations.NewDeviceFirmware(ptpDevInfo),
@@ -149,18 +155,24 @@ func verify(ptpDevInfo *devices.PTPDeviceInfo, constructor *CollectionConstructo
 }
 
 // Returns a new DevInfoCollector from the CollectionConstuctor Factory
-func NewDevInfoCollector(constructor *CollectionConstructor) (Collector, error) {
+func NewDevInfoCollector(constructor *collectorsBase.CollectionConstructor) (collectorsBase.Collector, error) {
 	// Build DPPInfoFetcher ahead of time call to GetPTPDeviceInfo will build the other
 	ctx, err := contexts.GetPTPDaemonContext(constructor.Clientset)
 	if err != nil {
 		return &DevInfoCollector{}, fmt.Errorf("failed to create DevInfoCollector: %w", err)
 	}
-	err = devices.BuildPTPDeviceInfo(constructor.PTPInterface)
+
+	ptpInterface, err := getPTPInterfaceName(constructor)
+	if err != nil {
+		return &DevInfoCollector{}, err
+	}
+
+	err = devices.BuildPTPDeviceInfo(ptpInterface)
 	if err != nil {
 		return &DevInfoCollector{}, fmt.Errorf("failed to build fetcher for PTPDeviceInfo %w", err)
 	}
 
-	ptpDevInfo, err := devices.GetPTPDeviceInfo(constructor.PTPInterface, ctx)
+	ptpDevInfo, err := devices.GetPTPDeviceInfo(ptpInterface, ctx)
 	if err != nil {
 		return &DevInfoCollector{}, fmt.Errorf("failed to fetch initial DeviceInfo %w", err)
 	}
@@ -171,13 +183,13 @@ func NewDevInfoCollector(constructor *CollectionConstructor) (Collector, error) 
 	}
 
 	collector := DevInfoCollector{
-		baseCollector: newBaseCollector(
+		ExecCollector: collectorsBase.NewExecCollector(
 			constructor.DevInfoAnnouceInterval,
 			true,
 			constructor.Callback,
+			ctx,
 		),
-		ctx:           ctx,
-		interfaceName: constructor.PTPInterface,
+		interfaceName: ptpInterface,
 		devInfo:       &ptpDevInfo,
 		quit:          make(chan os.Signal),
 		erroredPolls:  constructor.ErroredPolls,
@@ -188,5 +200,5 @@ func NewDevInfoCollector(constructor *CollectionConstructor) (Collector, error) 
 }
 
 func init() {
-	RegisterCollector(DevInfoCollectorName, NewDevInfoCollector, required)
+	collectorsBase.RegisterCollector(DevInfoCollectorName, NewDevInfoCollector, collectorsBase.Required)
 }

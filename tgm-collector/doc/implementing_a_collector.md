@@ -40,7 +40,7 @@ sequenceDiagram
 		note left of callback: Callback.Call()
 		callback ->> User: Presents formatted data to user
 		Collector ->>- Runner: Sends poll sucess/failure via results channel
-		note left of Collector: resultsChan <- PollResult{CollectorName, Errors}
+		note left of Collector: resultsChan <- collectorsBase.PollResult{CollectorName, Errors}
 
 		Runner ->> Runner: Reacts to failures
 	end
@@ -75,7 +75,7 @@ package collectors
 import (
 	"fmt"
 
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/callbacks"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/collector-framework/pkg/callbacks"
 )
 const (
 	AnnouncementCollectorName = "MyCustomerAnouncer"
@@ -99,11 +99,11 @@ func  (annMsg *AnnouncementMessage)  GetAnalyserFormat() (*callbacks.AnalyserFor
 
 // Collector
 type AnnouncementCollector struct {
-	*baseCollector
+	*collectorsBase.ExecCollector
 	msg          string
 }
 
-func (announcer *AnnouncementCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCount) {
+func (announcer *AnnouncementCollector) Poll(resultsChan chan collectorsBase.PollResult, wg *utils.WaitGroupCount) {
 	defer func() {
 		wg.Done()
 	}()
@@ -111,19 +111,19 @@ func (announcer *AnnouncementCollector) Poll(resultsChan chan PollResult, wg *ut
 	msg := &AnnouncementMessage{Msg: announcer.msg}
 
 	errs := make([]error, 0)
-	err := announcer.callback.Call(&msg, AnnouncementMsg)
+	err := announcer.Callback.Call(&msg, AnnouncementMsg)
 	if err != nil {
 		errs = append(errs, fmt.Errorf("callback failed %w", err))
 	}
-	resultsChan <- PollResult{
+	resultsChan <- collectorsBase.PollResult{
 		CollectorName: AnnouncementCollectorName,
 		Errors:        errorsToReturn,
 	}
 }
 
-func NewAnnouncementCollector(constuctor *CollectionConstuctor) (Collector, error) {
+func NewAnnouncementCollector(constuctor *CollectionConstuctor) (collectorsBase.Collector, error) {
 	announcer := AnnouncementCollector{
-		baseCollector: newBaseCollector(
+		ExecCollector: collectorsBase.NewExecCollector(
 			constructor.PollInterval,
 			false,
 			constructor.Callback,
@@ -135,6 +135,6 @@ func NewAnnouncementCollector(constuctor *CollectionConstuctor) (Collector, erro
 
 func init(){
 	// We'll make this a required collector
-	RegisterCollector(AnnouncementCollectorName, NewAnnouncementCollector, required)
+	collectorsBase.RegisterCollector(AnnouncementCollectorName, NewAnnouncementCollector, required)
 }
 ```

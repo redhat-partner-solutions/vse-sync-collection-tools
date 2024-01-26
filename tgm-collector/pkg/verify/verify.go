@@ -10,11 +10,12 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/callbacks"
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/clients"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/collector-framework/pkg/callbacks"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/collector-framework/pkg/clients"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/collector-framework/pkg/utils"
+	validationsBase "github.com/redhat-partner-solutions/vse-sync-collection-tools/collector-framework/pkg/validations"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/collectors/contexts"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/collectors/devices"
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/utils"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/validations"
 )
 
@@ -27,7 +28,7 @@ const (
 func getDevInfoValidations(
 	clientset *clients.Clientset,
 	interfaceName string,
-) []validations.Validation {
+) []validationsBase.Validation {
 	ctx, err := contexts.GetPTPDaemonContext(clientset)
 	utils.IfErrorExitOrPanic(err)
 	devInfo, err := devices.GetPTPDeviceInfo(interfaceName, ctx)
@@ -35,17 +36,17 @@ func getDevInfoValidations(
 	devDetails := validations.NewDeviceDetails(&devInfo)
 	devFirmware := validations.NewDeviceFirmware(&devInfo)
 	devDriver := validations.NewDeviceDriver(&devInfo)
-	return []validations.Validation{devDetails, devFirmware, devDriver}
+	return []validationsBase.Validation{devDetails, devFirmware, devDriver}
 }
 
 func getGPSVersionValidations(
 	clientset *clients.Clientset,
-) []validations.Validation {
+) []validationsBase.Validation {
 	ctx, err := contexts.GetPTPDaemonContext(clientset)
 	utils.IfErrorExitOrPanic(err)
 	gnssVersions, err := devices.GetGPSVersions(ctx)
 	utils.IfErrorExitOrPanic(err)
-	return []validations.Validation{
+	return []validationsBase.Validation{
 		validations.NewGNSS(&gnssVersions),
 		validations.NewGPSDVersion(&gnssVersions),
 		validations.NewGNSDevices(&gnssVersions),
@@ -56,7 +57,7 @@ func getGPSVersionValidations(
 
 func getGPSStatusValidation(
 	clientset *clients.Clientset,
-) []validations.Validation {
+) []validationsBase.Validation {
 	ctx, err := contexts.GetPTPDaemonContext(clientset)
 	utils.IfErrorExitOrPanic(err)
 
@@ -74,14 +75,14 @@ func getGPSStatusValidation(
 		time.Sleep(time.Second)
 	}
 	utils.IfErrorExitOrPanic(err)
-	return []validations.Validation{
+	return []validationsBase.Validation{
 		antCheck,
 		validations.NewGNSSNavStatus(&gpsDetails),
 	}
 }
 
-func getValidations(interfaceName, kubeConfig string) []validations.Validation {
-	checks := make([]validations.Validation, 0)
+func getValidations(interfaceName, kubeConfig string) []validationsBase.Validation {
+	checks := make([]validationsBase.Validation, 0)
 	clientset, err := clients.GetClientset(kubeConfig)
 	utils.IfErrorExitOrPanic(err)
 	checks = append(checks, getDevInfoValidations(clientset, interfaceName)...)
