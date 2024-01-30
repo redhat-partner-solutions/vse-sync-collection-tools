@@ -5,8 +5,9 @@ package runner
 import (
 	"strings"
 
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/collector-framework/pkg/collectors"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/collector-framework/pkg/collectors"
 )
 
 var (

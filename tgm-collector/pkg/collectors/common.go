@@ -26,4 +26,5 @@ func getPTPInterfaceName(constructor *collectorsBase.CollectionConstructor) (str
 	return ptpInterface, nil
 }
 
-func LinkMe() {}
+// Empty function used to insure the collectors module gets added to the resulting binary
+func IncludeCollectorsNoOp() {}

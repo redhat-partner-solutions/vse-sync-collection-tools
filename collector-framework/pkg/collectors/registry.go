@@ -67,6 +67,5 @@ func RegisterCollector(collectorName string, builderFunc collectonBuilderFunc, i
 			optional: make([]string, 0),
 		}
 	}
-	fmt.Print(collectorName)
 	registry.register(collectorName, builderFunc, inclusionType)
 }

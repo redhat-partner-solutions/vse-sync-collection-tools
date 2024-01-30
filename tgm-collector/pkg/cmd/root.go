@@ -29,12 +29,10 @@ var (
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	collectors.LinkMe()
 	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
 	}
-
 }
 
 func init() {
@@ -45,4 +43,6 @@ func init() {
 		log.WarnLevel.String(),
 		"Log level (debug, info, warn, error, fatal, panic)",
 	)
+
+	collectors.IncludeCollectorsNoOp()
 }
