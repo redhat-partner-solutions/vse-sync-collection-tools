@@ -9,6 +9,7 @@ require (
 	github.com/onsi/gomega v1.27.1
 	github.com/openshift/client-go v0.0.0-20230120202327-72f107311084
 	github.com/sirupsen/logrus v1.9.0
+	github.com/spf13/cobra v1.6.0
 	golang.org/x/mod v0.8.0
 	k8s.io/api v0.26.1
 	k8s.io/apimachinery v0.26.1
@@ -33,6 +34,7 @@ require (
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/pprof v0.0.0-20210407192527-94a9f03dee38 // indirect
 	github.com/imdario/mergo v0.3.13 // indirect
+	github.com/inconshreveable/mousetrap v1.0.1 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect

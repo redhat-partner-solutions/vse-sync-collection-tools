@@ -9,6 +9,8 @@ import (
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/collectors/contexts"
 )
 
+var LogsCollectorName = collectorsBase.LogsCollectorName
+
 func NewPTPLogsCollector(constructor *collectorsBase.CollectionConstructor) (collectorsBase.Collector, error) {
 	ctx, err := contexts.GetPTPDaemonContext(constructor.Clientset)
 	if err != nil {
@@ -23,5 +25,5 @@ func NewPTPLogsCollector(constructor *collectorsBase.CollectionConstructor) (col
 
 func init() {
 	// Make log opt in as in may lose some data.
-	collectorsBase.RegisterCollector(collectorsBase.LogsCollectorName, NewPTPLogsCollector, collectorsBase.Optional)
+	collectorsBase.RegisterCollector(LogsCollectorName, NewPTPLogsCollector, collectorsBase.Optional)
 }

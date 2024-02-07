@@ -4,56 +4,68 @@ package cmd
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"os/user"
 	"path/filepath"
 	"strings"
-	"time"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
 
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/collector-framework/pkg/collectors"
+	fCmd "github.com/redhat-partner-solutions/vse-sync-collection-tools/collector-framework/pkg/cmd"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/collector-framework/pkg/runner"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/collector-framework/pkg/utils"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/collectors"
 )
 
 const (
-	defaultDuration             string = "1000s"
-	defaultPollInterval         int    = 1
-	defaultDevInfoInterval      int    = 60
 	defaultIncludeLogTimestamps bool   = false
 	defaultTempDir              string = "."
 	defaultKeepDebugFiles       bool   = false
 	tempdirPerm                        = 0755
 )
 
+type CollectorArgFunc func() map[string]map[string]any
+type CheckVarsFunc func()
+
 var (
-	requestedDurationStr   string
-	pollInterval           int
-	devInfoAnnouceInterval int
-	collectorNames         []string
-	logsOutputFile         string
-	includeLogTimestamps   bool
-	tempDir                string
-	keepDebugFiles         bool
+	logsOutputFile       string
+	includeLogTimestamps bool
+	tempDir              string
+	keepDebugFiles       bool
 )
 
-// collectCmd represents the collect command
-var collectCmd = &cobra.Command{
-	Use:   "collect",
-	Short: "Run the collector tool",
-	Long:  `Run the collector tool to gather data from your target cluster`,
-	Run: func(cmd *cobra.Command, args []string) {
-		collectionRunner := runner.NewCollectorRunner(collectorNames)
+func init() { //nolint:funlen // Allow this to get a little long
+	AddInterfaceFlag(fCmd.CollectCmd)
 
-		requestedDuration, err := time.ParseDuration(requestedDurationStr)
-		if requestedDuration.Nanoseconds() < 0 {
-			log.Panicf("Requested duration must be positive")
+	fCmd.CollectCmd.Flags().StringVarP(
+		&logsOutputFile,
+		"logs-output", "l", "",
+		"Path to the logs output file. This is required when using the logs collector",
+	)
+	fCmd.CollectCmd.Flags().BoolVar(
+		&includeLogTimestamps,
+		"log-timestamps", defaultIncludeLogTimestamps,
+		"Specifies if collected logs should include timestamps or not. (default is false)",
+	)
+	fCmd.CollectCmd.Flags().StringVarP(&tempDir, "tempdir", "t", defaultTempDir,
+		"Directory for storing temp/debug files. Must exist.")
+	fCmd.CollectCmd.Flags().BoolVar(&keepDebugFiles, "keep", defaultKeepDebugFiles, "Keep debug files")
+
+	fCmd.SetCollecterArgsFunc(func() map[string]map[string]any {
+		collectorArgs := make(map[string]map[string]any)
+		collectorArgs["PTP"] = map[string]any{
+			"ptpInterface": ptpInterface,
 		}
-		utils.IfErrorExitOrPanic(err)
+		collectorArgs["Logs"] = map[string]any{
+			"logsOutputFile":       logsOutputFile,
+			"includeLogTimestamps": includeLogTimestamps,
+			"tempDir":              tempDir,
+			"keepDebugFiles":       keepDebugFiles,
+		}
+		return collectorArgs
+	})
 
+	fCmd.SetCheckVarsFunc(func(collectorNames []string) {
 		for _, c := range collectorNames {
 			if (c == collectors.LogsCollectorName || c == runner.All) && logsOutputFile == "" {
 				utils.IfErrorExitOrPanic(utils.NewMissingInputError(
@@ -77,89 +89,5 @@ var collectCmd = &cobra.Command{
 		if err := os.MkdirAll(tempDir, tempdirPerm); err != nil {
 			log.Fatal(err)
 		}
-
-		collectorArgs := make(map[string]map[string]any)
-		collectorArgs["PTP"] = map[string]any{
-			"ptpInterface": ptpInterface,
-		}
-		collectorArgs["Logs"] = map[string]any{
-			"logsOutputFile":       logsOutputFile,
-			"includeLogTimestamps": includeLogTimestamps,
-			"tempDir":              tempDir,
-			"keepDebugFiles":       keepDebugFiles,
-		}
-
-		collectionRunner.Run(
-			kubeConfig,
-			outputFile,
-			requestedDuration,
-			pollInterval,
-			devInfoAnnouceInterval,
-			useAnalyserJSON,
-			collectorArgs,
-		)
-	},
-}
-
-func init() { //nolint:funlen // Allow this to get a little long
-	rootCmd.AddCommand(collectCmd)
-
-	AddKubeconfigFlag(collectCmd)
-	AddOutputFlag(collectCmd)
-	AddFormatFlag(collectCmd)
-	AddInterfaceFlag(collectCmd)
-
-	collectCmd.Flags().StringVarP(
-		&requestedDurationStr,
-		"duration",
-		"d",
-		defaultDuration,
-		"A positive duration string sequence of decimal numbers and a unit suffix, such as \"300ms\", \"1.5h\" or \"2h45m\"."+
-			" Valid time units are \"s\", \"m\", \"h\".",
-	)
-	collectCmd.Flags().IntVarP(
-		&pollInterval,
-		"rate",
-		"r",
-		defaultPollInterval,
-		"Poll interval for querying the cluster. The value will be polled once every interval. "+
-			"Using --rate 10 will cause the value to be polled once every 10 seconds",
-	)
-	collectCmd.Flags().IntVarP(
-		&devInfoAnnouceInterval,
-		"announce",
-		"a",
-		defaultDevInfoInterval,
-		"interval at which to emit the device info summary to the targeted output.",
-	)
-	defaultCollectorNames := make([]string, 0)
-	defaultCollectorNames = append(defaultCollectorNames, runner.All)
-	collectCmd.Flags().StringSliceVarP(
-		&collectorNames,
-		"collector",
-		"s",
-		defaultCollectorNames,
-		fmt.Sprintf(
-			"the collectors you wish to run (case-insensitive):\n"+
-				"\trequired collectors: %s (will be automatically added)\n"+
-				"\toptional collectors: %s",
-			strings.Join(runner.RequiredCollectorNames, ", "),
-			strings.Join(runner.OptionalCollectorNames, ", "),
-		),
-	)
-
-	collectCmd.Flags().StringVarP(
-		&logsOutputFile,
-		"logs-output", "l", "",
-		"Path to the logs output file. This is required when using the logs collector",
-	)
-	collectCmd.Flags().BoolVar(
-		&includeLogTimestamps,
-		"log-timestamps", defaultIncludeLogTimestamps,
-		"Specifies if collected logs should include timestamps or not. (default is false)",
-	)
-
-	collectCmd.Flags().StringVarP(&tempDir, "tempdir", "t", defaultTempDir,
-		"Directory for storing temp/debug files. Must exist.")
-	collectCmd.Flags().BoolVar(&keepDebugFiles, "keep", defaultKeepDebugFiles, "Keep debug files")
+	})
 }

@@ -3,32 +3,15 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
-
+	fCmd "github.com/redhat-partner-solutions/vse-sync-collection-tools/collector-framework/pkg/cmd"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/verify"
+	log "github.com/sirupsen/logrus"
 )
 
-var envCmd = &cobra.Command{
-	Use:   "env",
-	Short: "environment based actions",
-	Long:  `environment based actions`,
-}
-
-// verifyEnvCmd represents the verifyEnv command
-var verifyEnvCmd = &cobra.Command{
-	Use:   "verify",
-	Short: "verify the environment is ready for collection",
-	Long:  `verify the environment is ready for collection`,
-	Run: func(cmd *cobra.Command, args []string) {
-		verify.Verify(ptpInterface, kubeConfig, useAnalyserJSON)
-	},
-}
-
 func init() {
-	rootCmd.AddCommand(envCmd)
-	envCmd.AddCommand(verifyEnvCmd)
-	AddKubeconfigFlag(verifyEnvCmd)
-	AddOutputFlag(verifyEnvCmd)
-	AddFormatFlag(verifyEnvCmd)
-	AddInterfaceFlag(verifyEnvCmd)
+	AddInterfaceFlag(fCmd.VerifyEnvCmd)
+	fCmd.SetVerifyFunc(func(kubeconfig string, useAnalyserJSON bool) {
+		log.Info("Hello")
+		verify.Verify(ptpInterface, kubeconfig, useAnalyserJSON)
+	})
 }
