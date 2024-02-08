@@ -3,9 +3,10 @@
 package cmd
 
 import (
+	log "github.com/sirupsen/logrus"
+
 	fCmd "github.com/redhat-partner-solutions/vse-sync-collection-tools/collector-framework/pkg/cmd"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/tgm-collector/pkg/verify"
-	log "github.com/sirupsen/logrus"
 )
 
 func init() {
