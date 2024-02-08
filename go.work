@@ -1,0 +1,6 @@
+go 1.20
+
+use (
+	./collector-framework
+	./tgm-collector/
+)
