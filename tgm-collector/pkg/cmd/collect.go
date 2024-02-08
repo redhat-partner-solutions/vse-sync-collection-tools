@@ -4,12 +4,11 @@ package cmd
 
 import (
 	"errors"
+	"log"
 	"os"
 	"os/user"
 	"path/filepath"
 	"strings"
-
-	log "github.com/sirupsen/logrus"
 
 	fCmd "github.com/redhat-partner-solutions/vse-sync-collection-tools/collector-framework/pkg/cmd"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/collector-framework/pkg/runner"
@@ -25,7 +24,6 @@ const (
 )
 
 type CollectorArgFunc func() map[string]map[string]any
-type CheckVarsFunc func()
 
 var (
 	logsOutputFile       string
@@ -51,21 +49,8 @@ func init() { //nolint:funlen // Allow this to get a little long
 		"Directory for storing temp/debug files. Must exist.")
 	fCmd.CollectCmd.Flags().BoolVar(&keepDebugFiles, "keep", defaultKeepDebugFiles, "Keep debug files")
 
-	fCmd.SetCollecterArgsFunc(func() map[string]map[string]any {
-		collectorArgs := make(map[string]map[string]any)
-		collectorArgs["PTP"] = map[string]any{
-			"ptpInterface": ptpInterface,
-		}
-		collectorArgs["Logs"] = map[string]any{
-			"logsOutputFile":       logsOutputFile,
-			"includeLogTimestamps": includeLogTimestamps,
-			"tempDir":              tempDir,
-			"keepDebugFiles":       keepDebugFiles,
-		}
-		return collectorArgs
-	})
-
-	fCmd.SetCheckVarsFunc(func(collectorNames []string) {
+	fCmd.SetCollecterArgsFunc(func(collectorNames []string) map[string]map[string]any {
+		// Check args
 		for _, c := range collectorNames {
 			if (c == collectors.LogsCollectorName || c == runner.All) && logsOutputFile == "" {
 				utils.IfErrorExitOrPanic(utils.NewMissingInputError(
@@ -89,5 +74,18 @@ func init() { //nolint:funlen // Allow this to get a little long
 		if err := os.MkdirAll(tempDir, tempdirPerm); err != nil {
 			log.Fatal(err)
 		}
+
+		// Populate collector args
+		collectorArgs := make(map[string]map[string]any)
+		collectorArgs["PTP"] = map[string]any{
+			"ptpInterface": ptpInterface,
+		}
+		collectorArgs["Logs"] = map[string]any{
+			"logsOutputFile":       logsOutputFile,
+			"includeLogTimestamps": includeLogTimestamps,
+			"tempDir":              tempDir,
+			"keepDebugFiles":       keepDebugFiles,
+		}
+		return collectorArgs
 	})
 }

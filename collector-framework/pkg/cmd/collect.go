@@ -20,8 +20,7 @@ const (
 	defaultDevInfoInterval int    = 60
 )
 
-type CollectorArgFunc func() map[string]map[string]any
-type CheckVarsFunc func([]string)
+type CollectorArgFunc func([]string) map[string]map[string]any
 
 var (
 	requestedDurationStr   string
@@ -29,15 +28,10 @@ var (
 	devInfoAnnouceInterval int
 	collectorNames         []string
 	runFunc                CollectorArgFunc
-	checkVars              CheckVarsFunc
 )
 
 func SetCollecterArgsFunc(f CollectorArgFunc) {
 	runFunc = f
-}
-
-func SetCheckVarsFunc(f CheckVarsFunc) {
-	checkVars = f
 }
 
 // CollectCmd represents the collect command
@@ -55,15 +49,10 @@ var CollectCmd = &cobra.Command{
 		}
 		utils.IfErrorExitOrPanic(err)
 
-		if checkVars != nil {
-			log.Debug("No checkVars function is defined")
-			checkVars(collectorNames)
-		}
-
 		collectorArgs := make(map[string]map[string]any)
 		if runFunc != nil {
 			log.Debug("No runFunc function is defined")
-			collectorArgs = runFunc()
+			collectorArgs = runFunc(collectorNames)
 		}
 
 		collectionRunner.Run(
