@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -20,8 +21,8 @@ import (
 )
 
 const (
-	startTimeout    = 5 * time.Second
-	deletionTimeout = 10 * time.Minute
+	startTimeoutDefault    = 5 * time.Second
+	deletionTimeoutDefault = 10 * time.Minute
 )
 
 type ExecContext interface {
@@ -175,6 +176,8 @@ type ContainerCreationExecContext struct {
 	command                  []string
 	volumes                  []*Volume
 	hostNetwork              bool
+	startTimeout             time.Duration
+	deletionTimeout          time.Duration
 }
 
 type Volume struct {
@@ -271,7 +274,7 @@ func (c *ContainerCreationExecContext) isPodRunning() (bool, error) {
 
 func (c *ContainerCreationExecContext) waitForPodToStart() error {
 	start := time.Now()
-	for time.Since(start) <= startTimeout {
+	for time.Since(start) <= c.startTimeout {
 		running, err := c.isPodRunning()
 		if err != nil {
 			return err
@@ -318,7 +321,7 @@ func (c *ContainerCreationExecContext) deletePod() error {
 
 func (c *ContainerCreationExecContext) waitForPodToDelete() error {
 	start := time.Now()
-	for time.Since(start) <= deletionTimeout {
+	for time.Since(start) <= c.deletionTimeout {
 		pods, err := c.listPods(&metav1.ListOptions{})
 		if err != nil {
 			return err
@@ -345,6 +348,18 @@ func (c *ContainerCreationExecContext) DeletePodAndWait() error {
 	return c.waitForPodToDelete()
 }
 
+func fetchDurationEnv(key string, defaultValue time.Duration) (time.Duration, error) {
+	timeoutStr, ok := os.LookupEnv(key)
+	if ok {
+		timeout, err := time.ParseDuration(timeoutStr)
+		if err != nil {
+			return defaultValue, fmt.Errorf("failed to parse %s as a duration: %w", key, err)
+		}
+		return timeout, nil
+	}
+	return defaultValue, nil
+}
+
 func NewContainerCreationExecContext(
 	clientset *Clientset,
 	namespace, podName, containerName, containerImage string,
@@ -353,7 +368,7 @@ func NewContainerCreationExecContext(
 	containerSecurityContext *corev1.SecurityContext,
 	hostNetwork bool,
 	volumes []*Volume,
-) *ContainerCreationExecContext {
+) (*ContainerCreationExecContext, error) {
 	ctx := ContainerExecContext{
 		namespace:     namespace,
 		podNamePrefix: podName,
@@ -362,7 +377,17 @@ func NewContainerCreationExecContext(
 		clientset:     clientset,
 	}
 
-	return &ContainerCreationExecContext{
+	startTimeout, err := fetchDurationEnv("COLLECTOR_POD_START_TIMEOUT", startTimeoutDefault)
+	if err != nil {
+		return nil, err
+	}
+
+	deletionTimeout, err := fetchDurationEnv("COLLECTOR_POD_DELETE_TIMEOUT", deletionTimeoutDefault)
+	if err != nil {
+		return nil, err
+	}
+
+	containerCTX := ContainerCreationExecContext{
 		ContainerExecContext:     &ctx,
 		containerImage:           containerImage,
 		labels:                   labels,
@@ -370,5 +395,8 @@ func NewContainerCreationExecContext(
 		containerSecurityContext: containerSecurityContext,
 		hostNetwork:              hostNetwork,
 		volumes:                  volumes,
+		startTimeout:             startTimeout,
+		deletionTimeout:          deletionTimeout,
 	}
+	return &containerCTX, nil
 }
