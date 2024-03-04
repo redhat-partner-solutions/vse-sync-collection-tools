@@ -30,7 +30,7 @@ func GetPTPDaemonContext(clientset *clients.Clientset) (clients.ExecContext, err
 
 func GetNetlinkContext(clientset *clients.Clientset) (*clients.ContainerCreationExecContext, error) {
 	hpt := corev1.HostPathDirectory
-	ctx := clients.NewContainerCreationExecContext(
+	ctx, err := clients.NewContainerCreationExecContext(
 		clientset,
 		PTPNamespace,
 		NetlinkDebugPod,
@@ -59,5 +59,8 @@ func GetNetlinkContext(clientset *clients.Clientset) (*clients.ContainerCreation
 			},
 		},
 	)
+	if err != nil {
+		return ctx, fmt.Errorf("failed to create netlink context: %w", err)
+	}
 	return ctx, nil
 }
