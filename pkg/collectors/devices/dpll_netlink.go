@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strconv"
+	"math/big"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -45,11 +45,11 @@ func (dpllInfo *DevNetlinkDPLLInfo) GetAnalyserFormat() ([]*callbacks.AnalyserFo
 }
 
 type NetlinkEntry struct {
-	LockStatus string `json:"lock-status"` //nolint:tagliatelle // not my choice
-	Driver     string `json:"module-name"` //nolint:tagliatelle // not my choice
-	ClockType  string `json:"type"`        //nolint:tagliatelle // not my choice
-	ClockID    int64  `json:"clock-id"`    //nolint:tagliatelle // not my choice
-	ID         int    `json:"id"`          //nolint:tagliatelle // not my choice
+	ClockID    *big.Int `json:"clock-id"`    //nolint:tagliatelle // not my choice
+	LockStatus string   `json:"lock-status"` //nolint:tagliatelle // not my choice
+	Driver     string   `json:"module-name"` //nolint:tagliatelle // not my choice
+	ClockType  string   `json:"type"`        //nolint:tagliatelle // not my choice
+	ID         int      `json:"id"`          //nolint:tagliatelle // not my choice
 }
 
 // # Example output
@@ -69,16 +69,16 @@ type NetlinkEntry struct {
 //   'type': 'pps'}]
 
 var (
-	dpllNetlinkFetcher map[int64]*fetcher.Fetcher
+	dpllNetlinkFetcher map[string]*fetcher.Fetcher
 	dpllClockIDFetcher map[string]*fetcher.Fetcher
 )
 
 func init() {
-	dpllNetlinkFetcher = make(map[int64]*fetcher.Fetcher)
+	dpllNetlinkFetcher = make(map[string]*fetcher.Fetcher)
 	dpllClockIDFetcher = make(map[string]*fetcher.Fetcher)
 }
 
-func buildPostProcessDPLLNetlink(clockID int64) fetcher.PostProcessFuncType {
+func buildPostProcessDPLLNetlink(clockID *big.Int) fetcher.PostProcessFuncType {
 	return func(result map[string]string) (map[string]any, error) {
 		processedResult := make(map[string]any)
 
@@ -91,7 +91,7 @@ func buildPostProcessDPLLNetlink(clockID int64) fetcher.PostProcessFuncType {
 
 		log.Debug("entries: ", entries)
 		for _, entry := range entries {
-			if entry.ClockID == clockID {
+			if entry.ClockID.Cmp(clockID) == 0 {
 				state, ok := states[entry.LockStatus]
 				if !ok {
 					log.Errorf("Unknown state: %s", state)
@@ -106,7 +106,7 @@ func buildPostProcessDPLLNetlink(clockID int64) fetcher.PostProcessFuncType {
 
 // BuildDPLLNetlinkInfoFetcher popluates the fetcher required for
 // collecting the DPLLInfo
-func BuildDPLLNetlinkInfoFetcher(clockID int64) error { //nolint:dupl // Further dedup risks be too abstract or fragile
+func BuildDPLLNetlinkInfoFetcher(clockID *big.Int) error { //nolint:dupl // Further dedup risks be too abstract or fragile
 	fetcherInst, err := fetcher.FetcherFactory(
 		[]*clients.Cmd{dateCmd},
 		[]fetcher.AddCommandArgs{
@@ -121,21 +121,21 @@ func BuildDPLLNetlinkInfoFetcher(clockID int64) error { //nolint:dupl // Further
 		log.Errorf("failed to create fetcher for dpll netlink: %s", err.Error())
 		return fmt.Errorf("failed to create fetcher for dpll netlink: %w", err)
 	}
-	dpllNetlinkFetcher[clockID] = fetcherInst
+	dpllNetlinkFetcher[clockID.String()] = fetcherInst
 	fetcherInst.SetPostProcessor(buildPostProcessDPLLNetlink(clockID))
 	return nil
 }
 
 // GetDevDPLLInfo returns the device DPLL info for an interface.
-func GetDevDPLLNetlinkInfo(ctx clients.ExecContext, clockID int64) (DevNetlinkDPLLInfo, error) {
+func GetDevDPLLNetlinkInfo(ctx clients.ExecContext, clockID *big.Int) (DevNetlinkDPLLInfo, error) {
 	dpllInfo := DevNetlinkDPLLInfo{}
-	fetcherInst, fetchedInstanceOk := dpllNetlinkFetcher[clockID]
+	fetcherInst, fetchedInstanceOk := dpllNetlinkFetcher[clockID.String()]
 	if !fetchedInstanceOk {
 		err := BuildDPLLNetlinkInfoFetcher(clockID)
 		if err != nil {
 			return dpllInfo, err
 		}
-		fetcherInst, fetchedInstanceOk = dpllNetlinkFetcher[clockID]
+		fetcherInst, fetchedInstanceOk = dpllNetlinkFetcher[clockID.String()]
 		if !fetchedInstanceOk {
 			return dpllInfo, errors.New("failed to create fetcher for DPLLInfo using netlink interface")
 		}
@@ -153,10 +153,10 @@ func BuildClockIDFetcher(interfaceName string) error {
 		[]*clients.Cmd{dateCmd},
 		[]fetcher.AddCommandArgs{
 			{
-				Key: "dpll-netlink-clock-id",
+				Key: "dpll-netlink-serial-number",
 				Command: fmt.Sprintf(
 					`export IFNAME=%s; export BUSID=$(readlink /sys/class/net/$IFNAME/device | xargs basename | cut -d ':' -f 2,3);`+
-						` echo $(("16#$(lspci -v | grep $BUSID -A 20 |grep 'Serial Number' | awk '{print $NF}' | tr -d '-')"))`,
+						` echo $(lspci -v | grep $BUSID -A 20 |grep 'Serial Number' | awk '{print $NF}' | tr -d '-')`,
 					interfaceName,
 				),
 				Trim: true,
@@ -174,17 +174,21 @@ func BuildClockIDFetcher(interfaceName string) error {
 
 func postProcessDPLLNetlinkClockID(result map[string]string) (map[string]any, error) {
 	processedResult := make(map[string]any)
-	clockID, err := strconv.ParseInt(result["dpll-netlink-clock-id"], 10, 64)
-	if err != nil {
-		return processedResult, fmt.Errorf("failed to parse int for clock id: %w", err)
+	clockID := new(big.Int)
+	_, ok := clockID.SetString(result["dpll-netlink-serial-number"], 16) //nolint:gomnd // Conversion from hex (base 16)
+
+	if !ok {
+		return processedResult, fmt.Errorf(
+			"failed to parse int for clock id from serial number: %s", result["dpll-netlink-serial-number"],
+		)
 	}
 	processedResult["clockID"] = clockID
 	return processedResult, nil
 }
 
 type NetlinkClockID struct {
-	Timestamp string `fetcherKey:"date"          json:"timestamp"`
-	ClockID   int64  `fetcherKey:"clockID"       json:"clockId"`
+	ClockID   *big.Int `fetcherKey:"clockID"       json:"clockId"`
+	Timestamp string   `fetcherKey:"date"          json:"timestamp"`
 }
 
 func GetClockID(ctx clients.ExecContext, interfaceName string) (NetlinkClockID, error) {
