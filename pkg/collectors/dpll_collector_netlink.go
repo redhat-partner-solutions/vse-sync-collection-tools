@@ -4,6 +4,7 @@ package collectors
 
 import (
 	"fmt"
+	"math/big"
 
 	log "github.com/sirupsen/logrus"
 
@@ -16,8 +17,8 @@ import (
 type DPLLNetlinkCollector struct {
 	*baseCollector
 	ctx           *clients.ContainerCreationExecContext
+	clockID       *big.Int
 	interfaceName string
-	clockID       int64
 }
 
 const (
