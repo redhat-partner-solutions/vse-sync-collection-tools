@@ -65,7 +65,7 @@ var _ = Describe("GetGPSNav", func() {
 			}, "\n")
 			response[expectedInput] = []byte(expectedOutput)
 
-			ctx, err := clients.NewContainerContext(clientset, "TestNamespace", "Test", "TestContainer")
+			ctx, err := clients.NewContainerContext(clientset, "TestNamespace", "Test", "TestContainer", "TestNodeName")
 			Expect(err).NotTo(HaveOccurred())
 
 			gpsInfo, err := devices.GetGPSNav(ctx)

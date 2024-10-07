@@ -63,6 +63,7 @@ func NewCollectorRunner(selectedCollectors []string) *CollectorRunner {
 func (runner *CollectorRunner) initialise( //nolint:funlen // allow a slightly long function
 	callback callbacks.Callback,
 	ptpInterface string,
+	ptpNodeName string,
 	clientset *clients.Clientset,
 	pollInterval int,
 	requestedDuration time.Duration,
@@ -79,6 +80,7 @@ func (runner *CollectorRunner) initialise( //nolint:funlen // allow a slightly l
 	constructor := &collectors.CollectionConstructor{
 		Callback:               callback,
 		PTPInterface:           ptpInterface,
+		PTPNodeName:            ptpNodeName,
 		Clientset:              clientset,
 		PollInterval:           pollInterval,
 		DevInfoAnnouceInterval: devInfoAnnouceInterval,
@@ -220,6 +222,7 @@ func (runner *CollectorRunner) cleanUpAll() {
 func (runner *CollectorRunner) Run( //nolint:funlen // allow a slightly long function
 	kubeConfig string,
 	outputFile string,
+	nodeName string,
 	requestedDuration time.Duration,
 	pollInterval int,
 	devInfoAnnouceInterval int,
@@ -243,6 +246,7 @@ func (runner *CollectorRunner) Run( //nolint:funlen // allow a slightly long fun
 	runner.initialise(
 		callback,
 		ptpInterface,
+		nodeName,
 		clientset,
 		pollInterval,
 		requestedDuration,

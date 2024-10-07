@@ -63,6 +63,7 @@ type LogsCollector struct {
 	client             *clients.Clientset
 	sliceQuit          chan os.Signal
 	logsOutputFileName string
+	nodeName           string
 	lastPoll           loglines.GenerationalLockedTime
 	wg                 sync.WaitGroup
 	withTimeStamps     bool
@@ -200,7 +201,7 @@ func processStream(stream io.ReadCloser, expectedEndtime time.Time) ([]*loglines
 }
 
 func (logs *LogsCollector) poll() error {
-	podName, err := logs.client.FindPodNameFromPrefix(contexts.PTPNamespace, contexts.PTPPodNamePrefix)
+	podName, err := logs.client.FindPodNameFromPrefix(contexts.PTPNamespace, contexts.PTPPodNamePrefix, logs.nodeName)
 	if err != nil {
 		return fmt.Errorf("failed to poll: %w", err)
 	}
@@ -282,6 +283,7 @@ func NewLogsCollector(constructor *CollectionConstructor) (Collector, error) {
 			Store:  make(map[uint32][]*loglines.LineSlice),
 			Dumper: loglines.NewGenerationDumper(constructor.TempDir, constructor.KeepDebugFiles),
 		},
+		nodeName: constructor.PTPNodeName,
 	}
 	return &collector, nil
 }

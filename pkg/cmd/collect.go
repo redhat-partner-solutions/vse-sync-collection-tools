@@ -81,6 +81,7 @@ var collectCmd = &cobra.Command{
 		collectionRunner.Run(
 			kubeConfig,
 			outputFile,
+			nodeName,
 			requestedDuration,
 			pollInterval,
 			devInfoAnnouceInterval,
@@ -101,6 +102,7 @@ func init() { //nolint:funlen // Allow this to get a little long
 	AddOutputFlag(collectCmd)
 	AddFormatFlag(collectCmd)
 	AddInterfaceFlag(collectCmd)
+	AddNodeNameFlag(collectCmd)
 
 	collectCmd.Flags().StringVarP(
 		&requestedDurationStr,

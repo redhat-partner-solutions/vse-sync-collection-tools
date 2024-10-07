@@ -24,12 +24,18 @@ var notATestPod = &v1.Pod{
 		Namespace:   "TestNamespace",
 		Annotations: map[string]string{},
 	},
+	Spec: v1.PodSpec{
+		NodeName: "TestNode",
+	},
 }
 var testPod = &v1.Pod{
 	ObjectMeta: metav1.ObjectMeta{
 		Name:        "TestPod-8292",
 		Namespace:   "TestNamespace",
 		Annotations: map[string]string{},
+	},
+	Spec: v1.PodSpec{
+		NodeName: "TestNode",
 	},
 }
 
@@ -49,7 +55,7 @@ var _ = Describe("NewContainerContext", func() {
 			fakeK8sClient := fakeK8s.NewSimpleClientset(notATestPod)
 			clientset.K8sClient = fakeK8sClient
 
-			_, err := clients.NewContainerContext(clientset, "TestNamespace", "Test", "TestContainer")
+			_, err := clients.NewContainerContext(clientset, "TestNamespace", "Test", "TestContainer", "TestNode")
 			Expect(err).To(HaveOccurred())
 		})
 	})
@@ -58,7 +64,7 @@ var _ = Describe("NewContainerContext", func() {
 			fakeK8sClient := fakeK8s.NewSimpleClientset(notATestPod, testPod)
 			clientset.K8sClient = fakeK8sClient
 
-			ctx, err := clients.NewContainerContext(clientset, "TestNamespace", "Test", "TestContainer")
+			ctx, err := clients.NewContainerContext(clientset, "TestNamespace", "Test", "TestContainer", "TestNode")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(ctx.GetNamespace()).To(Equal("TestNamespace"))
 			Expect(ctx.GetContainerName()).To(Equal("TestContainer"))
@@ -81,7 +87,7 @@ var _ = Describe("ExecCommandContainer", func() {
 				return []byte(expectedStdOut), []byte(expectedStdErr), nil
 			}
 			clients.NewSPDYExecutor = testutils.NewFakeNewSPDYExecutor(responder, nil)
-			ctx, _ := clients.NewContainerContext(clientset, "TestNamespace", "Test", "TestContainer")
+			ctx, _ := clients.NewContainerContext(clientset, "TestNamespace", "Test", "TestContainer", "TestNode")
 			cmd := []string{"my", "test", "command"}
 			stdout, stderr, err := ctx.ExecCommand(cmd)
 			Expect(err).NotTo(HaveOccurred())
@@ -100,7 +106,7 @@ var _ = Describe("ExecCommandContainer", func() {
 				return []byte(expectedStdOut), []byte(expectedStdErr), nil
 			}
 			clients.NewSPDYExecutor = testutils.NewFakeNewSPDYExecutor(responder, expectedErr)
-			ctx, _ := clients.NewContainerContext(clientset, "TestNamespace", "Test", "TestContainer")
+			ctx, _ := clients.NewContainerContext(clientset, "TestNamespace", "Test", "TestContainer", "TestNode")
 			cmd := []string{"my", "test", "command"}
 			stdout, stderr, err := ctx.ExecCommand(cmd)
 			Expect(err).To(HaveOccurred())
@@ -119,7 +125,7 @@ var _ = Describe("ExecCommandContainer", func() {
 				return []byte(expectedStdOut), []byte(expectedStdErr), expectedErr
 			}
 			clients.NewSPDYExecutor = testutils.NewFakeNewSPDYExecutor(responder, nil)
-			ctx, _ := clients.NewContainerContext(clientset, "TestNamespace", "Test", "TestContainer")
+			ctx, _ := clients.NewContainerContext(clientset, "TestNamespace", "Test", "TestContainer", "TestNode")
 			cmd := []string{"my", "test", "command"}
 			stdout, stderr, err := ctx.ExecCommand(cmd)
 			Expect(err).To(HaveOccurred())

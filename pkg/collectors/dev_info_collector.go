@@ -151,7 +151,7 @@ func verify(ptpDevInfo *devices.PTPDeviceInfo, constructor *CollectionConstructo
 // Returns a new DevInfoCollector from the CollectionConstuctor Factory
 func NewDevInfoCollector(constructor *CollectionConstructor) (Collector, error) {
 	// Build DPPInfoFetcher ahead of time call to GetPTPDeviceInfo will build the other
-	ctx, err := contexts.GetPTPDaemonContext(constructor.Clientset)
+	ctx, err := contexts.GetPTPDaemonContext(constructor.Clientset, constructor.PTPNodeName)
 	if err != nil {
 		return &DevInfoCollector{}, fmt.Errorf("failed to create DevInfoCollector: %w", err)
 	}

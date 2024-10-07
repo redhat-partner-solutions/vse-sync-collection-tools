@@ -27,8 +27,9 @@ const (
 func getDevInfoValidations(
 	clientset *clients.Clientset,
 	interfaceName string,
+	ptpNodeName string,
 ) []validations.Validation {
-	ctx, err := contexts.GetPTPDaemonContext(clientset)
+	ctx, err := contexts.GetPTPDaemonContext(clientset, ptpNodeName)
 	utils.IfErrorExitOrPanic(err)
 	devInfo, err := devices.GetPTPDeviceInfo(interfaceName, ctx)
 	utils.IfErrorExitOrPanic(err)
@@ -40,8 +41,9 @@ func getDevInfoValidations(
 
 func getGPSVersionValidations(
 	clientset *clients.Clientset,
+	ptpNodeName string,
 ) []validations.Validation {
-	ctx, err := contexts.GetPTPDaemonContext(clientset)
+	ctx, err := contexts.GetPTPDaemonContext(clientset, ptpNodeName)
 	utils.IfErrorExitOrPanic(err)
 	gnssVersions, err := devices.GetGPSVersions(ctx)
 	utils.IfErrorExitOrPanic(err)
@@ -56,8 +58,9 @@ func getGPSVersionValidations(
 
 func getGPSStatusValidation(
 	clientset *clients.Clientset,
+	ptpNodeName string,
 ) []validations.Validation {
-	ctx, err := contexts.GetPTPDaemonContext(clientset)
+	ctx, err := contexts.GetPTPDaemonContext(clientset, ptpNodeName)
 	utils.IfErrorExitOrPanic(err)
 
 	// If we need to do this for more validations then consider a generic
@@ -80,13 +83,13 @@ func getGPSStatusValidation(
 	}
 }
 
-func getValidations(interfaceName, kubeConfig string) []validations.Validation {
+func getValidations(interfaceName, ptpNodeName, kubeConfig string) []validations.Validation {
 	checks := make([]validations.Validation, 0)
 	clientset, err := clients.GetClientset(kubeConfig)
 	utils.IfErrorExitOrPanic(err)
-	checks = append(checks, getDevInfoValidations(clientset, interfaceName)...)
-	checks = append(checks, getGPSVersionValidations(clientset)...)
-	checks = append(checks, getGPSStatusValidation(clientset)...)
+	checks = append(checks, getDevInfoValidations(clientset, interfaceName, ptpNodeName)...)
+	checks = append(checks, getGPSVersionValidations(clientset, ptpNodeName)...)
+	checks = append(checks, getGPSStatusValidation(clientset, ptpNodeName)...)
 	checks = append(
 		checks,
 		validations.NewIsGrandMaster(clientset),
@@ -165,8 +168,8 @@ func report(results []*ValidationResult, useAnalyserJSON bool) {
 	}
 }
 
-func Verify(interfaceName, kubeConfig string, useAnalyserJSON bool) {
-	checks := getValidations(interfaceName, kubeConfig)
+func Verify(interfaceName, kubeConfig string, useAnalyserJSON bool, nodeName string) {
+	checks := getValidations(interfaceName, kubeConfig, nodeName)
 
 	results := make([]*ValidationResult, 0)
 	for _, check := range checks {

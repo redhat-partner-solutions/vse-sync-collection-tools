@@ -20,8 +20,8 @@ const (
 	NetlinkDebugContainerImage = "quay.io/redhat-partner-solutions/dpll-debug:0.1"
 )
 
-func GetPTPDaemonContext(clientset *clients.Clientset) (clients.ExecContext, error) {
-	ctx, err := clients.NewContainerContext(clientset, PTPNamespace, PTPPodNamePrefix, PTPContainer)
+func GetPTPDaemonContext(clientset *clients.Clientset, ptpNodeName string) (clients.ExecContext, error) {
+	ctx, err := clients.NewContainerContext(clientset, PTPNamespace, PTPPodNamePrefix, PTPContainer, ptpNodeName)
 	if err != nil {
 		return ctx, fmt.Errorf("could not create container context %w", err)
 	}
