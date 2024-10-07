@@ -54,7 +54,7 @@ func (gps *GPSCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCo
 
 // Returns a new GPSCollector based on values in the CollectionConstructor
 func NewGPSCollector(constructor *CollectionConstructor) (Collector, error) {
-	ctx, err := contexts.GetPTPDaemonContext(constructor.Clientset)
+	ctx, err := contexts.GetPTPDaemonContext(constructor.Clientset, constructor.PTPNodeName)
 	if err != nil {
 		return &GPSCollector{}, fmt.Errorf("failed to create DPLLCollector: %w", err)
 	}

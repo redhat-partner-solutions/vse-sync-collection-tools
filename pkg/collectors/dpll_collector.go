@@ -17,7 +17,7 @@ const (
 
 // Returns a new DPLLCollector from the CollectionConstuctor Factory
 func NewDPLLCollector(constructor *CollectionConstructor) (Collector, error) {
-	ctx, err := contexts.GetPTPDaemonContext(constructor.Clientset)
+	ctx, err := contexts.GetPTPDaemonContext(constructor.Clientset, constructor.PTPNodeName)
 	if err != nil {
 		return &DPLLNetlinkCollector{}, fmt.Errorf("failed to create DPLLCollector: %w", err)
 	}

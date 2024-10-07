@@ -67,7 +67,7 @@ func (dpll *DPLLFilesystemCollector) CleanUp() error {
 
 // Returns a new DPLLFilesystemCollector from the CollectionConstuctor Factory
 func NewDPLLFilesystemCollector(constructor *CollectionConstructor) (Collector, error) {
-	ctx, err := contexts.GetPTPDaemonContext(constructor.Clientset)
+	ctx, err := contexts.GetPTPDaemonContext(constructor.Clientset, constructor.PTPNodeName)
 	if err != nil {
 		return &DPLLFilesystemCollector{}, fmt.Errorf("failed to create DPLLFilesystemCollector: %w", err)
 	}

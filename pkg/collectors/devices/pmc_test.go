@@ -64,7 +64,7 @@ var _ = Describe("GetPMC", func() {
 			}, "\n")
 			response[expectedInput] = []byte(expectedOutput)
 
-			ctx, err := clients.NewContainerContext(clientset, "TestNamespace", "Test", "TestContainer")
+			ctx, err := clients.NewContainerContext(clientset, "TestNamespace", "Test", "TestContainer", "TestNodeName")
 			Expect(err).NotTo(HaveOccurred())
 
 			pmcInfo, err := devices.GetPMC(ctx)

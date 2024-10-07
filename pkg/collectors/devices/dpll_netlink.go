@@ -187,8 +187,8 @@ func postProcessDPLLNetlinkClockID(result map[string]string) (map[string]any, er
 }
 
 type NetlinkClockID struct {
-	ClockID   *big.Int `fetcherKey:"clockID"       json:"clockId"`
-	Timestamp string   `fetcherKey:"date"          json:"timestamp"`
+	ClockID   *big.Int `fetcherKey:"clockID" json:"clockId"`
+	Timestamp string   `fetcherKey:"date"    json:"timestamp"`
 }
 
 func GetClockID(ctx clients.ExecContext, interfaceName string) (NetlinkClockID, error) {

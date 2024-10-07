@@ -13,16 +13,23 @@ var (
 	outputFile      string
 	useAnalyserJSON bool
 	ptpInterface    string
+	nodeName        string
 )
 
 func AddKubeconfigFlag(targetCmd *cobra.Command) {
-	targetCmd.Flags().StringVarP(&kubeConfig, "kubeconfig", "k", "", "Path to the kubeconfig file")
+	targetCmd.Flags().StringVarP(&kubeConfig,
+		"kubeconfig",
+		"k", "",
+		"Path to the kubeconfig file")
 	err := targetCmd.MarkFlagRequired("kubeconfig")
 	utils.IfErrorExitOrPanic(err)
 }
 
 func AddOutputFlag(targetCmd *cobra.Command) {
-	targetCmd.Flags().StringVarP(&outputFile, "output", "o", "", "Path to the output file")
+	targetCmd.Flags().StringVarP(&outputFile,
+		"output",
+		"o", "",
+		"Path to the output file")
 }
 
 func AddFormatFlag(targetCmd *cobra.Command) {
@@ -36,7 +43,17 @@ func AddFormatFlag(targetCmd *cobra.Command) {
 }
 
 func AddInterfaceFlag(targetCmd *cobra.Command) {
-	targetCmd.Flags().StringVarP(&ptpInterface, "interface", "i", "", "Name of the PTP interface")
+	targetCmd.Flags().StringVarP(&ptpInterface,
+		"interface",
+		"i", "",
+		"Name of the PTP interface")
 	err := targetCmd.MarkFlagRequired("interface")
 	utils.IfErrorExitOrPanic(err)
+}
+
+func AddNodeNameFlag(targetCmd *cobra.Command) {
+	targetCmd.Flags().StringVarP(&ptpInterface,
+		"nodeName",
+		"n", "",
+		"Name of the Node under test (valid only for MNO Use case)")
 }

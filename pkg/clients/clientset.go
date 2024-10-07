@@ -98,8 +98,13 @@ func ClearClientSet() {
 	clientset = Clientset{}
 }
 
-func (clientsholder *Clientset) FindPodNameFromPrefix(namespace, prefix string) (string, error) {
-	podList, err := clientsholder.K8sClient.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{})
+func (clientsholder *Clientset) FindPodNameFromPrefix(namespace, prefix, nodeName string) (string, error) {
+	listOpts := metav1.ListOptions{}
+	if len(nodeName) > 0 {
+		listOpts = metav1.ListOptions{FieldSelector: "spec.nodeName=" + nodeName}
+	}
+	podList, err := clientsholder.K8sClient.CoreV1().Pods(namespace).List(context.TODO(), listOpts)
+
 	if err != nil {
 		return "", fmt.Errorf("failed to getting pod list: %w", err)
 	}
@@ -115,10 +120,12 @@ func (clientsholder *Clientset) FindPodNameFromPrefix(namespace, prefix string) 
 
 	switch len(podNames) {
 	case 0:
-		return "", fmt.Errorf("no pod with prefix %v found in namespace %v", prefix, namespace)
+		return "", fmt.Errorf("no pod with prefix %v found in namespace %v on node %v", prefix, namespace,
+			nodeName)
 	case 1:
 		return podNames[0], nil
 	default:
-		return "", fmt.Errorf("too many (%v) pods with prefix %v found in namespace %v", len(podNames), prefix, namespace)
+		return "", fmt.Errorf("too many (%v) pods with prefix %v found in namespace %v on node %v",
+			len(podNames), prefix, namespace, nodeName)
 	}
 }

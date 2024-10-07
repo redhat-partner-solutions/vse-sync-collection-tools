@@ -40,6 +40,9 @@ var testPod = &v1.Pod{
 		Namespace:   "TestNamespace",
 		Annotations: map[string]string{},
 	},
+	Spec: v1.PodSpec{
+		NodeName: "TestNodeName",
+	},
 }
 
 var _ = Describe("NewContainerContext", func() {
@@ -84,7 +87,7 @@ var _ = Describe("NewContainerContext", func() {
 
 			response[expectedInput] = []byte(expectedOutput)
 
-			ctx, err := clients.NewContainerContext(clientset, "TestNamespace", "Test", "TestContainer")
+			ctx, err := clients.NewContainerContext(clientset, "TestNamespace", "Test", "TestContainer", "TestNodeName")
 			Expect(err).NotTo(HaveOccurred())
 			info, err := devices.GetPTPDeviceInfo("aFakeInterface", ctx)
 			Expect(err).NotTo(HaveOccurred())

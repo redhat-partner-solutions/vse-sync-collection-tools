@@ -24,6 +24,7 @@ type CollectionConstructor struct {
 	Clientset              *clients.Clientset
 	ErroredPolls           chan PollResult
 	PTPInterface           string
+	PTPNodeName            string
 	Msg                    string
 	LogsOutputFile         string
 	TempDir                string

@@ -32,17 +32,18 @@ type ExecContext interface {
 
 var NewSPDYExecutor = remotecommand.NewSPDYExecutor
 
-// ContainerExecContext encapsulates the context in which a command is run; the namespace, pod, and container.
+// ContainerExecContext encapsulates the context in which a command is run; the nodeName, the namespace, pod, and container.
 type ContainerExecContext struct {
 	clientset     *Clientset
 	namespace     string
 	podName       string
 	containerName string
 	podNamePrefix string
+	nodeName      string
 }
 
 func (c *ContainerExecContext) refresh() error {
-	newPodname, err := c.clientset.FindPodNameFromPrefix(c.namespace, c.podNamePrefix)
+	newPodname, err := c.clientset.FindPodNameFromPrefix(c.namespace, c.podNamePrefix, c.nodeName)
 	if err != nil {
 		return err
 	}
@@ -52,9 +53,9 @@ func (c *ContainerExecContext) refresh() error {
 
 func NewContainerContext(
 	clientset *Clientset,
-	namespace, podNamePrefix, containerName string,
+	namespace, podNamePrefix, containerName, nodeName string,
 ) (*ContainerExecContext, error) {
-	podName, err := clientset.FindPodNameFromPrefix(namespace, podNamePrefix)
+	podName, err := clientset.FindPodNameFromPrefix(namespace, podNamePrefix, nodeName)
 	if err != nil {
 		return &ContainerExecContext{}, err
 	}
@@ -64,6 +65,7 @@ func NewContainerContext(
 		containerName: containerName,
 		podNamePrefix: podNamePrefix,
 		clientset:     clientset,
+		nodeName:      nodeName,
 	}
 	return &ctx, nil
 }

@@ -53,7 +53,7 @@ func (pmc *PMCCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCo
 
 // Returns a new PMCCollector based on values in the CollectionConstructor
 func NewPMCCollector(constructor *CollectionConstructor) (Collector, error) {
-	ctx, err := contexts.GetPTPDaemonContext(constructor.Clientset)
+	ctx, err := contexts.GetPTPDaemonContext(constructor.Clientset, constructor.PTPNodeName)
 	if err != nil {
 		return &PMCCollector{}, fmt.Errorf("failed to create PMCCollector: %w", err)
 	}

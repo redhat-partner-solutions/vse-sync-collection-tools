@@ -20,7 +20,7 @@ var verifyEnvCmd = &cobra.Command{
 	Short: "verify the environment is ready for collection",
 	Long:  `verify the environment is ready for collection`,
 	Run: func(cmd *cobra.Command, args []string) {
-		verify.Verify(ptpInterface, kubeConfig, useAnalyserJSON)
+		verify.Verify(ptpInterface, kubeConfig, useAnalyserJSON, nodeName)
 	},
 }
 
@@ -31,4 +31,5 @@ func init() {
 	AddOutputFlag(verifyEnvCmd)
 	AddFormatFlag(verifyEnvCmd)
 	AddInterfaceFlag(verifyEnvCmd)
+	AddNodeNameFlag(verifyEnvCmd)
 }
