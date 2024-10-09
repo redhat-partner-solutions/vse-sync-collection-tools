@@ -169,7 +169,7 @@ func report(results []*ValidationResult, useAnalyserJSON bool) {
 }
 
 func Verify(interfaceName, kubeConfig string, useAnalyserJSON bool, nodeName string) {
-	checks := getValidations(interfaceName, kubeConfig, nodeName)
+	checks := getValidations(interfaceName, nodeName, kubeConfig)
 
 	results := make([]*ValidationResult, 0)
 	for _, check := range checks {
