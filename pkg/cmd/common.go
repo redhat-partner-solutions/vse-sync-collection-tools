@@ -52,7 +52,7 @@ func AddInterfaceFlag(targetCmd *cobra.Command) {
 }
 
 func AddNodeNameFlag(targetCmd *cobra.Command) {
-	targetCmd.Flags().StringVarP(&ptpInterface,
+	targetCmd.Flags().StringVarP(&nodeName,
 		"nodeName",
 		"n", "",
 		"Name of the Node under test (valid only for MNO Use case)")
