@@ -17,7 +17,7 @@ const (
 	GPSContainer               = "gpsd"
 	NetlinkDebugPod            = "ptp-dpll-netlink-debug-pod"
 	NetlinkDebugContainer      = "ptp-dpll-netlink-debug-container"
-	NetlinkDebugContainerImage = "quay.io/redhat-partner-solutions/dpll-debug:0.1"
+	NetlinkDebugContainerImage = "quay.io/redhat-partner-solutions/dpll-debug:0.5"
 )
 
 func GetPTPDaemonContext(clientset *clients.Clientset, ptpNodeName string) (clients.ExecContext, error) {
