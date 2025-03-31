@@ -237,7 +237,7 @@ func (c *ContainerCreationExecContext) createPod() error {
 }
 
 func (c *ContainerCreationExecContext) listPods(options *metav1.ListOptions) (*corev1.PodList, error) {
-	pods, err := c.clientset.K8sClient.CoreV1().Pods(c.pod.Namespace).List(
+	pods, err := c.clientset.K8sClient.CoreV1().Pods(c.namespace).List(
 		context.TODO(),
 		*options,
 	)
@@ -245,6 +245,25 @@ func (c *ContainerCreationExecContext) listPods(options *metav1.ListOptions) (*c
 		return pods, fmt.Errorf("failed to find pods: %s", err.Error())
 	}
 	return pods, nil
+}
+
+func (c *ContainerCreationExecContext) checkForLeftOverPod() error {
+	pods, err := c.listPods(&metav1.ListOptions{
+		FieldSelector: fields.OneTermEqualSelector("metadata.name", c.podName).String(),
+	})
+	if err != nil {
+		return err
+	}
+	if len(pods.Items) > 1 {
+		return fmt.Errorf("expected at most one pod found %d", len(pods.Items))
+	}
+	for i := range pods.Items {
+		if pods.Items[i].Spec.Containers[0].Image == c.containerImage {
+			log.Info("Found pod running correct image")
+			c.pod = &pods.Items[i]
+		}
+	}
+	return nil
 }
 
 func (c *ContainerCreationExecContext) refeshPod() error {
@@ -290,8 +309,12 @@ func (c *ContainerCreationExecContext) waitForPodToStart() error {
 }
 
 func (c *ContainerCreationExecContext) CreatePodAndWait() error {
-	var err error
 	running := false
+	err := c.checkForLeftOverPod()
+	if err != nil {
+		return err
+	}
+
 	if c.pod != nil {
 		running, err = c.isPodRunning()
 		if err != nil {
