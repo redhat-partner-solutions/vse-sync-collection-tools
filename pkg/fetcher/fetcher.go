@@ -83,6 +83,7 @@ func (inst *Fetcher) Fetch(ctx clients.ExecContext, pack any) error {
 // and extracts the results from the stdout
 func runCommands(ctx clients.ExecContext, cmdGrp clients.Cmder) (result map[string]string, err error) { //nolint:lll // allow slightly long function definition
 	cmd := cmdGrp.GetCommand()
+	log.Debugf("running command: '%s'", cmd)
 	command := []string{"/usr/bin/sh"}
 	var buffIn bytes.Buffer
 	buffIn.WriteString(cmd)

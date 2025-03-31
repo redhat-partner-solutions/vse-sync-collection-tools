@@ -4,7 +4,6 @@ package collectors
 
 import (
 	"fmt"
-	"math/big"
 
 	log "github.com/sirupsen/logrus"
 
@@ -17,8 +16,8 @@ import (
 type DPLLNetlinkCollector struct {
 	*baseCollector
 	ctx           *clients.ContainerCreationExecContext
-	clockID       *big.Int
 	interfaceName string
+	params        devices.NetlinkParameters
 }
 
 const (
@@ -35,22 +34,22 @@ func (dpll *DPLLNetlinkCollector) Start() error {
 	}
 	log.Debug("dpll.interfaceName: ", dpll.interfaceName)
 	log.Debug("dpll.ctx: ", dpll.ctx)
-	clockIDStuct, err := devices.GetClockID(dpll.ctx, dpll.interfaceName)
+	netlinkParams, err := devices.GetNetlinkParameters(dpll.ctx, dpll.interfaceName)
 	if err != nil {
 		return fmt.Errorf("dpll netlink collector failed to find clock id: %w", err)
 	}
-	log.Debug("clockIDStuct.ClockID: ", clockIDStuct.ClockID)
-	err = devices.BuildDPLLNetlinkInfoFetcher(clockIDStuct.ClockID)
+	log.Debug("clockIDStuct.ClockID: ", netlinkParams.ClockID)
+	err = devices.BuildDPLLNetlinkDeviceFetcher(netlinkParams)
 	if err != nil {
 		return fmt.Errorf("failed to build fetcher for DPLLNetlinkInfo %w", err)
 	}
-	dpll.clockID = clockIDStuct.ClockID
+	dpll.params = netlinkParams
 	return nil
 }
 
 // polls for the dpll info then passes it to the callback
 func (dpll *DPLLNetlinkCollector) poll() error {
-	dpllInfo, err := devices.GetDevDPLLNetlinkInfo(dpll.ctx, dpll.clockID)
+	dpllInfo, err := devices.GetDevDPLLNetlinkInfo(dpll.ctx, dpll.params)
 
 	if err != nil {
 		return fmt.Errorf("failed to fetch %s %w", DPLLNetlinkInfo, err)
