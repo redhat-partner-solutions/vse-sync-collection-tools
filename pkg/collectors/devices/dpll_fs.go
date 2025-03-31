@@ -34,7 +34,8 @@ func (dpllInfo *DevFilesystemDPLLInfo) GetAnalyserFormat() ([]*callbacks.Analyse
 			"timestamp": dpllInfo.Timestamp,
 			"eecstate":  dpllInfo.EECState,
 			"state":     dpllInfo.PPSState,
-			"terror":    dpllInfo.PPSOffset / unitConversionFactor,
+			// Convert to nano seconds
+			"terror": dpllInfo.PPSOffset / unitConversionFactor,
 		},
 	}
 	return []*callbacks.AnalyserFormatType{&formatted}, nil
