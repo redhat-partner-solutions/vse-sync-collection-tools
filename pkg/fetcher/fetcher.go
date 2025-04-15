@@ -88,7 +88,10 @@ func runCommands(ctx clients.ExecContext, cmdGrp clients.Cmder) (result map[stri
 	var buffIn bytes.Buffer
 	buffIn.WriteString(cmd)
 
-	stdout, _, err := ctx.ExecCommandStdIn(command, buffIn)
+	stdout, stderr, err := ctx.ExecCommandStdIn(command, buffIn)
+	if stderr != "" {
+		log.Error("Contents in stderr:", stderr)
+	}
 	if err != nil {
 		log.Debugf(
 			"command in container failed unexpectedly:\n\tcontext: %v\n\tcommand: %v\n\terror: %v",
