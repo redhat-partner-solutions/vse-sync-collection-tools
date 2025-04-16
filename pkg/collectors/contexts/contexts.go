@@ -28,7 +28,11 @@ func GetPTPDaemonContext(clientset *clients.Clientset, ptpNodeName string) (clie
 	return ctx, nil
 }
 
-func GetNetlinkContext(clientset *clients.Clientset) (*clients.ContainerCreationExecContext, error) {
+func GetNetlinkContext(
+	clientset *clients.Clientset,
+	ptpNodeName string,
+	unmanagedDebugPod bool,
+) (*clients.ContainerCreationExecContext, error) {
 	hpt := corev1.HostPathDirectory
 	ctx, err := clients.NewContainerCreationExecContext(
 		clientset,
@@ -58,6 +62,8 @@ func GetNetlinkContext(clientset *clients.Clientset) (*clients.ContainerCreation
 				VolumeSource: corev1.VolumeSource{HostPath: &corev1.HostPathVolumeSource{Path: "/lib/modules", Type: &hpt}},
 			},
 		},
+		ptpNodeName,
+		unmanagedDebugPod,
 	)
 	if err != nil {
 		return ctx, fmt.Errorf("failed to create netlink context: %w", err)

@@ -177,9 +177,10 @@ type ContainerCreationExecContext struct {
 	containerImage           string
 	command                  []string
 	volumes                  []*Volume
-	hostNetwork              bool
 	startTimeout             time.Duration
 	deletionTimeout          time.Duration
+	hostNetwork              bool
+	unmanagedDebugPod        bool
 }
 
 type Volume struct {
@@ -206,6 +207,10 @@ func (c *ContainerCreationExecContext) createPod() error {
 			HostNetwork: c.hostNetwork,
 		},
 	}
+	if c.nodeName != "" {
+		pod.Spec.NodeName = c.nodeName
+	}
+
 	if len(c.command) > 0 {
 		pod.Spec.Containers[0].Command = c.command
 	}
@@ -322,6 +327,9 @@ func (c *ContainerCreationExecContext) CreatePodAndWait() error {
 		}
 	}
 	if !running {
+		if c.unmanagedDebugPod {
+			return fmt.Errorf("life cylcing disabled however pod not found")
+		}
 		err := c.createPod()
 		if err != nil {
 			return err
@@ -366,7 +374,27 @@ func (c *ContainerCreationExecContext) waitForPodToDelete() error {
 }
 
 func (c *ContainerCreationExecContext) DeletePodAndWait() error {
-	err := c.deletePod()
+	if c.unmanagedDebugPod {
+		return nil
+	}
+
+	// check for running pod
+	running := false
+	err := c.checkForLeftOverPod()
+	if err != nil {
+		return err
+	}
+	if c.pod != nil {
+		running, err = c.isPodRunning()
+		if err != nil {
+			return err
+		}
+	}
+	if !running {
+		return nil
+	}
+
+	err = c.deletePod()
 	if err != nil {
 		return err
 	}
@@ -393,6 +421,8 @@ func NewContainerCreationExecContext(
 	containerSecurityContext *corev1.SecurityContext,
 	hostNetwork bool,
 	volumes []*Volume,
+	nodeName string,
+	unmanagedDebugPod bool,
 ) (*ContainerCreationExecContext, error) {
 	ctx := ContainerExecContext{
 		namespace:     namespace,
@@ -400,6 +430,7 @@ func NewContainerCreationExecContext(
 		podName:       podName,
 		containerName: containerName,
 		clientset:     clientset,
+		nodeName:      nodeName,
 	}
 
 	startTimeout, err := fetchDurationEnv("COLLECTOR_POD_START_TIMEOUT", startTimeoutDefault)
@@ -422,6 +453,7 @@ func NewContainerCreationExecContext(
 		volumes:                  volumes,
 		startTimeout:             startTimeout,
 		deletionTimeout:          deletionTimeout,
+		unmanagedDebugPod:        unmanagedDebugPod,
 	}
 	return &containerCTX, nil
 }

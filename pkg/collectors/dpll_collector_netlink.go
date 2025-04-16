@@ -15,9 +15,10 @@ import (
 
 type DPLLNetlinkCollector struct {
 	*baseCollector
-	ctx           *clients.ContainerCreationExecContext
-	interfaceName string
-	params        devices.NetlinkParameters
+	ctx            *clients.ContainerCreationExecContext
+	interfaceName  string
+	params         devices.NetlinkParameters
+	unmanagedDebugPod bool
 }
 
 const (
@@ -64,9 +65,7 @@ func (dpll *DPLLNetlinkCollector) poll() error {
 // Poll collects information from the cluster then
 // calls the callback.Call to allow that to persist it
 func (dpll *DPLLNetlinkCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCount) {
-	defer func() {
-		wg.Done()
-	}()
+	defer wg.Done()
 	errorsToReturn := make([]error, 0)
 	err := dpll.poll()
 	if err != nil {
@@ -90,7 +89,11 @@ func (dpll *DPLLNetlinkCollector) CleanUp() error {
 
 // Returns a new DPLLNetlinkCollector from the CollectionConstuctor Factory
 func NewDPLLNetlinkCollector(constructor *CollectionConstructor) (Collector, error) {
-	ctx, err := contexts.GetNetlinkContext(constructor.Clientset)
+	ctx, err := contexts.GetNetlinkContext(
+		constructor.Clientset,
+		constructor.PTPNodeName,
+		constructor.UnmanagedDebugPod,
+	)
 	if err != nil {
 		return &DPLLNetlinkCollector{}, fmt.Errorf("failed to create DPLLNetlinkCollector: %w", err)
 	}
@@ -101,8 +104,9 @@ func NewDPLLNetlinkCollector(constructor *CollectionConstructor) (Collector, err
 			false,
 			constructor.Callback,
 		),
-		interfaceName: constructor.PTPInterface,
-		ctx:           ctx,
+		interfaceName:  constructor.PTPInterface,
+		ctx:            ctx,
+		unmanagedDebugPod: constructor.UnmanagedDebugPod,
 	}
 
 	return &collector, nil

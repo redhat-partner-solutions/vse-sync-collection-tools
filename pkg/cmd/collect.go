@@ -38,6 +38,7 @@ var (
 	includeLogTimestamps   bool
 	tempDir                string
 	keepDebugFiles         bool
+	unmanagedDebugPod      bool
 )
 
 // collectCmd represents the collect command
@@ -78,19 +79,25 @@ var collectCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		collectionRunner.Run(
+		constuctor, err := collectors.NewCollectionConstructor(
 			kubeConfig,
+			useAnalyserJSON,
 			outputFile,
+			ptpInterface,
 			nodeName,
-			requestedDuration,
+			logsOutputFile,
+			tempDir,
 			pollInterval,
 			devInfoAnnouceInterval,
-			ptpInterface,
-			useAnalyserJSON,
-			logsOutputFile,
 			includeLogTimestamps,
-			tempDir,
 			keepDebugFiles,
+			unmanagedDebugPod,
+		)
+		utils.IfErrorExitOrPanic(err)
+
+		collectionRunner.Run(
+			requestedDuration,
+			constuctor,
 		)
 	},
 }
@@ -157,4 +164,6 @@ func init() { //nolint:funlen // Allow this to get a little long
 	collectCmd.Flags().StringVarP(&tempDir, "tempdir", "t", defaultTempDir,
 		"Directory for storing temp/debug files. Must exist.")
 	collectCmd.Flags().BoolVar(&keepDebugFiles, "keep", defaultKeepDebugFiles, "Keep debug files")
+
+	collectCmd.Flags().BoolVar(&unmanagedDebugPod, "unmanaged-debug-pod", false, "Do not manage debug pod")
 }

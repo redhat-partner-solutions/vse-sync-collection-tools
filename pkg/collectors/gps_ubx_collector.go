@@ -37,10 +37,7 @@ func (gps *GPSCollector) poll() error {
 // Poll collects information from the cluster then
 // calls the callback.Call to allow that to persist it
 func (gps *GPSCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCount) {
-	defer func() {
-		wg.Done()
-	}()
-
+	defer wg.Done()
 	errorsToReturn := make([]error, 0)
 	err := gps.poll()
 	if err != nil {
