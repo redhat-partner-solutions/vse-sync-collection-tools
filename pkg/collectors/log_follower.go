@@ -238,9 +238,7 @@ func (logs *LogsCollector) poll() error {
 
 // Poll collects log lines
 func (logs *LogsCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCount) {
-	defer func() {
-		wg.Done()
-	}()
+	defer wg.Done()
 	errorsToReturn := make([]error, 0)
 	err := logs.poll()
 	if err != nil {
