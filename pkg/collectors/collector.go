@@ -25,13 +25,58 @@ type CollectionConstructor struct {
 	ErroredPolls           chan PollResult
 	PTPInterface           string
 	PTPNodeName            string
-	Msg                    string
 	LogsOutputFile         string
 	TempDir                string
 	PollInterval           int
 	DevInfoAnnouceInterval int
 	IncludeLogTimestamps   bool
 	KeepDebugFiles         bool
+	UnmanagedDebugPod      bool
+}
+
+func NewCollectionConstructor(
+	kubeConfig string,
+	useAnalyserJSON bool,
+	outputFile string,
+	ptpInterface string,
+	ptpNodeName string,
+	logsOutputFile string,
+	tempDir string,
+	pollInterval int,
+	devInfoAnnouceInterval int,
+	includeLogTimestamps bool,
+	keepDebugFiles bool,
+	unmanagedDebugPod bool,
+) (*CollectionConstructor, error) {
+
+	clientset, err := clients.GetClientset(kubeConfig)
+	if err != nil {
+		return &CollectionConstructor{}, err
+	}
+
+	outputFormat := callbacks.Raw
+	if useAnalyserJSON {
+		outputFormat = callbacks.AnalyserJSON
+	}
+
+	callback, err := callbacks.SetupCallback(outputFile, outputFormat)
+	if err != nil {
+		return &CollectionConstructor{}, err
+	}
+
+	return &CollectionConstructor{
+		Callback:               callback,
+		Clientset:              clientset,
+		PTPInterface:           ptpInterface,
+		PTPNodeName:            ptpNodeName,
+		LogsOutputFile:         logsOutputFile,
+		TempDir:                tempDir,
+		PollInterval:           pollInterval,
+		DevInfoAnnouceInterval: devInfoAnnouceInterval,
+		IncludeLogTimestamps:   includeLogTimestamps,
+		KeepDebugFiles:         keepDebugFiles,
+		UnmanagedDebugPod:      unmanagedDebugPod,
+	}, nil
 }
 
 type PollResult struct {
@@ -44,6 +89,7 @@ type baseCollector struct {
 	isAnnouncer  bool
 	running      bool
 	pollInterval time.Duration
+	poller       func() []error
 }
 
 func (base *baseCollector) GetPollInterval() time.Duration {

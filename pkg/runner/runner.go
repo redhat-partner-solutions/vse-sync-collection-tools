@@ -11,8 +11,6 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/callbacks"
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/clients"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/utils"
 )
@@ -61,35 +59,12 @@ func NewCollectorRunner(selectedCollectors []string) *CollectorRunner {
 // initialise will call theconstructor for each
 // value in collector name, it will panic if a collector name is not known.
 func (runner *CollectorRunner) initialise( //nolint:funlen // allow a slightly long function
-	callback callbacks.Callback,
-	ptpInterface string,
-	ptpNodeName string,
-	clientset *clients.Clientset,
-	pollInterval int,
+	constructor *collectors.CollectionConstructor,
 	requestedDuration time.Duration,
-	devInfoAnnouceInterval int,
-	logsOutputFile string,
-	includeLogTimestamps bool,
-	tempDir string,
-	keepDebugFiles bool,
 ) {
-	runner.pollInterval = pollInterval
+	runner.pollInterval = constructor.PollInterval
 	runner.endTime = time.Now().Add(requestedDuration)
-	runner.devInfoAnnouceInterval = devInfoAnnouceInterval
-
-	constructor := &collectors.CollectionConstructor{
-		Callback:               callback,
-		PTPInterface:           ptpInterface,
-		PTPNodeName:            ptpNodeName,
-		Clientset:              clientset,
-		PollInterval:           pollInterval,
-		DevInfoAnnouceInterval: devInfoAnnouceInterval,
-		ErroredPolls:           runner.erroredPolls,
-		LogsOutputFile:         logsOutputFile,
-		IncludeLogTimestamps:   includeLogTimestamps,
-		TempDir:                tempDir,
-		KeepDebugFiles:         keepDebugFiles,
-	}
+	runner.devInfoAnnouceInterval = constructor.DevInfoAnnouceInterval
 
 	registry := collectors.GetRegistry()
 
@@ -170,13 +145,16 @@ func (runner *CollectorRunner) poller(
 				time.Since(lastPoll) > pollInterval,
 				lastPoll.IsZero() || time.Since(lastPoll) > pollInterval,
 			)
+			// Not using a ticker as the idea was to make
+			// pollInterval dynamic to be able to respond
+			// to events triggered the action tool
 			if lastPoll.IsZero() || time.Since(lastPoll) > pollInterval {
 				lastPoll = time.Now()
 				log.Debugf("poll %s", collectorName)
 				runningPolls.Add(1)
 				go collector.Poll(runner.pollResults, &runningPolls)
 			}
-			time.Sleep(time.Microsecond)
+			time.Sleep(10 * time.Nanosecond)
 		}
 	}
 	runningPolls.Wait()
@@ -194,15 +172,16 @@ func (runner *CollectorRunner) start() {
 		collectorName := collectorName
 		collector := collector
 		quit := make(chan os.Signal, 1)
+		runner.collectorQuitChannel[collectorName] = quit
+		var wg *utils.WaitGroupCount
+
 		if collector.IsAnnouncer() {
-			runner.collectorQuitChannel[collectorName] = quit
-			runner.runningAnnouncersWG.Add(1)
-			go runner.poller(collectorName, collector, quit, &runner.runningAnnouncersWG)
+			wg = &runner.runningAnnouncersWG
 		} else {
-			runner.collectorQuitChannel[collectorName] = quit
-			runner.runningCollectorsWG.Add(1)
-			go runner.poller(collectorName, collector, quit, &runner.runningCollectorsWG)
+			wg = &runner.runningCollectorsWG
 		}
+		wg.Add(1)
+		go runner.poller(collectorName, collector, quit, wg)
 	}
 }
 
@@ -220,42 +199,11 @@ func (runner *CollectorRunner) cleanUpAll() {
 // then polls them on the correct cadence and
 // finally cleans up the collectors when exiting
 func (runner *CollectorRunner) Run( //nolint:funlen // allow a slightly long function
-	kubeConfig string,
-	outputFile string,
-	nodeName string,
 	requestedDuration time.Duration,
-	pollInterval int,
-	devInfoAnnouceInterval int,
-	ptpInterface string,
-	useAnalyserJSON bool,
-	logsOutputFile string,
-	includeLogTimestamps bool,
-	tempDir string,
-	keepDebugFiles bool,
+	constuctor *collectors.CollectionConstructor,
 ) {
-	clientset, err := clients.GetClientset(kubeConfig)
-	utils.IfErrorExitOrPanic(err)
 
-	outputFormat := callbacks.Raw
-	if useAnalyserJSON {
-		outputFormat = callbacks.AnalyserJSON
-	}
-
-	callback, err := callbacks.SetupCallback(outputFile, outputFormat)
-	utils.IfErrorExitOrPanic(err)
-	runner.initialise(
-		callback,
-		ptpInterface,
-		nodeName,
-		clientset,
-		pollInterval,
-		requestedDuration,
-		devInfoAnnouceInterval,
-		logsOutputFile,
-		includeLogTimestamps,
-		tempDir,
-		keepDebugFiles,
-	)
+	runner.initialise(constuctor, requestedDuration)
 	runner.start()
 
 	// Use wg count to know if any collectors are running.
@@ -286,6 +234,6 @@ func (runner *CollectorRunner) Run( //nolint:funlen // allow a slightly long fun
 	}
 	log.Info("Doing Cleanup")
 	runner.cleanUpAll()
-	err = callback.CleanUp()
+	err := constuctor.Callback.CleanUp()
 	utils.IfErrorExitOrPanic(err)
 }
