@@ -272,9 +272,9 @@ func processUBX(result map[string]string) (map[string]any, error) { //nolint:fun
 }
 
 // GetGPSNav returns GPSNav of the host
-func GetGPSNav(ctx clients.ExecContext) (GPSDetails, error) {
-	gpsNav := GPSDetails{}
-	err := gpsFetcher.Fetch(ctx, &gpsNav)
+func GetGPSNav(ctx clients.ExecContext) (*GPSDetails, error) {
+	gpsNav := &GPSDetails{}
+	err := gpsFetcher.Fetch(ctx, gpsNav)
 	if err != nil {
 		log.Debugf("failed to fetch gpsNav %s", err.Error())
 		return gpsNav, fmt.Errorf("failed to fetch gpsNav %w", err)

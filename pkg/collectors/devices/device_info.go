@@ -148,8 +148,8 @@ func BuildPTPDeviceInfo(interfaceName string) error { //nolint:dupl // Further d
 }
 
 // GetPTPDeviceInfo returns the PTPDeviceInfo for an interface
-func GetPTPDeviceInfo(interfaceName string, ctx clients.ExecContext) (PTPDeviceInfo, error) {
-	devInfo := PTPDeviceInfo{}
+func GetPTPDeviceInfo(interfaceName string, ctx clients.ExecContext) (*PTPDeviceInfo, error) {
+	devInfo := &PTPDeviceInfo{}
 	// Find the dev for the GNSS for this interface
 	fetcherInst, fetchedInstanceOk := devFetcher[interfaceName]
 	if !fetchedInstanceOk {
@@ -163,7 +163,7 @@ func GetPTPDeviceInfo(interfaceName string, ctx clients.ExecContext) (PTPDeviceI
 		}
 	}
 
-	err := fetcherInst.Fetch(ctx, &devInfo)
+	err := fetcherInst.Fetch(ctx, devInfo)
 	if err != nil {
 		log.Debugf("failed to fetch devInfo %s", err.Error())
 		return devInfo, fmt.Errorf("failed to fetch devInfo %w", err)

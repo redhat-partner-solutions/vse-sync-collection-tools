@@ -3,6 +3,7 @@
 package collectors
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/callbacks"
@@ -48,10 +49,9 @@ func NewCollectionConstructor(
 	keepDebugFiles bool,
 	unmanagedDebugPod bool,
 ) (*CollectionConstructor, error) {
-
 	clientset, err := clients.GetClientset(kubeConfig)
 	if err != nil {
-		return &CollectionConstructor{}, err
+		return &CollectionConstructor{}, fmt.Errorf("failed to create constructor values: %w", err)
 	}
 
 	outputFormat := callbacks.Raw
@@ -61,7 +61,7 @@ func NewCollectionConstructor(
 
 	callback, err := callbacks.SetupCallback(outputFile, outputFormat)
 	if err != nil {
-		return &CollectionConstructor{}, err
+		return &CollectionConstructor{}, fmt.Errorf("failed to create constructor values: %w", err)
 	}
 
 	return &CollectionConstructor{
@@ -86,10 +86,12 @@ type PollResult struct {
 
 type baseCollector struct {
 	callback     callbacks.Callback
+	poller       func() (callbacks.OutputType, error)
+	name         string
+	callbackTag  string
+	pollInterval time.Duration
 	isAnnouncer  bool
 	running      bool
-	pollInterval time.Duration
-	poller       func() []error
 }
 
 func (base *baseCollector) GetPollInterval() time.Duration {
@@ -102,6 +104,9 @@ func (base *baseCollector) IsAnnouncer() bool {
 
 func (base *baseCollector) Start() error {
 	base.running = true
+	if base.poller == nil {
+		utils.IfErrorExitOrPanic(fmt.Errorf("poller not set for collector %s", base.name))
+	}
 	return nil
 }
 
@@ -110,12 +115,43 @@ func (base *baseCollector) CleanUp() error {
 	return nil
 }
 
+func (base *baseCollector) poll() error {
+	result, err := base.poller()
+	if err != nil {
+		return fmt.Errorf("failed to fetch  %s %w", base.callbackTag, err)
+	}
+	err = base.callback.Call(result, gpsNavKey)
+	if err != nil {
+		return fmt.Errorf("callback failed %w", err)
+	}
+	return nil
+}
+
+// Poll collects information from the cluster then
+// calls the callback.Call to allow that to persist it
+func (base *baseCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCount) {
+	defer wg.Done()
+	errorsToReturn := make([]error, 0)
+	err := base.poll()
+	if err != nil {
+		errorsToReturn = append(errorsToReturn, err)
+	}
+	resultsChan <- PollResult{
+		CollectorName: base.name,
+		Errors:        errorsToReturn,
+	}
+}
+
 func newBaseCollector(
 	pollInterval int,
 	isAnnouncer bool,
 	callback callbacks.Callback,
+	name string,
+	callbackTag string,
 ) *baseCollector {
 	return &baseCollector{
+		name:         name,
+		callbackTag:  callbackTag,
 		callback:     callback,
 		isAnnouncer:  isAnnouncer,
 		running:      false,

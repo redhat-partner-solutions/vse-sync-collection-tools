@@ -5,6 +5,7 @@ package collectors //nolint:dupl // new collector
 import (
 	"fmt"
 
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/callbacks"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/clients"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors/contexts"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors/devices"
@@ -21,16 +22,10 @@ type PMCCollector struct {
 	ctx clients.ExecContext
 }
 
-func (pmc *PMCCollector) poll() error {
-	gmSetting, err := devices.GetPMC(pmc.ctx)
-	if err != nil {
-		return fmt.Errorf("failed to fetch  %s %w", PMCInfo, err)
+func pmcPoller(pmc *PMCCollector) func() (callbacks.OutputType, error) {
+	return func() (callbacks.OutputType, error) {
+		return devices.GetPMC(pmc.ctx) //nolint:wrapcheck //no point wrapping this
 	}
-	err = pmc.callback.Call(&gmSetting, PMCInfo)
-	if err != nil {
-		return fmt.Errorf("callback failed %w", err)
-	}
-	return nil
 }
 
 // Poll collects information from the cluster then
@@ -55,16 +50,18 @@ func NewPMCCollector(constructor *CollectionConstructor) (Collector, error) {
 		return &PMCCollector{}, fmt.Errorf("failed to create PMCCollector: %w", err)
 	}
 
-	collector := PMCCollector{
+	collector := &PMCCollector{
 		baseCollector: newBaseCollector(
 			constructor.PollInterval,
 			false,
 			constructor.Callback,
+			PMCCollectorName,
+			PMCInfo,
 		),
 		ctx: ctx,
 	}
-
-	return &collector, nil
+	collector.poller = pmcPoller(collector)
+	return collector, nil
 }
 
 func init() {

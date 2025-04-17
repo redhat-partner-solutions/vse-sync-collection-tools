@@ -255,8 +255,8 @@ func BuildDPLLNetlinkDeviceFetcher(params NetlinkParameters) error { //nolint:du
 }
 
 // GetDevDPLLInfo returns the device DPLL info for an interface.
-func GetDevDPLLNetlinkInfo(ctx clients.ExecContext, params NetlinkParameters) (DevNetlinkDPLLInfo, error) {
-	dpllInfo := DevNetlinkDPLLInfo{PinType: params.PinType}
+func GetDevDPLLNetlinkInfo(ctx clients.ExecContext, params NetlinkParameters) (*DevNetlinkDPLLInfo, error) {
+	dpllInfo := &DevNetlinkDPLLInfo{PinType: params.PinType}
 	fetcherInst, fetchedInstanceOk := dpllNetlinkFetcher[params.ClockID]
 	if !fetchedInstanceOk {
 		err := BuildDPLLNetlinkDeviceFetcher(params)
@@ -268,7 +268,7 @@ func GetDevDPLLNetlinkInfo(ctx clients.ExecContext, params NetlinkParameters) (D
 			return dpllInfo, errors.New("failed to create fetcher for DPLLInfo using netlink interface")
 		}
 	}
-	err := fetcherInst.Fetch(ctx, &dpllInfo)
+	err := fetcherInst.Fetch(ctx, dpllInfo)
 	if err != nil {
 		log.Debugf("failed to fetch dpllInfo  via netlink: %s", err.Error())
 		return dpllInfo, fmt.Errorf("failed to fetch dpllInfo via netlink: %w", err)
