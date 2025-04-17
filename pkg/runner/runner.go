@@ -154,7 +154,7 @@ func (runner *CollectorRunner) poller(
 				runningPolls.Add(1)
 				go collector.Poll(runner.pollResults, &runningPolls)
 			}
-			time.Sleep(10 * time.Nanosecond)
+			time.Sleep(10 * time.Nanosecond) //nolint:gomnd,mnd // no point in making this its own var
 		}
 	}
 	runningPolls.Wait()
@@ -173,15 +173,15 @@ func (runner *CollectorRunner) start() {
 		collector := collector
 		quit := make(chan os.Signal, 1)
 		runner.collectorQuitChannel[collectorName] = quit
-		var wg *utils.WaitGroupCount
+		var pollerWaitGroup *utils.WaitGroupCount
 
 		if collector.IsAnnouncer() {
-			wg = &runner.runningAnnouncersWG
+			pollerWaitGroup = &runner.runningAnnouncersWG
 		} else {
-			wg = &runner.runningCollectorsWG
+			pollerWaitGroup = &runner.runningCollectorsWG
 		}
-		wg.Add(1)
-		go runner.poller(collectorName, collector, quit, wg)
+		pollerWaitGroup.Add(1)
+		go runner.poller(collectorName, collector, quit, pollerWaitGroup)
 	}
 }
 
@@ -202,7 +202,6 @@ func (runner *CollectorRunner) Run( //nolint:funlen // allow a slightly long fun
 	requestedDuration time.Duration,
 	constuctor *collectors.CollectionConstructor,
 ) {
-
 	runner.initialise(constuctor, requestedDuration)
 	runner.start()
 

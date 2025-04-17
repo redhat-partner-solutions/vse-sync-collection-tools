@@ -137,9 +137,9 @@ func processPMC(result map[string]string) (map[string]any, error) { //nolint:fun
 }
 
 // GetPMC returns PMCInfo
-func GetPMC(ctx clients.ExecContext) (PMCInfo, error) {
-	gmSetting := PMCInfo{}
-	err := pmcFetcher.Fetch(ctx, &gmSetting)
+func GetPMC(ctx clients.ExecContext) (*PMCInfo, error) {
+	gmSetting := &PMCInfo{}
+	err := pmcFetcher.Fetch(ctx, gmSetting)
 	if err != nil {
 		log.Debugf("failed to fetch gmSetting %s", err.Error())
 		return gmSetting, fmt.Errorf("failed to fetch gmSetting %w", err)

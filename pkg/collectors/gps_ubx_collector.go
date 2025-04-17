@@ -5,10 +5,10 @@ package collectors //nolint:dupl // new collector
 import (
 	"fmt"
 
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/callbacks"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/clients"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors/contexts"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors/devices"
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/utils"
 )
 
 var (
@@ -22,30 +22,9 @@ type GPSCollector struct {
 	interfaceName string
 }
 
-func (gps *GPSCollector) poll() error {
-	gpsNav, err := devices.GetGPSNav(gps.ctx)
-	if err != nil {
-		return fmt.Errorf("failed to fetch  %s %w", gpsNavKey, err)
-	}
-	err = gps.callback.Call(&gpsNav, gpsNavKey)
-	if err != nil {
-		return fmt.Errorf("callback failed %w", err)
-	}
-	return nil
-}
-
-// Poll collects information from the cluster then
-// calls the callback.Call to allow that to persist it
-func (gps *GPSCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCount) {
-	defer wg.Done()
-	errorsToReturn := make([]error, 0)
-	err := gps.poll()
-	if err != nil {
-		errorsToReturn = append(errorsToReturn, err)
-	}
-	resultsChan <- PollResult{
-		CollectorName: GPSCollectorName,
-		Errors:        errorsToReturn,
+func gpsNavPoller(gps *GPSCollector) func() (callbacks.OutputType, error) {
+	return func() (callbacks.OutputType, error) {
+		return devices.GetGPSNav(gps.ctx) //nolint:wrapcheck //no point wrapping this
 	}
 }
 
@@ -56,17 +35,20 @@ func NewGPSCollector(constructor *CollectionConstructor) (Collector, error) {
 		return &GPSCollector{}, fmt.Errorf("failed to create DPLLCollector: %w", err)
 	}
 
-	collector := GPSCollector{
+	collector := &GPSCollector{
 		baseCollector: newBaseCollector(
 			constructor.PollInterval,
 			false,
 			constructor.Callback,
+			GPSCollectorName,
+			gpsNavKey,
 		),
 		ctx:           ctx,
 		interfaceName: constructor.PTPInterface,
 	}
+	collector.poller = gpsNavPoller(collector)
 
-	return &collector, nil
+	return collector, nil
 }
 
 func init() {

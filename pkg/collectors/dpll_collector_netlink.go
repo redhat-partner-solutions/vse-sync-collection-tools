@@ -7,6 +7,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/callbacks"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/clients"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors/contexts"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors/devices"
@@ -49,17 +50,10 @@ func (dpll *DPLLNetlinkCollector) Start() error {
 }
 
 // polls for the dpll info then passes it to the callback
-func (dpll *DPLLNetlinkCollector) poll() error {
-	dpllInfo, err := devices.GetDevDPLLNetlinkInfo(dpll.ctx, dpll.params)
-
-	if err != nil {
-		return fmt.Errorf("failed to fetch %s %w", DPLLNetlinkInfo, err)
+func dpllNetlinkPoller(dpll *DPLLNetlinkCollector) func() (callbacks.OutputType, error) {
+	return func() (callbacks.OutputType, error) {
+		return devices.GetDevDPLLNetlinkInfo(dpll.ctx, dpll.params) //nolint:wrapcheck //no point wrapping this
 	}
-	err = dpll.callback.Call(&dpllInfo, DPLLNetlinkInfo)
-	if err != nil {
-		return fmt.Errorf("callback failed %w", err)
-	}
-	return nil
 }
 
 // Poll collects information from the cluster then
@@ -98,16 +92,18 @@ func NewDPLLNetlinkCollector(constructor *CollectionConstructor) (Collector, err
 		return &DPLLNetlinkCollector{}, fmt.Errorf("failed to create DPLLNetlinkCollector: %w", err)
 	}
 
-	collector := DPLLNetlinkCollector{
+	collector := &DPLLNetlinkCollector{
 		baseCollector: newBaseCollector(
 			constructor.PollInterval,
 			false,
 			constructor.Callback,
+			DPLLNetlinkCollectorName,
+			DPLLNetlinkInfo,
 		),
 		interfaceName:  constructor.PTPInterface,
 		ctx:            ctx,
 		unmanagedDebugPod: constructor.UnmanagedDebugPod,
 	}
-
-	return &collector, nil
+	collector.poller = dpllNetlinkPoller(collector)
+	return collector, nil
 }

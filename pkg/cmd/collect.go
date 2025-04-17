@@ -64,7 +64,8 @@ var collectCmd = &cobra.Command{
 		}
 
 		if strings.Contains(tempDir, "~") {
-			usr, err := user.Current()
+			var usr *user.User
+			usr, err = user.Current()
 			if err != nil {
 				log.Fatal("Failed to fetch current user so could not resolve tempdir")
 			}
@@ -75,7 +76,7 @@ var collectCmd = &cobra.Command{
 			}
 		}
 
-		if err := os.MkdirAll(tempDir, tempdirPerm); err != nil {
+		if err = os.MkdirAll(tempDir, tempdirPerm); err != nil {
 			log.Fatal(err)
 		}
 
