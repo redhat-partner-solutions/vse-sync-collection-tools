@@ -33,9 +33,9 @@ func getDevInfoValidations(
 	utils.IfErrorExitOrPanic(err)
 	devInfo, err := devices.GetPTPDeviceInfo(interfaceName, ctx)
 	utils.IfErrorExitOrPanic(err)
-	devDetails := validations.NewDeviceDetails(&devInfo)
-	devFirmware := validations.NewDeviceFirmware(&devInfo)
-	devDriver := validations.NewDeviceDriver(&devInfo)
+	devDetails := validations.NewDeviceDetails(devInfo)
+	devFirmware := validations.NewDeviceFirmware(devInfo)
+	devDriver := validations.NewDeviceDriver(devInfo)
 	return []validations.Validation{devDetails, devFirmware, devDriver}
 }
 
@@ -48,11 +48,11 @@ func getGPSVersionValidations(
 	gnssVersions, err := devices.GetGPSVersions(ctx)
 	utils.IfErrorExitOrPanic(err)
 	return []validations.Validation{
-		validations.NewGNSS(&gnssVersions),
-		validations.NewGPSDVersion(&gnssVersions),
-		validations.NewGNSDevices(&gnssVersions),
-		validations.NewGNSSModule(&gnssVersions),
-		validations.NewGNSSProtocol(&gnssVersions),
+		validations.NewGNSS(gnssVersions),
+		validations.NewGPSDVersion(gnssVersions),
+		validations.NewGNSDevices(gnssVersions),
+		validations.NewGNSSModule(gnssVersions),
+		validations.NewGNSSProtocol(gnssVersions),
 	}
 }
 
@@ -65,13 +65,13 @@ func getGPSStatusValidation(
 
 	// If we need to do this for more validations then consider a generic
 	var antCheck *validations.GNSSAntStatus
-	var gpsDetails devices.GPSDetails
+	var gpsDetails *devices.GPSDetails
 	for i := 0; i < antPowerRetries; i++ {
 		gpsDetails, err = devices.GetGPSNav(ctx)
 		if err != nil {
 			continue
 		}
-		if antCheck = validations.NewGNSSAntStatus(&gpsDetails); antCheck.Verify() == nil {
+		if antCheck = validations.NewGNSSAntStatus(gpsDetails); antCheck.Verify() == nil {
 			break
 		}
 		time.Sleep(time.Second)
@@ -79,7 +79,7 @@ func getGPSStatusValidation(
 	utils.IfErrorExitOrPanic(err)
 	return []validations.Validation{
 		antCheck,
-		validations.NewGNSSNavStatus(&gpsDetails),
+		validations.NewGNSSNavStatus(gpsDetails),
 	}
 }
 

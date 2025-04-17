@@ -11,6 +11,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/callbacks"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/clients"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors/contexts"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors/devices"
@@ -70,39 +71,21 @@ func (ptpDev *DevInfoCollector) monitorErroredPolls() {
 }
 
 // polls for the device info, stores it then passes it to the callback
-func (ptpDev *DevInfoCollector) poll() error {
-	var devInfo *devices.PTPDeviceInfo
-	select {
-	case <-ptpDev.requiresFetch:
-		fetchedDevInfo, err := devices.GetPTPDeviceInfo(ptpDev.interfaceName, ptpDev.ctx)
-		if err != nil {
-			return fmt.Errorf("failed to fetch %s %w", DeviceInfo, err)
+func devInfoPoller(ptpDev *DevInfoCollector) func() (callbacks.OutputType, error) {
+	return func() (callbacks.OutputType, error) {
+		var devInfo *devices.PTPDeviceInfo
+		select {
+		case <-ptpDev.requiresFetch:
+			fetchedDevInfo, err := devices.GetPTPDeviceInfo(ptpDev.interfaceName, ptpDev.ctx)
+			if err != nil {
+				return devInfo, fmt.Errorf("failed to fetch %s %w", DeviceInfo, err)
+			}
+			ptpDev.devInfo = fetchedDevInfo
+			devInfo = fetchedDevInfo
+		default:
+			devInfo = ptpDev.devInfo
 		}
-		ptpDev.devInfo = &fetchedDevInfo
-		devInfo = &fetchedDevInfo
-	default:
-		devInfo = ptpDev.devInfo
-	}
-
-	err := ptpDev.callback.Call(devInfo, DeviceInfo)
-	if err != nil {
-		return fmt.Errorf("callback failed %w", err)
-	}
-	return nil
-}
-
-// Poll collects information from the cluster then
-// calls the callback.Call to allow that to persist it
-func (ptpDev *DevInfoCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCount) {
-	defer wg.Done()
-	errorsToReturn := make([]error, 0)
-	err := ptpDev.poll()
-	if err != nil {
-		errorsToReturn = append(errorsToReturn, err)
-	}
-	resultsChan <- PollResult{
-		CollectorName: DPLLCollectorName,
-		Errors:        errorsToReturn,
+		return devInfo, nil
 	}
 }
 
@@ -163,26 +146,29 @@ func NewDevInfoCollector(constructor *CollectionConstructor) (Collector, error) 
 		return &DevInfoCollector{}, fmt.Errorf("failed to fetch initial DeviceInfo %w", err)
 	}
 
-	err = verify(&ptpDevInfo, constructor)
+	err = verify(ptpDevInfo, constructor)
 	if err != nil {
 		return &DevInfoCollector{}, err
 	}
 
-	collector := DevInfoCollector{
+	collector := &DevInfoCollector{
 		baseCollector: newBaseCollector(
 			constructor.DevInfoAnnouceInterval,
 			true,
 			constructor.Callback,
+			DevInfoCollectorName,
+			DeviceInfo,
 		),
 		ctx:           ctx,
 		interfaceName: constructor.PTPInterface,
-		devInfo:       &ptpDevInfo,
+		devInfo:       ptpDevInfo,
 		quit:          make(chan os.Signal),
 		erroredPolls:  constructor.ErroredPolls,
 		requiresFetch: make(chan bool, 1),
 	}
+	collector.poller = devInfoPoller(collector)
 
-	return &collector, nil
+	return collector, nil
 }
 
 func init() {

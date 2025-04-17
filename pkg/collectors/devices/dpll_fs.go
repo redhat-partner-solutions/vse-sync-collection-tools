@@ -92,8 +92,8 @@ func BuildFilesystemDPLLInfoFetcher(interfaceName string) error { //nolint:dupl 
 }
 
 // GetDevDPLLFilesystemInfo returns the device DPLL info for an interface.
-func GetDevDPLLFilesystemInfo(ctx clients.ExecContext, interfaceName string) (DevFilesystemDPLLInfo, error) {
-	dpllInfo := DevFilesystemDPLLInfo{}
+func GetDevDPLLFilesystemInfo(ctx clients.ExecContext, interfaceName string) (*DevFilesystemDPLLInfo, error) {
+	dpllInfo := &DevFilesystemDPLLInfo{}
 	fetcherInst, fetchedInstanceOk := dpllFSFetcher[interfaceName]
 	if !fetchedInstanceOk {
 		err := BuildFilesystemDPLLInfoFetcher(interfaceName)
@@ -105,7 +105,7 @@ func GetDevDPLLFilesystemInfo(ctx clients.ExecContext, interfaceName string) (De
 			return dpllInfo, errors.New("failed to create fetcher for DPLLInfo")
 		}
 	}
-	err := fetcherInst.Fetch(ctx, &dpllInfo)
+	err := fetcherInst.Fetch(ctx, dpllInfo)
 	if err != nil {
 		log.Debugf("failed to fetch dpllInfo %s", err.Error())
 		return dpllInfo, fmt.Errorf("failed to fetch dpllInfo %w", err)

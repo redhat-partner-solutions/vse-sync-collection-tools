@@ -5,10 +5,10 @@ package collectors
 import (
 	"fmt"
 
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/callbacks"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/clients"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors/contexts"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors/devices"
-	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/utils"
 )
 
 type DPLLFilesystemCollector struct {
@@ -22,45 +22,11 @@ const (
 	DPLLInfo                    = "dpll-info-fs"
 )
 
-// Start sets up the collector so it is ready to be polled
-func (dpll *DPLLFilesystemCollector) Start() error {
-	dpll.running = true
-	return nil
-}
-
 // polls for the dpll info then passes it to the callback
-func (dpll *DPLLFilesystemCollector) poll() error {
-	dpllInfo, err := devices.GetDevDPLLFilesystemInfo(dpll.ctx, dpll.interfaceName)
-
-	if err != nil {
-		return fmt.Errorf("failed to fetch %s %w", DPLLInfo, err)
+func dpllFSPoller(dpll *DPLLFilesystemCollector) func() (callbacks.OutputType, error) {
+	return func() (callbacks.OutputType, error) {
+		return devices.GetDevDPLLFilesystemInfo(dpll.ctx, dpll.interfaceName) //nolint:wrapcheck //no point wrapping this
 	}
-	err = dpll.callback.Call(&dpllInfo, DPLLInfo)
-	if err != nil {
-		return fmt.Errorf("callback failed %w", err)
-	}
-	return nil
-}
-
-// Poll collects information from the cluster then
-// calls the callback.Call to allow that to persist it
-func (dpll *DPLLFilesystemCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCount) {
-	defer wg.Done()
-	errorsToReturn := make([]error, 0)
-	err := dpll.poll()
-	if err != nil {
-		errorsToReturn = append(errorsToReturn, err)
-	}
-	resultsChan <- PollResult{
-		CollectorName: DPLLFilesystemCollectorName,
-		Errors:        errorsToReturn,
-	}
-}
-
-// CleanUp stops a running collector
-func (dpll *DPLLFilesystemCollector) CleanUp() error {
-	dpll.running = false
-	return nil
 }
 
 // Returns a new DPLLFilesystemCollector from the CollectionConstuctor Factory
@@ -74,14 +40,17 @@ func NewDPLLFilesystemCollector(constructor *CollectionConstructor) (Collector, 
 		return &DPLLFilesystemCollector{}, fmt.Errorf("failed to build fetcher for DPLLInfo %w", err)
 	}
 
-	collector := DPLLFilesystemCollector{
+	collector := &DPLLFilesystemCollector{
 		baseCollector: newBaseCollector(
 			constructor.PollInterval,
 			false,
 			constructor.Callback,
+			DPLLFilesystemCollectorName,
+			DPLLInfo,
 		),
 		interfaceName: constructor.PTPInterface,
 		ctx:           ctx,
 	}
-	return &collector, nil
+	collector.poller = dpllFSPoller(collector)
+	return collector, nil
 }

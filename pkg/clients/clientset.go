@@ -4,6 +4,7 @@ package clients
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -40,7 +41,7 @@ func GetClientset(kubeconfigPaths ...string) (*Clientset, error) {
 
 	if len(kubeconfigPaths) == 0 {
 		return nil, utils.NewMissingInputError(
-			fmt.Errorf("must have at least one kubeconfig to initialise a new Clientset"),
+			errors.New("must have at least one kubeconfig to initialise a new Clientset"),
 		)
 	}
 	clientset, err := newClientset(kubeconfigPaths...)

@@ -267,6 +267,8 @@ func NewLogsCollector(constructor *CollectionConstructor) (Collector, error) {
 			logPollInterval,
 			false,
 			constructor.Callback,
+			LogsCollectorName,
+			"",
 		),
 		client:             constructor.Clientset,
 		sliceQuit:          make(chan os.Signal),
