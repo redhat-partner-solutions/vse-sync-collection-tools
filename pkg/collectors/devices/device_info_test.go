@@ -73,6 +73,8 @@ var _ = Describe("NewContainerContext", func() {
 			firmwareVersion := "4.20 0x8001778b 1.3346.0"
 			driverVersion := "1.11.20.7"
 
+			response["ls /sys/class/net/aFakeInterface/device/gnss/"] = []byte(gnssDev)
+
 			expectedInput := "echo '<date>';date +%s.%N;echo '</date>';"
 			expectedInput += "echo '<gnss>';ls /sys/class/net/aFakeInterface/device/gnss/;echo '</gnss>';"
 			expectedInput += "echo '<devID>';cat /sys/class/net/aFakeInterface/device/device;echo '</devID>';"

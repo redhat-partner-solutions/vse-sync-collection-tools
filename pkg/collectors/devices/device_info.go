@@ -3,6 +3,7 @@
 package devices
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"regexp"
@@ -26,8 +27,14 @@ type PTPDeviceInfo struct {
 	Timeoffset      time.Duration `fetcherKey:"timeOffset"      json:"timeOffset"`
 }
 
+const notFound = "NOT FOUND"
+
 // AnalyserJSON returns the json expected by the analysers
 func (ptpDevInfo *PTPDeviceInfo) GetAnalyserFormat() ([]*callbacks.AnalyserFormatType, error) {
+	gnssDev := ptpDevInfo.GNSSDev
+	if gnssDev == "" {
+		gnssDev = notFound
+	}
 	formatted := callbacks.AnalyserFormatType{
 		ID: "devInfo",
 		Data: map[string]any{
@@ -35,7 +42,7 @@ func (ptpDevInfo *PTPDeviceInfo) GetAnalyserFormat() ([]*callbacks.AnalyserForma
 			"fetched_timestamp": ptpDevInfo.Timestamp,
 			"vendorID":          ptpDevInfo.VendorID,
 			"devID":             ptpDevInfo.DeviceID,
-			"gnss":              ptpDevInfo.GNSSDev,
+			"gnss":              gnssDev,
 			"firmwareVersion":   ptpDevInfo.FirmwareVersion,
 			"driverVersion":     ptpDevInfo.DriverVersion,
 		},
@@ -106,20 +113,34 @@ func processGNSSPath(s string) (string, error) {
 	return "/dev/" + strings.TrimSpace(s), nil
 }
 
-// BuildPTPDeviceInfo popluates the fetcher required for
-// collecting the PTPDeviceInfo
-func BuildPTPDeviceInfo(interfaceName string) error { //nolint:dupl // Further dedup risks be too abstract or fragile
+func getGNSSSCommand(ctx clients.ExecContext, interfaceName string) (*clients.Cmd, error) {
+	buf := bytes.Buffer{}
+	buf.WriteString(fmt.Sprintf("ls /sys/class/net/%s/device/gnss/", interfaceName))
+	stdout, _, err := ctx.ExecCommandStdIn([]string{"/usr/bin/sh"}, buf)
+	if err != nil || stdout == "" {
+		return nil, fmt.Errorf("command to find gnss devices: %w", err)
+	}
 	gnssCmd, err := clients.NewCmd("gnss", fmt.Sprintf("ls /sys/class/net/%s/device/gnss/", interfaceName))
 	if err != nil {
-		return fmt.Errorf("failed to create fetcher for devInfo: failed to create command for %s: %w", "gnss", err)
+		return nil, fmt.Errorf("failed to create gnss command for interface %s: %w", interfaceName, err)
 	}
 	gnssCmd.SetOutputProcessor(processGNSSPath)
+	return gnssCmd, nil
+}
+
+// BuildPTPDeviceInfo popluates the fetcher required for
+// collecting the PTPDeviceInfo
+func BuildPTPDeviceInfo(ctx clients.ExecContext, interfaceName string) error { //nolint:dupl // Further dedup risks be too abstract or fragile
+	commands := []*clients.Cmd{dateCmd}
+	gnssCmd, err := getGNSSSCommand(ctx, interfaceName)
+	if err != nil {
+		log.Warn(err)
+	} else {
+		commands = append(commands, gnssCmd)
+	}
 
 	fetcherInst, err := fetcher.FetcherFactory(
-		[]*clients.Cmd{
-			dateCmd,
-			gnssCmd,
-		},
+		commands,
 		[]fetcher.AddCommandArgs{
 			{
 				Key:     "devID",
@@ -153,7 +174,7 @@ func GetPTPDeviceInfo(interfaceName string, ctx clients.ExecContext) (*PTPDevice
 	// Find the dev for the GNSS for this interface
 	fetcherInst, fetchedInstanceOk := devFetcher[interfaceName]
 	if !fetchedInstanceOk {
-		err := BuildPTPDeviceInfo(interfaceName)
+		err := BuildPTPDeviceInfo(ctx, interfaceName)
 		if err != nil {
 			return devInfo, err
 		}
