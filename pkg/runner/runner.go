@@ -163,14 +163,26 @@ func (runner *CollectorRunner) poller(
 
 // start configures all collectors to start collecting all their data keys
 func (runner *CollectorRunner) start() {
+	collectorsNames := make([]string, 0)
+	announcersNames := make([]string, 0)
+
 	for collectorName, collector := range runner.collectorInstances {
+		if collector.IsAnnouncer() {
+			announcersNames = append(announcersNames, collectorName)
+		} else {
+			collectorsNames = append(collectorsNames, collectorName)
+		}
+	}
+
+	for _, collectorName := range append(collectorsNames, announcersNames...) {
+		collectorName := collectorName
+
+		collector := runner.collectorInstances[collectorName]
 		log.Debugf("start collector %v", collector)
 		err := collector.Start()
 		utils.IfErrorExitOrPanic(err)
 
 		log.Debugf("Spawning  collector: %v", collector)
-		collectorName := collectorName
-		collector := collector
 		quit := make(chan os.Signal, 1)
 		runner.collectorQuitChannel[collectorName] = quit
 		var pollerWaitGroup *utils.WaitGroupCount
