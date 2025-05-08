@@ -109,7 +109,7 @@ func processGNSSPath(s string) (string, error) {
 // BuildPTPDeviceInfo popluates the fetcher required for
 // collecting the PTPDeviceInfo
 func BuildPTPDeviceInfo(interfaceName string) error { //nolint:dupl // Further dedup risks be too abstract or fragile
-	gnssCmd, err := clients.NewCmd("gnss", fmt.Sprintf("ls /sys/class/net/%s/device/gnss/", interfaceName))
+	gnssCmd, err := clients.NewCmd("gnss", fmt.Sprintf("ls /sys/class/net/%s/device/", interfaceName))
 	if err != nil {
 		return fmt.Errorf("failed to create fetcher for devInfo: failed to create command for %s: %w", "gnss", err)
 	}
