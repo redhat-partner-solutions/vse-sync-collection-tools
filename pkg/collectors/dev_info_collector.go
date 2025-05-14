@@ -136,7 +136,7 @@ func NewDevInfoCollector(constructor *CollectionConstructor) (Collector, error) 
 	if err != nil {
 		return &DevInfoCollector{}, fmt.Errorf("failed to create DevInfoCollector: %w", err)
 	}
-	err = devices.BuildPTPDeviceInfo(constructor.PTPInterface)
+	err = devices.BuildPTPDeviceInfo(ctx, constructor.PTPInterface)
 	if err != nil {
 		return &DevInfoCollector{}, fmt.Errorf("failed to build fetcher for PTPDeviceInfo %w", err)
 	}
