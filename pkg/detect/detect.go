@@ -116,16 +116,23 @@ func getDetectedInterfaces(ctx clients.ExecContext, config map[string][]string) 
 }
 
 func checkPTPConfig(ctx clients.ExecContext, clockType string) ([]DetectedInterface, error) {
-	// First try ts2phc config
-	interfaces, err := checkTs2PhcConfig(ctx)
-	if err != nil {
-		if clockType == constants.ClockTypeBC {
-			log.Info("ts2phc config not found, falling back to ptp4l config for BC clock")
+	if clockType == constants.ClockTypeBC {
+		// For BC clocks, try ptp4l config first
+		interfaces, err := checkPtp4lConfig(ctx)
+		if err != nil {
+			log.Info("ptp4l config not found, falling back to ts2phc config for BC clock")
+			return checkTs2PhcConfig(ctx)
+		}
+		return interfaces, nil
+	} else {
+		// For GM clocks, try ts2phc config first
+		interfaces, err := checkTs2PhcConfig(ctx)
+		if err != nil {
+			log.Info("ts2phc config not found, falling back to ptp4l config for GM clock")
 			return checkPtp4lConfig(ctx)
 		}
-		return nil, err
+		return interfaces, nil
 	}
-	return interfaces, nil
 }
 
 func checkPtp4lConfig(ctx clients.ExecContext) ([]DetectedInterface, error) {
