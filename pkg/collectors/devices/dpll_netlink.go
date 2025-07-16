@@ -14,6 +14,7 @@ import (
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/callbacks"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/clients"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/fetcher"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/utils"
 )
 
 var states = map[string]string{
@@ -312,7 +313,9 @@ func selectPin(pinsJSON []byte, clockID uint64) (int32, string, error) { //nolin
 	if err != nil {
 		return 0, "", fmt.Errorf("failed to unmarshal netlink output: %s", err.Error())
 	}
-
+	if len(entries) == 0 {
+		return 0, "", utils.NewRequirementsNotMetError(errors.New("no pins found"))
+	}
 	var OnePPSPin, SMA1Pin *NetlinkPin
 
 	log.Debug("entries: ", entries)
