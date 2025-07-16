@@ -16,6 +16,7 @@ import (
 
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/clients"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors/contexts"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/constants"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/utils"
 )
 
@@ -25,12 +26,12 @@ type DetectedInterface struct {
 	Primary            bool   `json:"primary"`
 }
 
-func Detect(kubeConfig, ptpNodeName string, outputAsJSON bool) {
+func Detect(kubeConfig, ptpNodeName string, outputAsJSON bool, clockType string) {
 	clientset, err := clients.GetClientset(kubeConfig)
 	utils.IfErrorExitOrPanic(err)
 	ctx, err := contexts.GetPTPDaemonContext(clientset, ptpNodeName)
 	utils.IfErrorExitOrPanic(err)
-	interfaces, err := checkTs2PhcConfig(ctx)
+	interfaces, err := checkPTPConfig(ctx, clockType)
 	utils.IfErrorExitOrPanic(err)
 	output(os.Stdout, interfaces, outputAsJSON)
 }
@@ -67,7 +68,7 @@ func parseConfig(contents string) (map[string][]string, error) {
 	}
 
 	if err := scanner.Err(); err != nil {
-		return result, fmt.Errorf("failed when parsing ts2phc config: %w", err)
+		return result, fmt.Errorf("failed when parsing config: %w", err)
 	}
 	return result, nil
 }
@@ -114,11 +115,88 @@ func getDetectedInterfaces(ctx clients.ExecContext, config map[string][]string) 
 	return detected
 }
 
+func checkPTPConfig(ctx clients.ExecContext, clockType string) ([]DetectedInterface, error) {
+	// First try ts2phc config
+	interfaces, err := checkTs2PhcConfig(ctx)
+	if err != nil {
+		if clockType == constants.ClockTypeBC {
+			log.Info("ts2phc config not found, falling back to ptp4l config for BC clock")
+			return checkPtp4lConfig(ctx)
+		}
+		return nil, err
+	}
+	return interfaces, nil
+}
+
+func checkPtp4lConfig(ctx clients.ExecContext) ([]DetectedInterface, error) {
+	errs := []error{}
+	detected := []DetectedInterface{}
+	files, _, err := ctx.ExecCommand([]string{"ls", "/var/run/"})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list /var/run/ directory: %w", err)
+	}
+
+	ptp4lConfigFiles := make([]string, 0)
+	for _, f := range strings.Fields(files) {
+		if strings.HasPrefix(f, "ptp4l.") && strings.HasSuffix(f, ".config") {
+			ptp4lConfigFiles = append(ptp4lConfigFiles, f)
+		}
+	}
+	if len(ptp4lConfigFiles) == 0 {
+		return nil, errors.New("failed to find ptp4l config file")
+	} else if len(ptp4lConfigFiles) > 1 {
+		log.Warnf("Multiple ptp4l profiles found (%v)", ptp4lConfigFiles)
+	}
+
+	for _, ptp4lConfigPath := range ptp4lConfigFiles {
+		ptp4lConfig, _, err := ctx.ExecCommand([]string{"cat", "/var/run/" + ptp4lConfigPath})
+		if err != nil {
+			errs = append(errs, fmt.Errorf("failed to read ptp4l config file: %w", err))
+			continue
+		}
+		config, err := parseConfig(ptp4lConfig)
+		if err != nil {
+			errs = append(errs, fmt.Errorf("failed to parse ptp4l config file: %w", err))
+			continue
+		}
+
+		detected = append(detected, getDetectedInterfacesFromPtp4l(ctx, config)...)
+	}
+	return detected, utils.MakeCompositeError("", errs) //nolint:wrapcheck //this just combines errors.
+}
+
+func getDetectedInterfacesFromPtp4l(ctx clients.ExecContext, config map[string][]string) []DetectedInterface {
+	detected := []DetectedInterface{}
+	for section, _ := range config {
+		if section == "global" || section == "nmea" { //nolint:goconst // only one time so const would obfuscate
+			continue
+		}
+
+		// For BC clocks, all interfaces are primary (they participate in PTP sync)
+		isPrimary := true
+
+		ptpDev, err := getPTPClockDevice(ctx, section)
+		if err != nil {
+			log.Warnf("Failed to get PTP clock device for interface %s: %v", section, err)
+			continue
+		}
+
+		detected = append(detected, DetectedInterface{
+			Name:               strings.TrimSpace(section),
+			Primary:            isPrimary,
+			PTPClockDevicePath: ptpDev,
+		})
+	}
+	return detected
+}
+
 func checkTs2PhcConfig(ctx clients.ExecContext) ([]DetectedInterface, error) { //nolint:staticcheck //Suggestion looks bad
 	errs := []error{}
 	detected := []DetectedInterface{}
 	files, _, err := ctx.ExecCommand([]string{"ls", "/var/run/"})
-	utils.IfErrorExitOrPanic(err)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list /var/run/ directory: %w", err)
+	}
 
 	ts2phcConfigFiles := make([]string, 0)
 	for _, f := range strings.Fields(files) {
