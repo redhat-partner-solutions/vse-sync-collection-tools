@@ -281,10 +281,10 @@ func BuildNetlinkInfoFetcher(interfaceName string) error {
 		[]*clients.Cmd{dateCmd},
 		[]fetcher.AddCommandArgs{
 			{
-				Key: "dpll-netlink-clock-id",
+				Key: "dpll-netlink-clock-serial-number",
 				Command: fmt.Sprintf(
 					`export IFNAME=%s; export BUSID=$(readlink /sys/class/net/$IFNAME/device | xargs basename | cut -d ':' -f 2,3);`+
-						` echo $(("16#$(lspci -v | grep $BUSID -A 20 |grep 'Serial Number' | awk '{print $NF}' | tr -d '-')"))`,
+						` echo $(lspci -v | grep $BUSID -A 20 |grep 'Serial Number' | awk '{print $NF}' | tr -d '-')`,
 					interfaceName,
 				),
 				Trim: true,
@@ -357,7 +357,7 @@ func selectPin(pinsJSON []byte, clockID uint64) (int32, string, error) { //nolin
 
 func postProcessDPLLNetlinkClockID(result map[string]string) (map[string]any, error) {
 	processedResult := make(map[string]any)
-	clockID, err := strconv.ParseUint(result["dpll-netlink-clock-id"], 10, 64)
+	clockID, err := strconv.ParseUint(result["dpll-netlink-clock-serial-number"], 16, 64)
 	if err != nil {
 		return processedResult, fmt.Errorf("failed to parse int for clock id: %w", err)
 	}
