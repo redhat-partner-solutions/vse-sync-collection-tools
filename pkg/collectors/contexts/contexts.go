@@ -4,6 +4,7 @@ package contexts
 
 import (
 	"fmt"
+	"os"
 
 	corev1 "k8s.io/api/core/v1"
 
@@ -11,14 +12,22 @@ import (
 )
 
 const (
-	PTPNamespace               = "openshift-ptp"
-	PTPPodNamePrefix           = "linuxptp-daemon-"
-	PTPContainer               = "linuxptp-daemon-container"
-	GPSContainer               = "gpsd"
-	NetlinkDebugPod            = "ptp-dpll-netlink-debug-pod"
-	NetlinkDebugContainer      = "ptp-dpll-netlink-debug-container"
-	NetlinkDebugContainerImage = "quay.io/redhat-partner-solutions/dpll-debug:0.5"
+	PTPNamespace          = "openshift-ptp"
+	PTPPodNamePrefix      = "linuxptp-daemon-"
+	PTPContainer          = "linuxptp-daemon-container"
+	GPSContainer          = "gpsd"
+	NetlinkDebugPod       = "ptp-dpll-netlink-debug-pod"
+	NetlinkDebugContainer = "ptp-dpll-netlink-debug-container"
 )
+
+// GetNetlinkDebugContainerImage returns the container image for netlink debug pod,
+// configurable via NETLINK_DEBUG_CONTAINER_IMAGE environment variable
+func GetNetlinkDebugContainerImage() string {
+	if image := os.Getenv("NETLINK_DEBUG_CONTAINER_IMAGE"); image != "" {
+		return image
+	}
+	return "quay.io/redhat-partner-solutions/dpll-debug:0.5"
+}
 
 func GetPTPDaemonContext(clientset *clients.Clientset, ptpNodeName string) (clients.ExecContext, error) {
 	ctx, err := clients.NewContainerContext(clientset, PTPNamespace, PTPPodNamePrefix, PTPContainer, ptpNodeName)
@@ -39,7 +48,7 @@ func GetNetlinkContext(
 		PTPNamespace,
 		NetlinkDebugPod,
 		NetlinkDebugContainer,
-		NetlinkDebugContainerImage,
+		GetNetlinkDebugContainerImage(),
 		map[string]string{},
 		[]string{"sleep", "inf"},
 		&corev1.SecurityContext{
