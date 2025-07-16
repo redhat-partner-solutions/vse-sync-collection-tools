@@ -14,6 +14,7 @@ import (
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/clients"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors/contexts"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors/devices"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/constants"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/utils"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/validations"
 )
@@ -83,16 +84,21 @@ func getGPSStatusValidation(
 	}
 }
 
-func getValidations(interfaceName, ptpNodeName, kubeConfig string) []validations.Validation {
+func getValidations(interfaceName, ptpNodeName, kubeConfig, clockType string) []validations.Validation {
 	checks := make([]validations.Validation, 0)
 	clientset, err := clients.GetClientset(kubeConfig)
 	utils.IfErrorExitOrPanic(err)
 	checks = append(checks, getDevInfoValidations(clientset, interfaceName, ptpNodeName)...)
-	checks = append(checks, getGPSVersionValidations(clientset, ptpNodeName)...)
-	checks = append(checks, getGPSStatusValidation(clientset, ptpNodeName)...)
+
+	// Skip GPS/GNSS validations for Boundary Clock
+	if clockType == constants.ClockTypeGM {
+		checks = append(checks, getGPSVersionValidations(clientset, ptpNodeName)...)
+		checks = append(checks, getGPSStatusValidation(clientset, ptpNodeName)...)
+		checks = append(checks, validations.NewIsGrandMaster(clientset))
+	}
+	// Common validations for both GM and BC
 	checks = append(
 		checks,
-		validations.NewIsGrandMaster(clientset),
 		validations.NewOperatorVersion(clientset),
 		validations.NewClusterVersion(clientset),
 	)
@@ -168,8 +174,8 @@ func report(results []*ValidationResult, useAnalyserJSON bool) {
 	}
 }
 
-func Verify(interfaceName, kubeConfig string, useAnalyserJSON bool, nodeName string) {
-	checks := getValidations(interfaceName, nodeName, kubeConfig)
+func Verify(interfaceName, kubeConfig string, useAnalyserJSON bool, nodeName, clockType string) {
+	checks := getValidations(interfaceName, nodeName, kubeConfig, clockType)
 
 	results := make([]*ValidationResult, 0)
 	for _, check := range checks {

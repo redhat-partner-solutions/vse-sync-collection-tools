@@ -5,6 +5,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/constants"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/utils"
 )
 
@@ -14,6 +15,7 @@ var (
 	useAnalyserJSON bool
 	ptpInterface    string
 	nodeName        string
+	clockType       string
 )
 
 func AddKubeconfigFlag(targetCmd *cobra.Command) {
@@ -56,4 +58,11 @@ func AddNodeNameFlag(targetCmd *cobra.Command) {
 		"nodeName",
 		"n", "",
 		"Name of the Node under test (valid only for MNO Use case)")
+}
+
+func AddClockTypeFlag(targetCmd *cobra.Command) {
+	targetCmd.Flags().StringVarP(&clockType,
+		"clock-type",
+		"c", constants.ClockTypeGM,
+		"Clock type: GM (Grand Master) or BC (Boundary Clock)")
 }
