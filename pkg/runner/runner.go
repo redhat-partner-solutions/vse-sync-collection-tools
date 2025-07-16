@@ -12,6 +12,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/constants"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/utils"
 )
 
@@ -69,6 +70,12 @@ func (runner *CollectorRunner) initialise( //nolint:funlen // allow a slightly l
 	registry := collectors.GetRegistry()
 
 	for _, collectorName := range runner.collectorNames {
+		// Skip GPS/GNSS collectors for Boundary Clock
+		if constructor.ClockType == constants.ClockTypeBC && collectorName == collectors.GPSCollectorName {
+			log.Infof("Skipping GPS collector '%s' for Boundary Clock configuration", collectorName)
+			continue
+		}
+
 		builderFunc, err := registry.GetBuilderFunc(collectorName)
 		if err != nil {
 			log.Error(err)

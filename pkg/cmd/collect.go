@@ -15,6 +15,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/constants"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/runner"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/utils"
 )
@@ -47,6 +48,13 @@ var collectCmd = &cobra.Command{
 	Short: "Run the collector tool",
 	Long:  `Run the collector tool to gather data from your target cluster`,
 	Run: func(cmd *cobra.Command, args []string) {
+		// Validate clock type
+		clockTypeUpper := strings.ToUpper(clockType)
+		if clockTypeUpper != constants.ClockTypeGM && clockTypeUpper != constants.ClockTypeBC {
+			fmt.Fprintf(os.Stderr, "Error: Invalid clock type '%s'. Must be either '%s' or '%s'\n", clockType, constants.ClockTypeGM, constants.ClockTypeBC)
+			os.Exit(1)
+		}
+
 		collectionRunner := runner.NewCollectorRunner(collectorNames)
 
 		requestedDuration, err := time.ParseDuration(requestedDurationStr)
@@ -93,6 +101,7 @@ var collectCmd = &cobra.Command{
 			includeLogTimestamps,
 			keepDebugFiles,
 			unmanagedDebugPod,
+			clockTypeUpper,
 		)
 		utils.IfErrorExitOrPanic(err)
 
@@ -111,6 +120,7 @@ func init() { //nolint:funlen // Allow this to get a little long
 	AddFormatFlag(collectCmd)
 	AddInterfaceFlag(collectCmd)
 	AddNodeNameFlag(collectCmd)
+	AddClockTypeFlag(collectCmd)
 
 	collectCmd.Flags().StringVarP(
 		&requestedDurationStr,
