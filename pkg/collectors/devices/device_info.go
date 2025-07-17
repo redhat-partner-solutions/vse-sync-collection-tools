@@ -14,6 +14,7 @@ import (
 
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/callbacks"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/clients"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/constants"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/fetcher"
 )
 
@@ -135,13 +136,17 @@ func getGNSSSCommand(ctx clients.ExecContext, interfaceName string) (*clients.Cm
 
 // BuildPTPDeviceInfo popluates the fetcher required for
 // collecting the PTPDeviceInfo
-func BuildPTPDeviceInfo(ctx clients.ExecContext, interfaceName string) error { //nolint:dupl // Further dedup risks be too abstract or fragile
+func BuildPTPDeviceInfo(ctx clients.ExecContext, interfaceName string, clockType string) error { //nolint:dupl // Further dedup risks be too abstract or fragile
 	commands := []*clients.Cmd{dateCmd}
-	gnssCmd, err := getGNSSSCommand(ctx, interfaceName)
-	if err != nil {
-		log.Warn(err)
-	} else {
-		commands = append(commands, gnssCmd)
+
+	// Only include GNSS command for GM (Grand Master) clock type, skip for BC (Boundary Clock)
+	if clockType == constants.ClockTypeGM {
+		gnssCmd, err := getGNSSSCommand(ctx, interfaceName)
+		if err != nil {
+			log.Warn(err)
+		} else {
+			commands = append(commands, gnssCmd)
+		}
 	}
 
 	fetcherInst, err := fetcher.FetcherFactory(
@@ -174,12 +179,12 @@ func BuildPTPDeviceInfo(ctx clients.ExecContext, interfaceName string) error { /
 }
 
 // GetPTPDeviceInfo returns the PTPDeviceInfo for an interface
-func GetPTPDeviceInfo(interfaceName string, ctx clients.ExecContext) (*PTPDeviceInfo, error) {
+func GetPTPDeviceInfo(interfaceName string, ctx clients.ExecContext, clockType string) (*PTPDeviceInfo, error) {
 	devInfo := &PTPDeviceInfo{}
 	// Find the dev for the GNSS for this interface
 	fetcherInst, fetchedInstanceOk := devFetcher[interfaceName]
 	if !fetchedInstanceOk {
-		err := BuildPTPDeviceInfo(ctx, interfaceName)
+		err := BuildPTPDeviceInfo(ctx, interfaceName, clockType)
 		if err != nil {
 			return devInfo, err
 		}
