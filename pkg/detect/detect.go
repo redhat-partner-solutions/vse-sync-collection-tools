@@ -10,6 +10,7 @@ import (
 	"io"
 	"os"
 	"regexp"
+	"sort"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -24,6 +25,41 @@ type DetectedInterface struct {
 	Name               string `json:"name"`
 	PTPClockDevicePath string `json:"ptp_dev"` //nolint:tagliatelle // script assumes
 	Primary            bool   `json:"primary"`
+}
+
+// sortAndDeduplicateInterfaces sorts interfaces by Primary (primary first) then by Name (alphabetically),
+// and deduplicates based on PTP device path, keeping the first occurrence
+func sortAndDeduplicateInterfaces(interfaces []DetectedInterface) []DetectedInterface {
+	if len(interfaces) == 0 {
+		return interfaces
+	}
+
+	// First, deduplicate based on PTP device path
+	// Use a map to track seen PTP devices and keep only the first occurrence
+	seen := make(map[string]bool)
+	deduplicated := make([]DetectedInterface, 0, len(interfaces))
+
+	// Sort by Primary (primary first) then by Name (alphabetically)
+	sort.Slice(interfaces, func(i, j int) bool {
+		// Primary interfaces come first
+		if interfaces[i].Primary != interfaces[j].Primary {
+			return interfaces[i].Primary // true comes before false
+		}
+		// If Primary status is the same, sort by Name alphabetically
+		return interfaces[i].Name < interfaces[j].Name
+	})
+
+	for _, iface := range interfaces {
+		if !seen[iface.PTPClockDevicePath] {
+			seen[iface.PTPClockDevicePath] = true
+			deduplicated = append(deduplicated, iface)
+		} else {
+			log.Infof("Deduplicating interface %s with PTP device %s (already seen)",
+				iface.Name, iface.PTPClockDevicePath)
+		}
+	}
+
+	return deduplicated
 }
 
 func Detect(kubeConfig, ptpNodeName string, outputAsJSON bool, clockType string) {
@@ -73,7 +109,9 @@ func parseConfig(contents string) (map[string][]string, error) {
 	return result, nil
 }
 
-var notMaster = regexp.MustCompile(`ts2phc.master\s+0`)
+var ts2phcNotMaster = regexp.MustCompile(`ts2phc.master\s+0`)
+var ptp4lMasterOnly = regexp.MustCompile(`masterOnly\s+1`)
+var ptp4lServerOnly = regexp.MustCompile(`serverOnly\s+1`)
 
 func getPTPClockDevice(ctx clients.ExecContext, interfaceName string) (string, error) {
 	out, _, err := ctx.ExecCommand([]string{"ethtool", "-T", interfaceName})
@@ -98,7 +136,7 @@ func getDetectedInterfaces(ctx clients.ExecContext, config map[string][]string) 
 
 		isPrimary := true
 		for _, l := range lines {
-			if notMaster.MatchString(l) {
+			if ts2phcNotMaster.MatchString(l) {
 				isPrimary = false
 			}
 		}
@@ -174,13 +212,18 @@ func checkPtp4lConfig(ctx clients.ExecContext) ([]DetectedInterface, error) {
 
 func getDetectedInterfacesFromPtp4l(ctx clients.ExecContext, config map[string][]string) []DetectedInterface {
 	detected := []DetectedInterface{}
-	for section, _ := range config {
+	for section, lines := range config {
 		if section == "global" || section == "nmea" { //nolint:goconst // only one time so const would obfuscate
 			continue
 		}
 
 		// For BC clocks, all interfaces are primary (they participate in PTP sync)
 		isPrimary := true
+		for _, l := range lines {
+			if ptp4lMasterOnly.MatchString(l) || ptp4lServerOnly.MatchString(l) {
+				isPrimary = false
+			}
+		}
 
 		ptpDev, err := getPTPClockDevice(ctx, section)
 		if err != nil {
@@ -194,7 +237,7 @@ func getDetectedInterfacesFromPtp4l(ctx clients.ExecContext, config map[string][
 			PTPClockDevicePath: ptpDev,
 		})
 	}
-	return detected
+	return sortAndDeduplicateInterfaces(detected)
 }
 
 func checkTs2PhcConfig(ctx clients.ExecContext) ([]DetectedInterface, error) { //nolint:staticcheck //Suggestion looks bad
