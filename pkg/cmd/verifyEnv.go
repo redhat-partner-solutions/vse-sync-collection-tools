@@ -3,8 +3,13 @@
 package cmd
 
 import (
+	"fmt"
+	"os"
+	"strings"
+
 	"github.com/spf13/cobra"
 
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/constants"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/verify"
 )
 
@@ -20,7 +25,13 @@ var verifyEnvCmd = &cobra.Command{
 	Short: "verify the environment is ready for collection",
 	Long:  `verify the environment is ready for collection`,
 	Run: func(cmd *cobra.Command, args []string) {
-		verify.Verify(ptpInterface, kubeConfig, useAnalyserJSON, nodeName)
+		// Validate clock type
+		clockTypeUpper := strings.ToUpper(clockType)
+		if clockTypeUpper != constants.ClockTypeGM && clockTypeUpper != constants.ClockTypeBC {
+			fmt.Fprintf(os.Stderr, "Error: Invalid clock type '%s'. Must be either '%s' or '%s'\n", clockType, constants.ClockTypeGM, constants.ClockTypeBC)
+			os.Exit(1)
+		}
+		verify.Verify(ptpInterface, kubeConfig, useAnalyserJSON, nodeName, clockTypeUpper)
 	},
 }
 
@@ -32,4 +43,5 @@ func init() {
 	AddFormatFlag(verifyEnvCmd)
 	AddInterfaceFlag(verifyEnvCmd)
 	AddNodeNameFlag(verifyEnvCmd)
+	AddClockTypeFlag(verifyEnvCmd)
 }

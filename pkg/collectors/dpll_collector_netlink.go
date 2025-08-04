@@ -105,5 +105,9 @@ func NewDPLLNetlinkCollector(constructor *CollectionConstructor) (Collector, err
 		unmanagedDebugPod: constructor.UnmanagedDebugPod,
 	}
 	collector.poller = dpllNetlinkPoller(collector)
-	return collector, nil
+	err = collector.Start()
+	if err != nil {
+		collector.CleanUp()
+	}
+	return collector, err
 }

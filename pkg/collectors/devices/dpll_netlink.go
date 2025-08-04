@@ -14,6 +14,7 @@ import (
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/callbacks"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/clients"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/fetcher"
+	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/utils"
 )
 
 var states = map[string]string{
@@ -270,7 +271,6 @@ func GetDevDPLLNetlinkInfo(ctx clients.ExecContext, params NetlinkParameters) (*
 	}
 	err := fetcherInst.Fetch(ctx, dpllInfo)
 	if err != nil {
-		log.Debugf("failed to fetch dpllInfo  via netlink: %s", err.Error())
 		return dpllInfo, fmt.Errorf("failed to fetch dpllInfo via netlink: %w", err)
 	}
 	return dpllInfo, nil
@@ -281,10 +281,10 @@ func BuildNetlinkInfoFetcher(interfaceName string) error {
 		[]*clients.Cmd{dateCmd},
 		[]fetcher.AddCommandArgs{
 			{
-				Key: "dpll-netlink-clock-id",
+				Key: "dpll-netlink-clock-serial-number",
 				Command: fmt.Sprintf(
 					`export IFNAME=%s; export BUSID=$(readlink /sys/class/net/$IFNAME/device | xargs basename | cut -d ':' -f 2,3);`+
-						` echo $(("16#$(lspci -v | grep $BUSID -A 20 |grep 'Serial Number' | awk '{print $NF}' | tr -d '-')"))`,
+						` echo $(lspci -v | grep $BUSID -A 20 |grep 'Serial Number' | awk '{print $NF}' | tr -d '-')`,
 					interfaceName,
 				),
 				Trim: true,
@@ -312,7 +312,9 @@ func selectPin(pinsJSON []byte, clockID uint64) (int32, string, error) { //nolin
 	if err != nil {
 		return 0, "", fmt.Errorf("failed to unmarshal netlink output: %s", err.Error())
 	}
-
+	if len(entries) == 0 {
+		return 0, "", utils.NewRequirementsNotMetError(errors.New("no pins found"))
+	}
 	var OnePPSPin, SMA1Pin *NetlinkPin
 
 	log.Debug("entries: ", entries)
@@ -357,7 +359,7 @@ func selectPin(pinsJSON []byte, clockID uint64) (int32, string, error) { //nolin
 
 func postProcessDPLLNetlinkClockID(result map[string]string) (map[string]any, error) {
 	processedResult := make(map[string]any)
-	clockID, err := strconv.ParseUint(result["dpll-netlink-clock-id"], 10, 64)
+	clockID, err := strconv.ParseUint(result["dpll-netlink-clock-serial-number"], 16, 64)
 	if err != nil {
 		return processedResult, fmt.Errorf("failed to parse int for clock id: %w", err)
 	}
@@ -395,7 +397,6 @@ func GetNetlinkParameters(ctx clients.ExecContext, interfaceName string) (Netlin
 	}
 	err := fetcherInst.Fetch(ctx, &netlinkInfo)
 	if err != nil {
-		log.Debugf("failed to fetch netlink info %s", err.Error())
 		return netlinkInfo, fmt.Errorf("failed to fetch netlink info %w", err)
 	}
 	return netlinkInfo, nil

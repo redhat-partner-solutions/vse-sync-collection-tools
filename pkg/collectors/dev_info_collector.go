@@ -27,6 +27,7 @@ type DevInfoCollector struct {
 	erroredPolls  chan PollResult
 	requiresFetch chan bool
 	interfaceName string
+	clockType     string
 	wg            sync.WaitGroup
 }
 
@@ -76,7 +77,7 @@ func devInfoPoller(ptpDev *DevInfoCollector) func() (callbacks.OutputType, error
 		var devInfo *devices.PTPDeviceInfo
 		select {
 		case <-ptpDev.requiresFetch:
-			fetchedDevInfo, err := devices.GetPTPDeviceInfo(ptpDev.interfaceName, ptpDev.ctx)
+			fetchedDevInfo, err := devices.GetPTPDeviceInfo(ptpDev.interfaceName, ptpDev.ctx, ptpDev.clockType)
 			if err != nil {
 				return devInfo, fmt.Errorf("failed to fetch %s %w", DeviceInfo, err)
 			}
@@ -136,12 +137,12 @@ func NewDevInfoCollector(constructor *CollectionConstructor) (Collector, error) 
 	if err != nil {
 		return &DevInfoCollector{}, fmt.Errorf("failed to create DevInfoCollector: %w", err)
 	}
-	err = devices.BuildPTPDeviceInfo(ctx, constructor.PTPInterface)
+	err = devices.BuildPTPDeviceInfo(ctx, constructor.PTPInterface, constructor.ClockType)
 	if err != nil {
 		return &DevInfoCollector{}, fmt.Errorf("failed to build fetcher for PTPDeviceInfo %w", err)
 	}
 
-	ptpDevInfo, err := devices.GetPTPDeviceInfo(constructor.PTPInterface, ctx)
+	ptpDevInfo, err := devices.GetPTPDeviceInfo(constructor.PTPInterface, ctx, constructor.ClockType)
 	if err != nil {
 		return &DevInfoCollector{}, fmt.Errorf("failed to fetch initial DeviceInfo %w", err)
 	}
@@ -161,6 +162,7 @@ func NewDevInfoCollector(constructor *CollectionConstructor) (Collector, error) 
 		),
 		ctx:           ctx,
 		interfaceName: constructor.PTPInterface,
+		clockType:     constructor.ClockType,
 		devInfo:       ptpDevInfo,
 		quit:          make(chan os.Signal),
 		erroredPolls:  constructor.ErroredPolls,
