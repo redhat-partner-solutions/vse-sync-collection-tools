@@ -271,7 +271,6 @@ func GetDevDPLLNetlinkInfo(ctx clients.ExecContext, params NetlinkParameters) (*
 	}
 	err := fetcherInst.Fetch(ctx, dpllInfo)
 	if err != nil {
-		log.Debugf("failed to fetch dpllInfo  via netlink: %s", err.Error())
 		return dpllInfo, fmt.Errorf("failed to fetch dpllInfo via netlink: %w", err)
 	}
 	return dpllInfo, nil
@@ -398,7 +397,6 @@ func GetNetlinkParameters(ctx clients.ExecContext, interfaceName string) (Netlin
 	}
 	err := fetcherInst.Fetch(ctx, &netlinkInfo)
 	if err != nil {
-		log.Debugf("failed to fetch netlink info %s", err.Error())
 		return netlinkInfo, fmt.Errorf("failed to fetch netlink info %w", err)
 	}
 	return netlinkInfo, nil
