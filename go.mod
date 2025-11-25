@@ -1,6 +1,6 @@
 module github.com/redhat-partner-solutions/vse-sync-collection-tools
 
-go 1.18
+go 1.24.2
 
 require (
 	github.com/onsi/ginkgo/v2 v2.9.0
