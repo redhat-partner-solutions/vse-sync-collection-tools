@@ -114,7 +114,7 @@ func getDetectedInterfaces(ctx clients.ExecContext, config map[string][]string) 
 	return detected
 }
 
-func checkTs2PhcConfig(ctx clients.ExecContext) ([]DetectedInterface, error) { //nolint:stylecheck //Suggestion looks bad
+func checkTs2PhcConfig(ctx clients.ExecContext) ([]DetectedInterface, error) { //nolint:staticcheck //Suggestion looks bad
 	errs := []error{}
 	detected := []DetectedInterface{}
 	files, _, err := ctx.ExecCommand([]string{"ls", "/var/run/"})

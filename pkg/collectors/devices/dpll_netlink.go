@@ -53,7 +53,7 @@ type DevNetlinkDPLLInfo struct {
 
 func convertNetlinkOffset(offset int64) float64 {
 	// Convert to nano seconds with 3 decimal places
-	return float64(int64(math.Round(float64(offset/DPLLPhaseOffsetDivider)))) / 1000 //nolint:gomnd,mnd // this is just for decimal places
+	return float64(int64(math.Round(float64(offset/DPLLPhaseOffsetDivider)))) / 1000 //nolint:mnd // this is just for decimal places
 }
 
 // AnalyserJSON returns the json expected by the analysers

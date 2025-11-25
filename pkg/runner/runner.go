@@ -154,7 +154,7 @@ func (runner *CollectorRunner) poller(
 				runningPolls.Add(1)
 				go collector.Poll(runner.pollResults, &runningPolls)
 			}
-			time.Sleep(10 * time.Nanosecond) //nolint:gomnd,mnd // no point in making this its own var
+			time.Sleep(10 * time.Nanosecond) //nolint:mnd // no point in making this its own var
 		}
 	}
 	runningPolls.Wait()
