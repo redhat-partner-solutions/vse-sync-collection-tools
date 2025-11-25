@@ -1,119 +1,112 @@
-linters-settings:  # https://golangci-lint.run/
-  dupl:
-    threshold: 100
-  funlen:
-    lines: 50
-    statements: 25
-  gci:
-    sections:
-      - standard
-      - dot
-      - default
-      - prefix(github.com/redhat-partner-solutions)
-      - blank
-    custom-order: true
-  goconst:
-    min-len: 4
-    min-occurrences: 1
-  gocritic:
-    enabled-tags:
-      - diagnostic
-      - experimental
-      - opinionated
-      - performance
-      - style
-    disabled-checks:
-      - dupImport  # https://github.com/go-critic/go-critic/issues/845
-      - octalLiteral
-  gocyclo:
-    min-complexity: 15
-  gomnd:
-    settings:
-      mnd:
-        # don't include the "operation" and "assign"
-        checks: argument,case,condition,return
-  govet:
-    check-shadowing: true
-    settings:
-      printf:
-        funcs:
-          - (github.com/sirupsen/logrus).Infof
-          - (github.com/sirupsen/logrus).Warnf
-          - (github.com/sirupsen/logrus).Errorf
-          - (github.com/sirupsen/logrus).Fatalf
-    enable-all: true
-  lll:
-    line-length: 120
-  maligned:
-    suggest-new: true
-  nolintlint:
-    allow-leading-space: false  # disallow leading spaces. A space means the //nolint comment shows in `godoc` output.
-    allow-unused: true  # report any unused nolint directives
-    require-explanation: true  # don't require an explanation for nolint directives
-    require-specific: true  # require nolint directives to be specific about which linter is being skipped
-  tagliatelle:
-    case:
-      rules:
-        yaml: snake
-  revive:
-    rules:
-      - name: exported
-        arguments:
-          - "disableStutteringCheck"
+version: "2"
 linters:
-  enable-all: true
+  default: all
   disable:
-    - deadcode
+    - depguard
+    - err113
     - exhaustruct
-    - exhaustivestruct
     - gochecknoglobals
     - gochecknoinits
     - gocognit
     - godot
     - godox
-    - goerr113
-    - gofumpt  # go1.19 and above.
-    - goimports
-    - golint
-    - ifshort
-    - interfacer
-    - maligned
+    - ireturn
     - nlreturn
-    - nosnakecase
     - nonamedreturns
     - paralleltest
-    - scopelint
-    - structcheck
-    - varcheck
     - wsl
-    - ireturn
+  settings:
+    dupl:
+      threshold: 100
+    funlen:
+      lines: 50
+      statements: 25
+    goconst:
+      min-len: 4
+      min-occurrences: 1
+    gocritic:
+      disabled-checks:
+        - dupImport
+        - octalLiteral
+      enabled-tags:
+        - diagnostic
+        - experimental
+        - opinionated
+        - performance
+        - style
+    gocyclo:
+      min-complexity: 15
+    govet:
+      enable-all: true
+      settings:
+        printf:
+          funcs:
+            - (github.com/sirupsen/logrus).Infof
+            - (github.com/sirupsen/logrus).Warnf
+            - (github.com/sirupsen/logrus).Errorf
+            - (github.com/sirupsen/logrus).Fatalf
+    lll:
+      line-length: 120
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+      allow-unused: true
+    revive:
+      rules:
+        - name: exported
+          arguments:
+            - disableStutteringCheck
+    tagliatelle:
+      case:
+        rules:
+          yaml: snake
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - goconst
+          - mnd
+        path: _test\.go
+      - linters:
+          - lll
+        source: ^(.*= (".*"|`.*`))$
+      - linters:
+          - lll
+        source: \/\/.+$
+      - linters:
+          - tagliatelle
+        source: ^.*(PPS|EEC|GNSS|GPS).*$
+      - linters:
+          - ireturn
+        source: func.*New.*Collector.*$
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gci
+    - gofmt
+  settings:
+    gci:
+      sections:
+        - standard
+        - dot
+        - default
+        - prefix(github.com/redhat-partner-solutions)
+        - blank
+      custom-order: true
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
 issues:
-  # Excluding configuration per-path, per-linter, per-text and per-source
-  exclude-rules:
-    # Ignore magic numbers and inline strings in tests.
-    - path: _test\.go
-      linters:
-        - gomnd
-        - goconst
-    # Ignore line length for string assignments (don't try and line-wrap regex definitions) and trailing comments
-    - linters:
-        - lll
-      source: "^(.*= (\".*\"|`.*`))$"
-    - linters:
-        - lll
-      source: "\\/\\/.+$"
-    - linters:
-        - tagliatelle
-      source: "^.*(PPS|EEC|GNSS|GPS).*$"
-    - linters:
-        - ireturn
-      source: "func.*New.*Collector.*$"
-
-
-
-# golangci.com configuration
-# https://github.com/golangci/golangci/wiki/Configuration
-service:
-  golangci-lint-version: 1.52.x  # use the fixed version to not introduce new linters unexpectedly
-  prepare:
-    - echo "here I can run custom commands, but no preparation needed for this repo"
+  new: true
+  new-from-rev: 1e5394d235098ff66fafd52111394124fa6b90cb
