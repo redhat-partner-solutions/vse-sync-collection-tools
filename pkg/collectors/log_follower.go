@@ -159,8 +159,8 @@ func (logs *LogsCollector) writeToLogFile() {
 }
 
 func processLine(line string) (*loglines.ProcessedLine, error) {
-	splitLine := strings.SplitN(line, " ", 2) //nolint:gomnd // moving this to a var would make the code less clear
-	if len(splitLine) < 2 {                   //nolint:gomnd // moving this to a var would make the code less clear
+	splitLine := strings.SplitN(line, " ", 2) //nolint:mnd // moving this to a var would make the code less clear
+	if len(splitLine) < 2 {                   //nolint:mnd // moving this to a var would make the code less clear
 		return nil, fmt.Errorf("failed to split line %s", line)
 	}
 	timestampPart := splitLine[0]

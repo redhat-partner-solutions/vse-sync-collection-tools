@@ -186,7 +186,7 @@ func DedupLineSlices(lineSlices []*LineSlice) (*LineSlice, *LineSlice) {
 	// dedupling the earlier one along the way
 	dedupedLines, lastLines := DedupAB(lastButOneLineSlice.Lines, lastLineSlice.Lines)
 
-	if len(lineSlices) == 2 { //nolint:gomnd // it would obscure that its just a length of 2
+	if len(lineSlices) == 2 { //nolint:mnd // it would obscure that its just a length of 2
 		if len(dedupedLines) == 0 {
 			return &LineSlice{Generation: lastButOneLineSlice.Generation},
 				MakeSliceFromLines(lastLines, lastLineSlice.Generation)
