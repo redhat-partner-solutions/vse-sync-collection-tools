@@ -26,6 +26,7 @@ func GetNetlinkDebugContainerImage() string {
 	if image := os.Getenv("NETLINK_DEBUG_CONTAINER_IMAGE"); image != "" {
 		return image
 	}
+
 	return "quay.io/redhat-partner-solutions/dpll-debug:0.5"
 }
 
@@ -34,6 +35,7 @@ func GetPTPDaemonContext(clientset *clients.Clientset, ptpNodeName string) (clie
 	if err != nil {
 		return ctx, fmt.Errorf("could not create container context %w", err)
 	}
+
 	return ctx, nil
 }
 
@@ -43,6 +45,7 @@ func GetNetlinkContext(
 	unmanagedDebugPod bool,
 ) (*clients.ContainerCreationExecContext, error) {
 	hpt := corev1.HostPathDirectory
+
 	ctx, err := clients.NewContainerCreationExecContext(
 		clientset,
 		PTPNamespace,
@@ -77,5 +80,6 @@ func GetNetlinkContext(
 	if err != nil {
 		return ctx, fmt.Errorf("failed to create netlink context: %w", err)
 	}
+
 	return ctx, nil
 }

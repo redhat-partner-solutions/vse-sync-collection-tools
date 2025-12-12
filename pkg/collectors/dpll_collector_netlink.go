@@ -16,6 +16,7 @@ import (
 
 type DPLLNetlinkCollector struct {
 	*baseCollector
+
 	ctx               *clients.ContainerCreationExecContext
 	interfaceName     string
 	params            devices.NetlinkParameters
@@ -30,22 +31,29 @@ const (
 // Start sets up the collector so it is ready to be polled
 func (dpll *DPLLNetlinkCollector) Start() error {
 	dpll.running = true
+
 	err := dpll.ctx.CreatePodAndWait()
 	if err != nil {
 		return fmt.Errorf("dpll netlink collector failed to start pod: %w", err)
 	}
+
 	log.Debug("dpll.interfaceName: ", dpll.interfaceName)
 	log.Debug("dpll.ctx: ", dpll.ctx)
+
 	netlinkParams, err := devices.GetNetlinkParameters(dpll.ctx, dpll.interfaceName)
 	if err != nil {
 		return fmt.Errorf("dpll netlink collector failed to find clock id: %w", err)
 	}
+
 	log.Debug("clockIDStuct.ClockID: ", netlinkParams.ClockID)
+
 	err = devices.BuildDPLLNetlinkDeviceFetcher(netlinkParams)
 	if err != nil {
 		return fmt.Errorf("failed to build fetcher for DPLLNetlinkInfo %w", err)
 	}
+
 	dpll.params = netlinkParams
+
 	return nil
 }
 
@@ -60,11 +68,14 @@ func dpllNetlinkPoller(dpll *DPLLNetlinkCollector) func() (callbacks.OutputType,
 // calls the callback.Call to allow that to persist it
 func (dpll *DPLLNetlinkCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCount) {
 	defer wg.Done()
+
 	errorsToReturn := make([]error, 0)
+
 	err := dpll.poll()
 	if err != nil {
 		errorsToReturn = append(errorsToReturn, err)
 	}
+
 	resultsChan <- PollResult{
 		CollectorName: DPLLNetlinkCollectorName,
 		Errors:        errorsToReturn,
@@ -74,10 +85,12 @@ func (dpll *DPLLNetlinkCollector) Poll(resultsChan chan PollResult, wg *utils.Wa
 // CleanUp stops a running collector
 func (dpll *DPLLNetlinkCollector) CleanUp() error {
 	dpll.running = false
+
 	err := dpll.ctx.DeletePodAndWait()
 	if err != nil {
 		return fmt.Errorf("dpll netlink collector failed to clean up: %w", err)
 	}
+
 	return nil
 }
 
@@ -105,9 +118,11 @@ func NewDPLLNetlinkCollector(constructor *CollectionConstructor) (Collector, err
 		unmanagedDebugPod: constructor.UnmanagedDebugPod,
 	}
 	collector.poller = dpllNetlinkPoller(collector)
+
 	err = collector.Start()
 	if err != nil {
 		collector.CleanUp()
 	}
+
 	return collector, err
 }

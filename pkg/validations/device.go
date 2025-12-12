@@ -3,7 +3,7 @@
 package validations
 
 import (
-	"fmt"
+	"errors"
 
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/collectors/devices"
 	"github.com/redhat-partner-solutions/vse-sync-collection-tools/pkg/utils"
@@ -27,8 +27,9 @@ type DeviceDetails struct {
 
 func (dev *DeviceDetails) Verify() error {
 	if dev.VendorID != VendorIntel || (dev.DeviceID != E810WesportChannel && dev.DeviceID != E810LoganBeach) {
-		return utils.NewInvalidEnvError(fmt.Errorf("NIC device is not based on E810"))
+		return utils.NewInvalidEnvError(errors.New("NIC device is not based on E810"))
 	}
+
 	return nil
 }
 

@@ -25,6 +25,7 @@ func (gnssAnt *GNSSAntStatus) Verify() error {
 			return nil
 		}
 	}
+
 	return utils.NewInvalidEnvError(errors.New("no GNSS antenna connected"))
 }
 

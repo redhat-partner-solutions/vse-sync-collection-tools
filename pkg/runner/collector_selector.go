@@ -3,6 +3,7 @@
 package runner
 
 import (
+	"slices"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -23,12 +24,8 @@ func init() {
 }
 
 func isIn(name string, arr []string) bool {
-	for _, arrVal := range arr {
-		if name == arrVal {
-			return true
-		}
-	}
-	return false
+
+	return slices.Contains(arr, name)
 }
 
 func removeDuplicates(arr []string) []string {
@@ -38,6 +35,7 @@ func removeDuplicates(arr []string) []string {
 			res = append(res, name)
 		}
 	}
+
 	return res
 }
 
@@ -47,6 +45,7 @@ func removeDuplicates(arr []string) []string {
 func GetCollectorsToRun(selectedCollectors []string) []string {
 	collectorNames := make([]string, 0)
 	collectorNames = append(collectorNames, RequiredCollectorNames...)
+
 	for _, name := range selectedCollectors {
 		switch {
 		case strings.EqualFold(name, "all"):
@@ -61,6 +60,8 @@ func GetCollectorsToRun(selectedCollectors []string) []string {
 			log.Errorf("Unknown collector %s. Ignored", name)
 		}
 	}
+
 	collectorNames = removeDuplicates(collectorNames)
+
 	return collectorNames
 }

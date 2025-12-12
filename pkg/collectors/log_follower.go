@@ -56,6 +56,7 @@ var (
 // which might not be present in the environment.
 type LogsCollector struct {
 	*baseCollector
+
 	generations        loglines.Generations
 	writeQuit          chan os.Signal
 	lines              chan *loglines.ProcessedLine
@@ -83,8 +84,10 @@ func (logs *LogsCollector) SetLastPoll(pollTime time.Time) {
 func (logs *LogsCollector) Start() error {
 	go logs.processSlices()
 	go logs.writeToLogFile()
+
 	logs.generations.Dumper.Start()
 	logs.running = true
+
 	return nil
 }
 
@@ -95,6 +98,7 @@ func (logs *LogsCollector) writeLine(line *loglines.ProcessedLine, writer io.Str
 	} else {
 		_, err = writer.WriteString(line.Content + "\n")
 	}
+
 	if err != nil {
 		log.Error("failed to write log output to file")
 	}
@@ -104,21 +108,28 @@ func (logs *LogsCollector) writeLine(line *loglines.ProcessedLine, writer io.Str
 func (logs *LogsCollector) processSlices() {
 	logs.wg.Add(1)
 	defer logs.wg.Done()
+
 	for {
 		select {
 		case sig := <-logs.sliceQuit:
 			log.Debug("Clearing slices")
+
 			for len(logs.slices) > 0 {
 				lineSlice := <-logs.slices
 				logs.generations.Add(lineSlice)
 			}
+
 			log.Debug("Flushing remaining generations")
+
 			deduplicated := logs.generations.FlushAll()
 			for _, line := range deduplicated.Lines {
 				logs.lines <- line
 			}
+
 			log.Debug("Sending Signal to writer")
+
 			logs.writeQuit <- sig
+
 			return
 		case lineSlice := <-logs.slices:
 			logs.generations.Add(lineSlice)
@@ -129,6 +140,7 @@ func (logs *LogsCollector) processSlices() {
 					logs.lines <- line
 				}
 			}
+
 			time.Sleep(time.Nanosecond)
 		}
 	}
@@ -140,7 +152,9 @@ func (logs *LogsCollector) writeToLogFile() {
 
 	fileHandle, err := os.OpenFile(logs.logsOutputFileName, os.O_CREATE|os.O_WRONLY, logFilePermissions)
 	utils.IfErrorExitOrPanic(err)
+
 	defer fileHandle.Close()
+
 	for {
 		select {
 		case <-logs.writeQuit:
@@ -149,6 +163,7 @@ func (logs *LogsCollector) writeToLogFile() {
 				line := <-logs.lines
 				logs.writeLine(line, fileHandle)
 			}
+
 			return
 		case line := <-logs.lines:
 			logs.writeLine(line, fileHandle)
@@ -163,18 +178,22 @@ func processLine(line string) (*loglines.ProcessedLine, error) {
 	if len(splitLine) < 2 {                   //nolint:mnd // moving this to a var would make the code less clear
 		return nil, fmt.Errorf("failed to split line %s", line)
 	}
+
 	timestampPart := splitLine[0]
 	lineContent := splitLine[1]
+
 	timestamp, err := time.Parse(time.RFC3339, timestampPart)
 	if err != nil {
 		// This is not a value line something went wrong
 		return nil, fmt.Errorf("failed to process timestamp from line: '%s'", line)
 	}
+
 	processed := &loglines.ProcessedLine{
 		Timestamp: timestamp,
 		Content:   strings.TrimRightFunc(lineContent, unicode.IsSpace),
 		Full:      strings.TrimRightFunc(line, unicode.IsSpace),
 	}
+
 	return processed, nil
 }
 
@@ -182,21 +201,25 @@ func processLine(line string) (*loglines.ProcessedLine, error) {
 func processStream(stream io.ReadCloser, expectedEndtime time.Time) ([]*loglines.ProcessedLine, error) {
 	scanner := bufio.NewScanner(stream)
 	segment := make([]*loglines.ProcessedLine, 0)
+
 	for scanner.Scan() {
 		if err := scanner.Err(); err != nil {
 			return segment, fmt.Errorf("error while reading logs stream %w", err)
 		}
+
 		pline, err := processLine(scanner.Text())
 		if err != nil {
 			log.Warning("failed to process line: ", err)
 			continue
 		}
+
 		segment = append(segment, pline)
 		if expectedEndtime.Sub(pline.Timestamp) < 0 {
 			// Were past our expected end time lets finish there
 			break
 		}
 	}
+
 	return segment, nil
 }
 
@@ -205,6 +228,7 @@ func (logs *LogsCollector) poll() error {
 	if err != nil {
 		return fmt.Errorf("failed to poll: %w", err)
 	}
+
 	podLogOptions := v1.PodLogOptions{
 		SinceTime:  &metav1.Time{Time: logs.lastPoll.Time()},
 		Container:  contexts.PTPContainer,
@@ -216,6 +240,7 @@ func (logs *LogsCollector) poll() error {
 		Pods(contexts.PTPNamespace).
 		GetLogs(podName, &podLogOptions).
 		Timeout(followTimeout)
+
 	stream, err := podLogRequest.Stream(context.TODO())
 	if err != nil {
 		return fmt.Errorf("failed to poll when r: %w", err)
@@ -224,26 +249,33 @@ func (logs *LogsCollector) poll() error {
 
 	start := time.Now()
 	generation := logs.lastPoll.Generation()
+
 	lines, err := processStream(stream, time.Now().Add(logs.GetPollInterval()))
 	if err != nil {
 		return err
 	}
+
 	if len(lines) > 0 {
 		lineSlice := loglines.MakeSliceFromLines(lines, generation)
 		logs.slices <- lineSlice
+
 		logs.SetLastPoll(start)
 	}
+
 	return nil
 }
 
 // Poll collects log lines
 func (logs *LogsCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCount) {
 	defer wg.Done()
+
 	errorsToReturn := make([]error, 0)
+
 	err := logs.poll()
 	if err != nil {
 		errorsToReturn = append(errorsToReturn, err)
 	}
+
 	resultsChan <- PollResult{
 		CollectorName: LogsCollectorName,
 		Errors:        errorsToReturn,
@@ -254,9 +286,11 @@ func (logs *LogsCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroup
 func (logs *LogsCollector) CleanUp() error {
 	logs.running = false
 	logs.sliceQuit <- os.Kill
+
 	log.Debug("waiting for logs to complete")
 	logs.wg.Wait()
 	logs.generations.Dumper.Stop()
+
 	return nil
 }
 
@@ -285,6 +319,7 @@ func NewLogsCollector(constructor *CollectionConstructor) (Collector, error) {
 		},
 		nodeName: constructor.PTPNodeName,
 	}
+
 	return &collector, nil
 }
 

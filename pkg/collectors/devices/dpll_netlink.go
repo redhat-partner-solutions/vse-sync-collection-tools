@@ -60,6 +60,7 @@ func convertNetlinkOffset(offset int64) float64 {
 // AnalyserJSON returns the json expected by the analysers
 func (dpllInfo *DevNetlinkDPLLInfo) GetAnalyserFormat() ([]*callbacks.AnalyserFormatType, error) {
 	subType := UnknownSubtype
+
 	switch dpllInfo.PinType {
 	case OnePPSLabel:
 		subType = OnePPSSubtype
@@ -68,7 +69,7 @@ func (dpllInfo *DevNetlinkDPLLInfo) GetAnalyserFormat() ([]*callbacks.AnalyserFo
 	}
 
 	formatted := callbacks.AnalyserFormatType{
-		ID: fmt.Sprintf("%s/time-error", subType),
+		ID: subType + "/time-error",
 		Data: map[string]any{
 			"timestamp": dpllInfo.Timestamp,
 			"eecstate":  dpllInfo.EECState,
@@ -77,6 +78,7 @@ func (dpllInfo *DevNetlinkDPLLInfo) GetAnalyserFormat() ([]*callbacks.AnalyserFo
 			"eecterror": convertNetlinkOffset(dpllInfo.EECOffset),
 		},
 	}
+
 	return []*callbacks.AnalyserFormatType{&formatted}, nil
 }
 
@@ -189,12 +191,14 @@ func buildPostProcessDPLLNetlink(clockID uint64) fetcher.PostProcessFuncType {
 		processedResult := make(map[string]any)
 
 		entries := make([]NetlinkStateEntry, 0)
+
 		err := json.Unmarshal([]byte(result["dpll-netlink-device"]), &entries)
 		if err != nil {
 			log.Errorf("Failed to unmarshal netlink device output: %s", err.Error())
 		}
 
 		log.Debug("entries: ", entries)
+
 		for _, entry := range entries {
 			if entry.ClockID == clockID {
 				state, ok := states[entry.LockStatus]
@@ -202,10 +206,13 @@ func buildPostProcessDPLLNetlink(clockID uint64) fetcher.PostProcessFuncType {
 					log.Errorf("Unknown state: %s", state)
 					state = "-1"
 				}
+
 				processedResult[entry.ClockType] = state
 			}
 		}
+
 		pin := NetlinkPin{}
+
 		err = json.Unmarshal([]byte(result["dpll-netlink-offset"]), &pin)
 		if err != nil {
 			log.Errorf("Failed to unmarshal netlink pin output: %s", err.Error())
@@ -219,6 +226,7 @@ func buildPostProcessDPLLNetlink(clockID uint64) fetcher.PostProcessFuncType {
 				processedResult["pps_offset"] = parentPin.PhaseOffset
 			}
 		}
+
 		return processedResult, nil
 	}
 }
@@ -250,29 +258,35 @@ func BuildDPLLNetlinkDeviceFetcher(params NetlinkParameters) error { //nolint:du
 		log.Errorf("failed to create fetcher for dpll netlink: %s", err.Error())
 		return fmt.Errorf("failed to create fetcher for dpll netlink: %w", err)
 	}
+
 	dpllNetlinkFetcher[params.ClockID] = fetcherInst
 	fetcherInst.SetPostProcessor(buildPostProcessDPLLNetlink(params.ClockID))
+
 	return nil
 }
 
 // GetDevDPLLInfo returns the device DPLL info for an interface.
 func GetDevDPLLNetlinkInfo(ctx clients.ExecContext, params NetlinkParameters) (*DevNetlinkDPLLInfo, error) {
 	dpllInfo := &DevNetlinkDPLLInfo{PinType: params.PinType}
+
 	fetcherInst, fetchedInstanceOk := dpllNetlinkFetcher[params.ClockID]
 	if !fetchedInstanceOk {
 		err := BuildDPLLNetlinkDeviceFetcher(params)
 		if err != nil {
 			return dpllInfo, err
 		}
+
 		fetcherInst, fetchedInstanceOk = dpllNetlinkFetcher[params.ClockID]
 		if !fetchedInstanceOk {
 			return dpllInfo, errors.New("failed to create fetcher for DPLLInfo using netlink interface")
 		}
 	}
+
 	err := fetcherInst.Fetch(ctx, dpllInfo)
 	if err != nil {
 		return dpllInfo, fmt.Errorf("failed to fetch dpllInfo via netlink: %w", err)
 	}
+
 	return dpllInfo, nil
 }
 
@@ -301,23 +315,29 @@ func BuildNetlinkInfoFetcher(interfaceName string) error {
 		log.Errorf("failed to create fetcher for dpll clock ID: %s", err.Error())
 		return fmt.Errorf("failed to create fetcher for dpll clock ID: %w", err)
 	}
+
 	fetcherInst.SetPostProcessor(postProcessDPLLNetlinkClockID)
 	dpllClockIDFetcher[interfaceName] = fetcherInst
+
 	return nil
 }
 
 func selectPin(pinsJSON []byte, clockID uint64) (int32, string, error) { //nolint:funlen,gocritic,cyclop // allow slightly longer function for sake of readability
 	entries := make([]*NetlinkPin, 0)
+
 	err := json.Unmarshal(pinsJSON, &entries)
 	if err != nil {
 		return 0, "", fmt.Errorf("failed to unmarshal netlink output: %s", err.Error())
 	}
+
 	if len(entries) == 0 {
 		return 0, "", utils.NewRequirementsNotMetError(errors.New("no pins found"))
 	}
+
 	var OnePPSPin, SMA1Pin *NetlinkPin
 
 	log.Debug("entries: ", entries)
+
 	for _, pin := range entries {
 		if pin.ClockID != clockID {
 			continue
@@ -332,6 +352,7 @@ func selectPin(pinsJSON []byte, clockID uint64) (int32, string, error) { //nolin
 	}
 
 	choosePPS := true
+
 	for _, parentDev := range OnePPSPin.ParentDevices {
 		if parentDev.State != ConnectedState {
 			choosePPS = false
@@ -340,6 +361,7 @@ func selectPin(pinsJSON []byte, clockID uint64) (int32, string, error) { //nolin
 	}
 
 	chooseSMA1 := true
+
 	for _, parentDev := range SMA1Pin.ParentDevices {
 		if parentDev.Direction != InputDirection || parentDev.State != ConnectedState {
 			chooseSMA1 = false
@@ -351,18 +373,22 @@ func selectPin(pinsJSON []byte, clockID uint64) (int32, string, error) { //nolin
 	if choosePPS {
 		return OnePPSPin.ID, OnePPSLabel, nil
 	}
+
 	if chooseSMA1 {
 		return SMA1Pin.ID, SMA1Label, nil
 	}
+
 	return 0, "", errors.New("failed to determin correct offset pin")
 }
 
 func postProcessDPLLNetlinkClockID(result map[string]string) (map[string]any, error) {
 	processedResult := make(map[string]any)
+
 	clockID, err := strconv.ParseUint(result["dpll-netlink-clock-serial-number"], 16, 64)
 	if err != nil {
 		return processedResult, fmt.Errorf("failed to parse int for clock id: %w", err)
 	}
+
 	processedResult["clockID"] = clockID
 
 	offsetPintID, pinType, err := selectPin([]byte(result["dpll-netlink-pins"]), clockID)
@@ -372,6 +398,7 @@ func postProcessDPLLNetlinkClockID(result map[string]string) (map[string]any, er
 
 	processedResult["offsetPin"] = offsetPintID
 	processedResult["pinType"] = pinType
+
 	return processedResult, nil
 }
 
@@ -384,20 +411,24 @@ type NetlinkParameters struct {
 
 func GetNetlinkParameters(ctx clients.ExecContext, interfaceName string) (NetlinkParameters, error) {
 	netlinkInfo := NetlinkParameters{}
+
 	fetcherInst, fetchedInstanceOk := dpllClockIDFetcher[interfaceName]
 	if !fetchedInstanceOk {
 		err := BuildNetlinkInfoFetcher(interfaceName)
 		if err != nil {
 			return netlinkInfo, err
 		}
+
 		fetcherInst, fetchedInstanceOk = dpllClockIDFetcher[interfaceName]
 		if !fetchedInstanceOk {
 			return netlinkInfo, errors.New("failed to create fetcher for DPLLInfo using netlink interface")
 		}
 	}
+
 	err := fetcherInst.Fetch(ctx, &netlinkInfo)
 	if err != nil {
 		return netlinkInfo, fmt.Errorf("failed to fetch netlink info %w", err)
 	}
+
 	return netlinkInfo, nil
 }

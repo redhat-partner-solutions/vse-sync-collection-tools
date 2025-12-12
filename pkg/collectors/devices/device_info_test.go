@@ -4,8 +4,10 @@ package devices_test
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"net/url"
+	"strings"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -62,14 +64,16 @@ var _ = Describe("NewContainerContext", func() {
 			reader := bufio.NewReader(options.Stdin)
 			cmd := ""
 			keepReading := true
+			var cmdSb65 strings.Builder
 			for keepReading {
 				line, prefix, _ := reader.ReadLine()
 				keepReading = prefix
-				cmd += string(line)
+				cmdSb65.WriteString(string(line))
 			}
+			cmd += cmdSb65.String()
 			resp, ok := response[cmd]
 			if !ok {
-				return []byte(resp.stdout), []byte(resp.stderr), fmt.Errorf("Response not found")
+				return []byte(resp.stdout), []byte(resp.stderr), errors.New("Response not found")
 			}
 			return []byte(resp.stdout), []byte(resp.stderr), resp.err
 		}
@@ -155,7 +159,7 @@ var _ = Describe("NewContainerContext", func() {
 			firmwareVersion := "4.20 0x8001778b 1.3346.0"
 			driverVersion := "1.11.20.7"
 
-			response["ls /sys/class/net/aFakeInterface/device/gnss/"] = Response{err: fmt.Errorf("Not found")}
+			response["ls /sys/class/net/aFakeInterface/device/gnss/"] = Response{err: errors.New("Not found")}
 
 			expectedInput := "echo '<date>';date +%s.%N;echo '</date>';"
 			expectedInput += "echo '<devID>';cat /sys/class/net/aFakeInterface/device/device;echo '</devID>';"

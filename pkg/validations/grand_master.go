@@ -46,16 +46,17 @@ func fetchPTPConfigs(client *clients.Clientset) (PTPConfigList, error) {
 		Namespace("openshift-ptp").
 		Resource("ptpconfigs").
 		DoRaw(context.TODO())
-
 	if err != nil {
 		return PTPConfigList{}, fmt.Errorf("failed to fetch ptpconfigs %w", err)
 	}
 
 	unpacked := &PTPConfigList{}
+
 	err = json.Unmarshal(data, unpacked)
 	if err != nil {
 		return PTPConfigList{}, fmt.Errorf("failed to unmarshal ptpconfigs %w", err)
 	}
+
 	return *unpacked, nil
 }
 
@@ -63,6 +64,7 @@ func (gm *GMProfiles) Verify() error {
 	if gm.Error != nil {
 		return gm.Error
 	}
+
 	for _, profile := range gm.Profiles {
 		if strings.Contains(profile.TS2PhcConf, gmFlag) {
 			return nil
@@ -90,14 +92,17 @@ func (gm *GMProfiles) GetOrder() int {
 
 func NewIsGrandMaster(client *clients.Clientset) *GMProfiles {
 	ptpConfigList, err := fetchPTPConfigs(client)
+
 	gmProfiles := &GMProfiles{
 		Error: err,
 	}
 	if err != nil {
 		return gmProfiles
 	}
+
 	for _, item := range ptpConfigList.Items {
 		gmProfiles.Profiles = append(gmProfiles.Profiles, item.Spec.Profiles...)
 	}
+
 	return gmProfiles
 }

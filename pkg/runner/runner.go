@@ -27,6 +27,7 @@ func getQuitChannel() chan os.Signal {
 	// Allow ourselves to handle shut down gracefully
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
 	return quit
 }
 
@@ -83,6 +84,7 @@ func (runner *CollectorRunner) initialise( //nolint:funlen // allow a slightly l
 		}
 
 		newCollector, err := builderFunc(constructor)
+
 		var missingRequirements *utils.RequirementsNotMetError
 		if errors.As(err, &missingRequirements) {
 			// Requirements are missing so don't add the collector to collectorInstance
@@ -90,22 +92,26 @@ func (runner *CollectorRunner) initialise( //nolint:funlen // allow a slightly l
 			log.Warning(err.Error())
 		} else {
 			utils.IfErrorExitOrPanic(err)
+
 			runner.collectorInstances[collectorName] = newCollector
 			log.Debugf("Added collector %T, %v", newCollector, newCollector)
 		}
 	}
+
 	log.Debugf("Collectors %v", runner.collectorInstances)
 	runner.setOnlyAnnouncers()
 }
 
 func (runner *CollectorRunner) setOnlyAnnouncers() {
 	onlyAnnouncers := true
+
 	for _, collector := range runner.collectorInstances {
 		if !collector.IsAnnouncer() {
 			onlyAnnouncers = false
 			break
 		}
 	}
+
 	runner.onlyAnnouncers = onlyAnnouncers
 }
 
@@ -126,21 +132,28 @@ func (runner *CollectorRunner) poller(
 	wg *utils.WaitGroupCount,
 ) {
 	defer wg.Done()
+
 	var lastPoll time.Time
+
 	pollInterval := collector.GetPollInterval()
 	runningPolls := utils.WaitGroupCount{}
+
 	log.Debugf("Collector with poll interval %f ", pollInterval.Seconds())
+
 	for runner.shouldKeepPolling(collector) {
 		// If pollResults were to block we do not want to keep spawning polls
 		// so we shouldn't allow too many polls to be running simultaneously
 		if runningPolls.GetCount() >= maxRunningPolls {
 			runningPolls.Wait()
 		}
+
 		log.Debugf("Collector GoRoutine: %s", collectorName)
+
 		select {
 		case <-quit:
 			log.Infof("Killed shutting down collector %s waiting for running polls to finish", collectorName)
 			runningPolls.Wait()
+
 			return
 		default:
 			log.Debug(
@@ -157,13 +170,17 @@ func (runner *CollectorRunner) poller(
 			// to events triggered the action tool
 			if lastPoll.IsZero() || time.Since(lastPoll) > pollInterval {
 				lastPoll = time.Now()
+
 				log.Debugf("poll %s", collectorName)
 				runningPolls.Add(1)
+
 				go collector.Poll(runner.pollResults, &runningPolls)
 			}
+
 			time.Sleep(10 * time.Nanosecond) //nolint:mnd // no point in making this its own var
 		}
 	}
+
 	runningPolls.Wait()
 	log.Debugf("Collector finished %s", collectorName)
 }
@@ -182,7 +199,6 @@ func (runner *CollectorRunner) start() {
 	}
 
 	for _, collectorName := range append(collectorsNames, announcersNames...) {
-		collectorName := collectorName
 
 		collector := runner.collectorInstances[collectorName]
 		log.Debugf("start collector %v", collector)
@@ -190,8 +206,10 @@ func (runner *CollectorRunner) start() {
 		utils.IfErrorExitOrPanic(err)
 
 		log.Debugf("Spawning  collector: %v", collector)
+
 		quit := make(chan os.Signal, 1)
 		runner.collectorQuitChannel[collectorName] = quit
+
 		var pollerWaitGroup *utils.WaitGroupCount
 
 		if collector.IsAnnouncer() {
@@ -199,7 +217,9 @@ func (runner *CollectorRunner) start() {
 		} else {
 			pollerWaitGroup = &runner.runningCollectorsWG
 		}
+
 		pollerWaitGroup.Add(1)
+
 		go runner.poller(collectorName, collector, quit, pollerWaitGroup)
 	}
 }
@@ -208,6 +228,7 @@ func (runner *CollectorRunner) start() {
 func (runner *CollectorRunner) cleanUpAll() {
 	for collectorName, collector := range runner.collectorInstances {
 		log.Debugf("cleanup %s", collectorName)
+
 		err := collector.CleanUp()
 		utils.IfErrorExitOrPanic(err)
 	}
@@ -227,18 +248,22 @@ func (runner *CollectorRunner) Run( //nolint:funlen // allow a slightly long fun
 	// Use wg count to know if any collectors are running.
 	for (runner.runningCollectorsWG.GetCount() + runner.runningAnnouncersWG.GetCount()) > 0 {
 		log.Debugf("Main Loop ")
+
 		select {
 		case sig := <-runner.quit:
 			log.Info("Killed shutting down")
 			// Forward signal to collector QuitChannels
 			for collectorName, quit := range runner.collectorQuitChannel {
 				log.Infof("Killed shutting down: %s", collectorName)
+
 				quit <- sig
 			}
+
 			runner.runningCollectorsWG.Wait()
 			runner.runningAnnouncersWG.Wait()
 		case pollRes := <-runner.pollResults:
 			log.Infof("Received %v", pollRes)
+
 			if len(pollRes.Errors) > 0 {
 				log.Warnf("Poll %s had issues: %v. Will retry next poll", pollRes.CollectorName, pollRes.Errors)
 				// If erroredPolls blocks it could cause pollResults to fill and
@@ -250,8 +275,10 @@ func (runner *CollectorRunner) Run( //nolint:funlen // allow a slightly long fun
 			time.Sleep(time.Millisecond)
 		}
 	}
+
 	log.Info("Doing Cleanup")
 	runner.cleanUpAll()
+
 	err := constuctor.Callback.CleanUp()
 	utils.IfErrorExitOrPanic(err)
 }

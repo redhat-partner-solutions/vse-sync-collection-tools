@@ -3,6 +3,7 @@
 package loglines
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"sort"
@@ -17,6 +18,7 @@ const (
 func dedupGeneration(lineSlices []*LineSlice) *LineSlice {
 	ls1, ls2 := DedupLineSlices(lineSlices)
 	output := MakeSliceFromLines(MakeNewCombinedSlice(ls1.Lines, ls2.Lines), ls2.Generation)
+
 	return output
 }
 
@@ -29,6 +31,7 @@ func findLineIndex(needle *ProcessedLine, list []*ProcessedLine) int {
 			return i
 		}
 	}
+
 	return -1
 }
 
@@ -41,10 +44,12 @@ func findFirstIssueIndex(x, y []*ProcessedLine) int {
 			// we've reached the end of y so no bad lines found
 			break
 		}
+
 		if line.Full != y[index].Full {
 			return index
 		}
 	}
+
 	return -1
 }
 
@@ -59,6 +64,7 @@ func findNextMatching(a, b []*ProcessedLine) (offset, index int) {
 			}
 		}
 	}
+
 	return offset, index
 }
 
@@ -83,6 +89,7 @@ func fixLines(x, y []*ProcessedLine, issueIndex int) ([]*ProcessedLine, []*Proce
 		newX = append(newX, x[:issueIndex]...)
 		newX = append(newX, y[issueIndex:issueIndex+yOffset]...)
 		newX = append(newX, x[issueIndex+xIndex:]...)
+
 		return newX, y, true
 	}
 
@@ -92,8 +99,10 @@ func fixLines(x, y []*ProcessedLine, issueIndex int) ([]*ProcessedLine, []*Proce
 		newY = append(newY, y[:issueIndex]...)
 		newY = append(newY, x[issueIndex:issueIndex+xOffset]...)
 		newY = append(newY, y[issueIndex+yIndex:]...)
+
 		return x, newY, true
 	}
+
 	return x, y, false
 }
 
@@ -104,20 +113,24 @@ func fixLines(x, y []*ProcessedLine, issueIndex int) ([]*ProcessedLine, []*Proce
 func processOverlap(x, y []*ProcessedLine) ([]*ProcessedLine, []*ProcessedLine, error) {
 	newX := x
 	newY := y
+
 	issueIndex := findFirstIssueIndex(newX, newY)
 	if issueIndex == -1 {
 		return newX, newY, nil
 	}
+
 	var changed bool
 	for issueIndex != -1 {
 		newX, newY, changed = fixLines(newX, newY, issueIndex)
+
 		issueIndex = findFirstIssueIndex(newX, newY)
 		if !changed && issueIndex != -1 {
-			return newX, newY, fmt.Errorf("failed to resolve overlap")
+			return newX, newY, errors.New("failed to resolve overlap")
 		}
 	}
 	// Now its been fixed lets just dedup it completely again.
 	dx, dy := DedupAB(newX, newY)
+
 	return dx, dy, nil
 }
 
@@ -126,9 +139,12 @@ func handleIncompleteOverlap(a, b []*ProcessedLine) ([]*ProcessedLine, []*Proces
 	newA, newB, err := processOverlap(a, b)
 	if err != nil {
 		issueIndex := findFirstIssueIndex(newA, newB)
+
 		log.Warning("Failed to fix issues gonna just split at the issue and retry this might lose some data")
+
 		return DedupAB(newA[:issueIndex], newB[issueIndex:])
 	}
+
 	return newA, newB
 }
 
@@ -136,8 +152,10 @@ func handleIncompleteOverlap(a, b []*ProcessedLine) ([]*ProcessedLine, []*Proces
 func DedupAB(a, b []*ProcessedLine) ([]*ProcessedLine, []*ProcessedLine) {
 	bFirstLineIndex := findLineIndex(b[0], a)
 	log.Debug("line index: ", bFirstLineIndex)
+
 	if bFirstLineIndex == -1 {
 		log.Debug("didn't to find first line of b")
+
 		lastLineIndex := findLineIndex(a[len(a)-1], b)
 		if lastLineIndex == -1 {
 			log.Debug("didn't to find last line of a; assuming no overlap")
@@ -161,6 +179,7 @@ func MakeNewCombinedSlice(x, y []*ProcessedLine) []*ProcessedLine {
 	r := make([]*ProcessedLine, 0, len(x)+len(y))
 	r = append(r, x...)
 	r = append(r, y...)
+
 	return r
 }
 
@@ -172,6 +191,7 @@ func DedupLineSlices(lineSlices []*LineSlice) (*LineSlice, *LineSlice) {
 			// If start is the same then lets put the earlist end time first
 			return lineSlices[i].end.Sub(lineSlices[j].end) < 0
 		}
+
 		return sdif < 0
 	})
 
@@ -191,6 +211,7 @@ func DedupLineSlices(lineSlices []*LineSlice) (*LineSlice, *LineSlice) {
 			return &LineSlice{Generation: lastButOneLineSlice.Generation},
 				MakeSliceFromLines(lastLines, lastLineSlice.Generation)
 		}
+
 		return MakeSliceFromLines(dedupedLines, lastButOneLineSlice.Generation),
 			MakeSliceFromLines(lastLines, lastLineSlice.Generation)
 	}
@@ -203,6 +224,7 @@ func DedupLineSlices(lineSlices []*LineSlice) (*LineSlice, *LineSlice) {
 		resLines = MakeNewCombinedSlice(aLines, resLines)
 		reference = MakeNewCombinedSlice(aLines, bLines)
 	}
+
 	return MakeSliceFromLines(resLines, lastButOneLineSlice.Generation),
 		MakeSliceFromLines(lastLines, lastLineSlice.Generation)
 }
@@ -220,5 +242,6 @@ func WriteOverlap(lines []*ProcessedLine, name string) error {
 			log.Error(err)
 		}
 	}
+
 	return nil
 }

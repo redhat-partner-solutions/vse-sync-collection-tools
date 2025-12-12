@@ -14,6 +14,7 @@ import (
 // of the logrus logger
 func SetupLogging(logLevel string, out io.Writer) {
 	log.SetOutput(out)
+
 	level, err := log.ParseLevel(logLevel)
 	utils.IfErrorExitOrPanic(err)
 	log.SetLevel(level)

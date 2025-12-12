@@ -21,8 +21,10 @@ func NewDPLLCollector(constructor *CollectionConstructor) (Collector, error) {
 	if err != nil {
 		return &DPLLNetlinkCollector{}, fmt.Errorf("failed to create DPLLCollector: %w", err)
 	}
+
 	dpllFSExists, err := devices.IsDPLLFileSystemPresent(ctx, constructor.PTPInterface)
 	log.Debug("DPLL FS exists: ", dpllFSExists)
+
 	if dpllFSExists && err == nil {
 		return NewDPLLFilesystemCollector(constructor)
 	} else {

@@ -33,6 +33,7 @@ func (reg *CollectorRegistry) register(
 	inclusionType collectorInclusionType,
 ) {
 	reg.registry[collectorName] = builderFunc
+
 	switch inclusionType {
 	case required:
 		reg.required = append(reg.required, collectorName)
@@ -48,6 +49,7 @@ func (reg *CollectorRegistry) GetBuilderFunc(collectorName string) (collectonBui
 	if !ok {
 		return nil, fmt.Errorf("not index in registry for collector named %s", collectorName)
 	}
+
 	return builderFunc, nil
 }
 
@@ -67,5 +69,6 @@ func RegisterCollector(collectorName string, builderFunc collectonBuilderFunc, i
 			optional: make([]string, 0),
 		}
 	}
+
 	registry.register(collectorName, builderFunc, inclusionType)
 }

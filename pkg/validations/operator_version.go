@@ -42,9 +42,9 @@ func getOperatorVersion(
 		Version:  version,
 		Resource: resource,
 	}
+
 	list, err := dynamicClient.Resource(resourceID).Namespace(namespace).
 		List(context.Background(), metav1.ListOptions{})
-
 	if err != nil {
 		return "", fmt.Errorf("failed to fetch operator version %w", err)
 	}
@@ -52,20 +52,24 @@ func getOperatorVersion(
 	for _, item := range list.Items {
 		value := item.Object["spec"]
 		crd := &CSV{}
+
 		marsh, err := json.Marshal(value)
 		if err != nil {
 			log.Debug("failed to marshal cluster service version spec", err)
 			continue
 		}
+
 		err = json.Unmarshal(marsh, crd)
 		if err != nil {
 			log.Debug("failed to marshal cluster service version spec", err)
 			continue
 		}
+
 		if crd.DisplayName == ptpOperatorDiplayName {
 			return crd.Version, nil
 		}
 	}
+
 	return "", errors.New("failed to find PTP Operator CSV")
 }
 
@@ -77,6 +81,7 @@ func NewOperatorVersion(client *clients.Clientset) *VersionWithErrorCheck {
 		"openshift-ptp",
 		client,
 	)
+
 	return &VersionWithErrorCheck{
 		VersionCheck: VersionCheck{
 			id:           ptpOperatorVersionID,

@@ -145,6 +145,7 @@ func init() { //nolint:funlen // Allow this to get a little long
 		defaultDevInfoInterval,
 		"interval at which to emit the device info summary to the targeted output.",
 	)
+
 	defaultCollectorNames := make([]string, 0)
 	defaultCollectorNames = append(defaultCollectorNames, runner.All)
 	collectCmd.Flags().StringSliceVarP(

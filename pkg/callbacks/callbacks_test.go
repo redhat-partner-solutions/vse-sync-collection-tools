@@ -19,6 +19,7 @@ func NewTestFile() *testFile {
 
 type testFile struct {
 	bytes.Buffer
+
 	open bool
 }
 
@@ -27,6 +28,7 @@ func (t *testFile) Close() error {
 		t.open = false
 		return nil
 	}
+
 	return errors.New("File is already closed") // TODO look up actual errors
 }
 
@@ -40,6 +42,7 @@ func (t *testOutputType) GetAnalyserFormat() ([]*callbacks.AnalyserFormatType, e
 		ID:   "testOutput",
 		Data: []any{"Hello"},
 	}
+
 	return []*callbacks.AnalyserFormatType{&fomatted}, nil
 }
 

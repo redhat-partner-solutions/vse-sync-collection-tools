@@ -21,6 +21,7 @@ import (
 
 type DevInfoCollector struct {
 	*baseCollector
+
 	ctx           clients.ExecContext
 	devInfo       *devices.PTPDeviceInfo
 	quit          chan os.Signal
@@ -40,6 +41,7 @@ const (
 func (ptpDev *DevInfoCollector) Start() error {
 	ptpDev.running = true
 	go ptpDev.monitorErroredPolls()
+
 	return nil
 }
 
@@ -54,6 +56,7 @@ func (ptpDev *DevInfoCollector) Start() error {
 func (ptpDev *DevInfoCollector) monitorErroredPolls() {
 	ptpDev.wg.Add(1)
 	defer ptpDev.wg.Done()
+
 	for {
 		select {
 		case <-ptpDev.quit:
@@ -75,17 +78,20 @@ func (ptpDev *DevInfoCollector) monitorErroredPolls() {
 func devInfoPoller(ptpDev *DevInfoCollector) func() (callbacks.OutputType, error) {
 	return func() (callbacks.OutputType, error) {
 		var devInfo *devices.PTPDeviceInfo
+
 		select {
 		case <-ptpDev.requiresFetch:
 			fetchedDevInfo, err := devices.GetPTPDeviceInfo(ptpDev.interfaceName, ptpDev.ctx, ptpDev.clockType)
 			if err != nil {
 				return devInfo, fmt.Errorf("failed to fetch %s %w", DeviceInfo, err)
 			}
+
 			ptpDev.devInfo = fetchedDevInfo
 			devInfo = fetchedDevInfo
 		default:
 			devInfo = ptpDev.devInfo
 		}
+
 		return devInfo, nil
 	}
 }
@@ -94,7 +100,9 @@ func devInfoPoller(ptpDev *DevInfoCollector) func() (callbacks.OutputType, error
 func (ptpDev *DevInfoCollector) CleanUp() error {
 	ptpDev.running = false
 	ptpDev.quit <- os.Kill
+
 	ptpDev.wg.Wait()
+
 	return nil
 }
 
@@ -137,6 +145,7 @@ func NewDevInfoCollector(constructor *CollectionConstructor) (Collector, error) 
 	if err != nil {
 		return &DevInfoCollector{}, fmt.Errorf("failed to create DevInfoCollector: %w", err)
 	}
+
 	err = devices.BuildPTPDeviceInfo(ctx, constructor.PTPInterface, constructor.ClockType)
 	if err != nil {
 		return &DevInfoCollector{}, fmt.Errorf("failed to build fetcher for PTPDeviceInfo %w", err)

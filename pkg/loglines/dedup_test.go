@@ -21,19 +21,24 @@ func loadLinesFromFile(path string, generation uint32) (*loglines.LineSlice, err
 		return &loglines.LineSlice{}, fmt.Errorf("failed to open file %s %w", path, err)
 	}
 	defer reader.Close()
+
 	scanner := bufio.NewScanner(reader)
 
 	lines := make([]*loglines.ProcessedLine, 0)
+
 	for scanner.Scan() {
 		if err := scanner.Err(); err != nil {
 			return &loglines.LineSlice{}, fmt.Errorf("failed to read line from %s %w", path, err)
 		}
+
 		line, err := loglines.ProcessLine(scanner.Text())
 		if err != nil {
 			return &loglines.LineSlice{}, fmt.Errorf("failed to process line from %s %w", path, err)
 		}
+
 		lines = append(lines, line)
 	}
+
 	return loglines.MakeSliceFromLines(lines, generation), nil
 }
 

@@ -38,6 +38,7 @@ func IfErrorExitOrPanic(err error) {
 // however this value is very useful.
 type WaitGroupCount struct {
 	sync.WaitGroup
+
 	count int64
 }
 
@@ -57,20 +58,24 @@ func (wg *WaitGroupCount) GetCount() int {
 
 // ParseTimestamp converts an input number of seconds (including a decimal fraction) into a time.Time
 func ParseTimestamp(timestamp string) (time.Time, error) {
-	duration, err := time.ParseDuration(fmt.Sprintf("%ss", timestamp))
+	duration, err := time.ParseDuration(timestamp + "s")
 	if err != nil {
 		return time.Time{}, fmt.Errorf("failed to parse timestamp as a duration %w", err)
 	}
+
 	return Epoch.Add(duration).UTC(), nil
 }
 
 func RemoveTempFiles(dir string, filenames []string) {
 	dir = filepath.Clean(dir)
+
 	for _, fname := range filenames {
 		log.Info()
+
 		if !strings.HasPrefix(fname, dir) {
 			fname = filepath.Join(dir, fname)
 		}
+
 		err := os.Remove(fname)
 		if err != nil && errors.Is(err, fs.ErrNotExist) {
 			log.Errorf("Failed to remove temp file %s: %s", fname, err.Error())

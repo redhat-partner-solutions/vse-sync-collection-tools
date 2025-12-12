@@ -18,6 +18,7 @@ func formatTimestampAsRFC3339Nano(s string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to parse timestamp %w", err)
 	}
+
 	return timestamp.Format(time.RFC3339Nano), nil
 }
 
@@ -27,9 +28,11 @@ func getDateCommand() *clients.Cmd {
 		if err != nil {
 			panic(err)
 		}
+
 		dateCmdInst.SetOutputProcessor(formatTimestampAsRFC3339Nano)
 		dateCmd = dateCmdInst
 	}
+
 	return dateCmd
 }
 

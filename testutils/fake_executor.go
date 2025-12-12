@@ -29,26 +29,32 @@ type fakeExecutor struct {
 
 func (f *fakeExecutor) Stream(options remotecommand.StreamOptions) error {
 	stdout, stderr, responseErr := f.responder(f.method, f.url, options)
+
 	_, err := options.Stdout.Write(stdout)
 	if err != nil {
 		return fmt.Errorf("failed to write stdout Error: %w", err)
 	}
+
 	_, err = options.Stderr.Write(stderr)
 	if err != nil {
 		return fmt.Errorf("failed to write stderr Error: %w", err)
 	}
+
 	return responseErr
 }
 
 func (f *fakeExecutor) StreamWithContext(ctx context.Context, options remotecommand.StreamOptions) error {
 	stdout, stderr, reponseErr := f.responder(f.method, f.url, options)
+
 	_, err := options.Stdout.Write(stdout)
 	if err != nil {
 		return fmt.Errorf("failed to write stdout Error: %w", err)
 	}
+
 	_, err = options.Stderr.Write(stderr)
 	if err != nil {
 		return fmt.Errorf("failed to write stderr Error: %w", err)
 	}
+
 	return reponseErr
 }

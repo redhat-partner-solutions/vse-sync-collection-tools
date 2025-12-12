@@ -5,6 +5,7 @@ package fetcher
 import (
 	"bytes"
 	"fmt"
+	"maps"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -40,10 +41,13 @@ func (inst *Fetcher) AddNewCommand(key, cmd string, trim bool) error {
 	if err != nil {
 		return fmt.Errorf("add fetcher cmd failed %w", err)
 	}
+
 	if trim {
 		cmdInst.SetOutputProcessor(TrimSpace)
 	}
+
 	inst.cmdGrp.AddCommand(cmdInst)
+
 	return nil
 }
 
@@ -59,23 +63,26 @@ func (inst *Fetcher) Fetch(ctx clients.ExecContext, pack any) error {
 	if err != nil {
 		return err
 	}
+
 	result := make(map[string]any)
 	for key, value := range runResult {
 		result[key] = value
 	}
+
 	if inst.postProcessor != nil {
 		updatedResults, ppErr := inst.postProcessor(runResult)
 		if ppErr != nil {
 			return fmt.Errorf("feching failed post process the data %w", ppErr)
 		}
-		for key, value := range updatedResults {
-			result[key] = value
-		}
+
+		maps.Copy(result, updatedResults)
 	}
+
 	err = unmarshal(result, pack)
 	if err != nil {
 		return fmt.Errorf("feching failed to unpack data %w", err)
 	}
+
 	return nil
 }
 
@@ -84,7 +91,9 @@ func (inst *Fetcher) Fetch(ctx clients.ExecContext, pack any) error {
 func runCommands(ctx clients.ExecContext, cmdGrp clients.Cmder) (result map[string]string, err error) { //nolint:lll // allow slightly long function definition
 	cmd := cmdGrp.GetCommand()
 	log.Debugf("running command: '%s'", cmd)
+
 	command := []string{"/usr/bin/sh"}
+
 	var buffIn bytes.Buffer
 	buffIn.WriteString(cmd)
 
@@ -92,18 +101,23 @@ func runCommands(ctx clients.ExecContext, cmdGrp clients.Cmder) (result map[stri
 	if stderr != "" {
 		log.Error("Contents in stderr:", stderr)
 	}
+
 	if err != nil {
 		log.Debugf(
 			"command in container failed unexpectedly:\n\tcontext: %v\n\tcommand: %v\n\terror: %v",
 			ctx, command, err,
 		)
+
 		return result, fmt.Errorf("runCommands failed %w", err)
 	}
+
 	result, err = cmdGrp.ExtractResult(stdout)
 	if err != nil {
 		log.Debugf("extraction failed %s", err.Error())
 		log.Debugf("output was %s", stdout)
+
 		return result, fmt.Errorf("runCommands failed %w", err)
 	}
+
 	return result, nil
 }
