@@ -109,4 +109,4 @@ formatters:
       - examples$
 issues:
   new: true
-  new-from-rev: 1e5394d235098ff66fafd52111394124fa6b90cb
+  new-from-rev: 31042cfa48077a63beb0ba0f1dd5e4aed3de6254
