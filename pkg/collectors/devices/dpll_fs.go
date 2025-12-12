@@ -38,6 +38,7 @@ func (dpllInfo *DevFilesystemDPLLInfo) GetAnalyserFormat() ([]*callbacks.Analyse
 			"terror": dpllInfo.PPSOffset / unitConversionFactor,
 		},
 	}
+
 	return []*callbacks.AnalyserFormatType{&formatted}, nil
 }
 
@@ -51,11 +52,14 @@ func init() {
 
 func postProcessDPLLFilesystem(result map[string]string) (map[string]any, error) {
 	processedResult := make(map[string]any)
+
 	offset, err := strconv.ParseFloat(result["dpll_1_offset"], 32)
 	if err != nil {
 		return processedResult, fmt.Errorf("failed converting dpll_1_offset %w to an int", err)
 	}
+
 	processedResult["dpll_1_offset"] = offset
+
 	return processedResult, nil
 }
 
@@ -86,30 +90,36 @@ func BuildFilesystemDPLLInfoFetcher(interfaceName string) error { //nolint:dupl 
 		log.Errorf("failed to create fetcher for dpll: %s", err.Error())
 		return fmt.Errorf("failed to create fetcher for dpll: %w", err)
 	}
+
 	dpllFSFetcher[interfaceName] = fetcherInst
 	fetcherInst.SetPostProcessor(postProcessDPLLFilesystem)
+
 	return nil
 }
 
 // GetDevDPLLFilesystemInfo returns the device DPLL info for an interface.
 func GetDevDPLLFilesystemInfo(ctx clients.ExecContext, interfaceName string) (*DevFilesystemDPLLInfo, error) {
 	dpllInfo := &DevFilesystemDPLLInfo{}
+
 	fetcherInst, fetchedInstanceOk := dpllFSFetcher[interfaceName]
 	if !fetchedInstanceOk {
 		err := BuildFilesystemDPLLInfoFetcher(interfaceName)
 		if err != nil {
 			return dpllInfo, err
 		}
+
 		fetcherInst, fetchedInstanceOk = dpllFSFetcher[interfaceName]
 		if !fetchedInstanceOk {
 			return dpllInfo, errors.New("failed to create fetcher for DPLLInfo")
 		}
 	}
+
 	err := fetcherInst.Fetch(ctx, dpllInfo)
 	if err != nil {
 		log.Debugf("failed to fetch dpllInfo %s", err.Error())
 		return dpllInfo, fmt.Errorf("failed to fetch dpllInfo %w", err)
 	}
+
 	return dpllInfo, nil
 }
 
@@ -127,9 +137,11 @@ func IsDPLLFileSystemPresent(ctx clients.ExecContext, interfaceName string) (boo
 	if err != nil {
 		return false, fmt.Errorf("failed to build fetcher to check DPLL FS  %w", err)
 	}
+
 	type Paths struct {
 		Paths string `fetcherKey:"paths"`
 	}
+
 	paths := Paths{}
 	expected := map[string]bool{
 		"dpll_0_state":  false,
@@ -141,17 +153,20 @@ func IsDPLLFileSystemPresent(ctx clients.ExecContext, interfaceName string) (boo
 	if err != nil {
 		return false, fmt.Errorf("failed to check DPLL FS  %w", err)
 	}
-	for _, p := range strings.Split(paths.Paths, "\n") {
+
+	for p := range strings.SplitSeq(paths.Paths, "\n") {
 		for expectedPath := range expected {
 			if strings.Trim(p, " ") == expectedPath {
 				expected[expectedPath] = true
 			}
 		}
 	}
+
 	for _, value := range expected {
 		if !value {
 			return false, nil
 		}
 	}
+
 	return true, nil
 }

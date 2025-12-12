@@ -24,16 +24,16 @@ type CollectionConstructor struct {
 	Callback               callbacks.Callback
 	Clientset              *clients.Clientset
 	ErroredPolls           chan PollResult
-	PTPInterface           string
+	TempDir                string
 	PTPNodeName            string
 	LogsOutputFile         string
-	TempDir                string
+	PTPInterface           string
+	ClockType              string
 	PollInterval           int
 	DevInfoAnnouceInterval int
 	IncludeLogTimestamps   bool
 	KeepDebugFiles         bool
 	UnmanagedDebugPod      bool
-	ClockType              string
 }
 
 func NewCollectionConstructor(
@@ -110,6 +110,7 @@ func (base *baseCollector) Start() error {
 	if base.poller == nil {
 		utils.IfErrorExitOrPanic(fmt.Errorf("poller not set for collector %s", base.name))
 	}
+
 	return nil
 }
 
@@ -123,10 +124,12 @@ func (base *baseCollector) poll() error {
 	if err != nil {
 		return fmt.Errorf("failed to fetch  %s %w", base.callbackTag, err)
 	}
+
 	err = base.callback.Call(result, gpsNavKey)
 	if err != nil {
 		return fmt.Errorf("callback failed %w", err)
 	}
+
 	return nil
 }
 
@@ -134,11 +137,14 @@ func (base *baseCollector) poll() error {
 // calls the callback.Call to allow that to persist it
 func (base *baseCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCount) {
 	defer wg.Done()
+
 	errorsToReturn := make([]error, 0)
+
 	err := base.poll()
 	if err != nil {
 		errorsToReturn = append(errorsToReturn, err)
 	}
+
 	resultsChan <- PollResult{
 		CollectorName: base.name,
 		Errors:        errorsToReturn,

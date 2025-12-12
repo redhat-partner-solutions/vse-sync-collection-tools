@@ -35,12 +35,14 @@ func (gmSetting *PMCInfo) GetAnalyserFormat() ([]*callbacks.AnalyserFormatType, 
 		ID:   "phc/gm-settings",
 		Data: gmSetting,
 	}
+
 	return []*callbacks.AnalyserFormatType{&formatted}, nil
 }
 
 // MapStringToInt converts map string to map int
 func MapStringToInt(inputMap map[string]string) (map[string]int, error) {
 	convertedMap := make(map[string]int)
+
 	for key, value := range inputMap {
 		convertedValue, err := strconv.Atoi(value)
 		if err != nil {
@@ -87,6 +89,7 @@ func init() {
 	pmcFetcher = fetcher.NewFetcher()
 	pmcFetcher.SetPostProcessor(processPMC)
 	pmcFetcher.AddCommand(getDateCommand())
+
 	err := pmcFetcher.AddNewCommand(
 		"PMC",
 		"pmc -u -f /var/run/ptp4l.0.config  'GET GRANDMASTER_SETTINGS_NP'",
@@ -139,10 +142,12 @@ func processPMC(result map[string]string) (map[string]any, error) { //nolint:fun
 // GetPMC returns PMCInfo
 func GetPMC(ctx clients.ExecContext) (*PMCInfo, error) {
 	gmSetting := &PMCInfo{}
+
 	err := pmcFetcher.Fetch(ctx, gmSetting)
 	if err != nil {
 		log.Debugf("failed to fetch gmSetting %s", err.Error())
 		return gmSetting, fmt.Errorf("failed to fetch gmSetting %w", err)
 	}
+
 	return gmSetting, nil
 }

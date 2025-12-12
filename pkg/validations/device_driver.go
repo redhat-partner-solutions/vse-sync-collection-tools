@@ -24,13 +24,15 @@ var (
 
 func NewDeviceDriver(ptpDevInfo *devices.PTPDeviceInfo) *VersionWithErrorCheck {
 	var err error
+
 	checkVer := ptpDevInfo.DriverVersion
 	if checkVer[len(checkVer)-1] == '.' {
 		checkVer = checkVer[:len(checkVer)-1]
 	}
-	ver := fmt.Sprintf("v%s", strings.ReplaceAll(checkVer, "_", "-"))
+
+	ver := "v" + strings.ReplaceAll(checkVer, "_", "-")
 	if semver.IsValid(ver) {
-		if semver.Compare(ver, fmt.Sprintf("v%s", minInTreeDriverVersion)) < 0 {
+		if semver.Compare(ver, "v"+minInTreeDriverVersion) < 0 {
 			err = fmt.Errorf(
 				"found device driver version %s. This is below minimum version %s so likely an out of tree driver",
 				ptpDevInfo.DriverVersion, minInTreeDriverVersion,

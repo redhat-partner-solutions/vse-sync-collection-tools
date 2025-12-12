@@ -5,6 +5,7 @@ package clients
 import (
 	"fmt"
 	"regexp"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -32,18 +33,22 @@ func NewCmd(key, cmd string) (*Cmd, error) {
 		suffix: fmt.Sprintf("echo '</%s>'", key),
 	}
 
-	cmdInstance.fullCmd = fmt.Sprintf("%s;", cmdInstance.prefix)
+	cmdInstance.fullCmd = cmdInstance.prefix + ";"
+
 	cmdInstance.fullCmd += cmdInstance.cmd
 	if string(cmd[len(cmd)-1]) != ";" {
 		cmdInstance.fullCmd += ";"
 	}
-	cmdInstance.fullCmd += fmt.Sprintf("%s;", cmdInstance.suffix)
+
+	cmdInstance.fullCmd += cmdInstance.suffix + ";"
 
 	compiledRegex, err := regexp.Compile(`(?s)<` + key + `>\n` + `(.*)` + `\n</` + key + `>`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to compile regex for key %s: %w", key, err)
 	}
+
 	cmdInstance.regex = compiledRegex
+
 	return &cmdInstance, nil
 }
 
@@ -57,6 +62,7 @@ func (c *Cmd) GetCommand() string {
 
 func (c *Cmd) ExtractResult(s string) (map[string]string, error) {
 	result := make(map[string]string)
+
 	log.Debugf("extract %s from %s", c.key, s)
 	match := c.regex.FindStringSubmatch(s)
 	log.Debugf("match %#v", match)
@@ -69,12 +75,16 @@ func (c *Cmd) ExtractResult(s string) (map[string]string, error) {
 			if err != nil {
 				return result, fmt.Errorf("failed to cleanup value %s of key %s", match[1], c.key)
 			}
+
 			value = cleanValue
 		}
+
 		log.Debugf("r %s", value)
 		result[c.key] = value
+
 		return result, nil
 	}
+
 	return result, fmt.Errorf("failed to find result for key: %s", c.key)
 }
 
@@ -88,20 +98,26 @@ func (cgrp *CmdGroup) AddCommand(c *Cmd) {
 
 func (cgrp *CmdGroup) GetCommand() string {
 	res := ""
+	var resSb91 strings.Builder
 	for _, c := range cgrp.cmds {
-		res += c.GetCommand()
+		resSb91.WriteString(c.GetCommand())
 	}
+	res += resSb91.String()
+
 	return res
 }
 
 func (cgrp *CmdGroup) ExtractResult(s string) (map[string]string, error) {
 	results := make(map[string]string)
+
 	for _, c := range cgrp.cmds {
 		res, err := c.ExtractResult(s)
 		if err != nil {
 			return results, err
 		}
+
 		results[c.key] = res[c.key]
 	}
+
 	return results, nil
 }

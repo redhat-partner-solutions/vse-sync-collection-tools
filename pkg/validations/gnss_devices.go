@@ -22,6 +22,7 @@ func (gnssDevices *GNSDevices) Verify() error {
 	if len(gnssDevices.Paths) == 0 {
 		return utils.NewInvalidEnvError(errors.New("no gnss devices found"))
 	}
+
 	return nil
 }
 

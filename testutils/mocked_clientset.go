@@ -18,20 +18,25 @@ const kubeconfigPath string = "test_files/kubeconfig"
 // Returns a clientset where K8sClient and K8sRestClient are faked
 func GetMockedClientSet(k8APIObjects ...runtime.Object) *clients.Clientset {
 	clients.ClearClientSet()
+
 	clientset, err := clients.GetClientset(kubeconfigPath)
 	if err != nil {
 		panic("Failed to get clientset")
 	}
+
 	fakeK8sClient := fakeK8s.NewSimpleClientset(k8APIObjects...)
 
 	config := rest.ClientContentConfig{
 		GroupVersion: schema.GroupVersion{Version: "v1"},
 	}
+
 	fakeRestClient, err := rest.NewRESTClient(&url.URL{}, "", config, nil, nil)
 	if err != nil {
 		panic("Failed to create rest client")
 	}
+
 	clientset.K8sClient = fakeK8sClient
 	clientset.K8sRestClient = fakeRestClient
+
 	return clientset
 }

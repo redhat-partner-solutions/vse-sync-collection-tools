@@ -47,7 +47,9 @@ func (c *ContainerExecContext) refresh() error {
 	if err != nil {
 		return err
 	}
+
 	c.podName = newPodname
+
 	return nil
 }
 
@@ -59,6 +61,7 @@ func NewContainerContext(
 	if err != nil {
 		return &ContainerExecContext{}, err
 	}
+
 	ctx := ContainerExecContext{
 		namespace:     namespace,
 		podName:       podName,
@@ -67,6 +70,7 @@ func NewContainerContext(
 		clientset:     clientset,
 		nodeName:      nodeName,
 	}
+
 	return &ctx, nil
 }
 
@@ -85,8 +89,11 @@ func (c *ContainerExecContext) GetContainerName() string {
 //nolint:lll,funlen // allow slightly long function definition and function length
 func (c *ContainerExecContext) execCommand(command []string, buffInPtr *bytes.Buffer) (stdout, stderr string, err error) {
 	commandStr := command
-	var buffOut bytes.Buffer
-	var buffErr bytes.Buffer
+
+	var (
+		buffOut bytes.Buffer
+		buffErr bytes.Buffer
+	)
 
 	useBuffIn := buffInPtr != nil
 
@@ -134,9 +141,11 @@ func (c *ContainerExecContext) execCommand(command []string, buffInPtr *bytes.Bu
 
 	err = exec.StreamWithContext(context.TODO(), streamOptions)
 	stdout, stderr = buffOut.String(), buffErr.String()
+
 	if err != nil {
 		if k8sErrors.IsNotFound(err) {
 			log.Debugf("Pod %s was not found, likely restarted so refreshing context", c.GetPodName())
+
 			refreshErr := c.refresh()
 			if refreshErr != nil {
 				log.Debug("Failed to refresh container context", refreshErr)
@@ -146,13 +155,17 @@ func (c *ContainerExecContext) execCommand(command []string, buffInPtr *bytes.Bu
 		log.Debug(err)
 		log.Debug(req.URL())
 		log.Debug("command: ", command)
+
 		if useBuffIn {
 			log.Debug("stdin: ", buffInPtr.String())
 		}
+
 		log.Debug("stderr: ", stderr)
 		log.Debug("stdout: ", stdout)
+
 		return stdout, stderr, fmt.Errorf("error running remote command: %w", err)
 	}
+
 	return stdout, stderr, nil
 }
 
@@ -171,6 +184,7 @@ func (c *ContainerExecContext) ExecCommandStdIn(command []string, buffIn bytes.B
 // ContainerExecContext encapsulates the context in which a command is run; the namespace, pod, and container.
 type ContainerCreationExecContext struct {
 	*ContainerExecContext
+
 	labels                   map[string]string
 	pod                      *corev1.Pod
 	containerSecurityContext *corev1.SecurityContext
@@ -214,9 +228,11 @@ func (c *ContainerCreationExecContext) createPod() error {
 	if len(c.command) > 0 {
 		pod.Spec.Containers[0].Command = c.command
 	}
+
 	if c.containerSecurityContext != nil {
 		pod.Spec.Containers[0].SecurityContext = c.containerSecurityContext
 	}
+
 	if len(c.volumes) > 0 {
 		volumes := make([]corev1.Volume, 0)
 		volumeMounts := make([]corev1.VolumeMount, 0)
@@ -224,6 +240,7 @@ func (c *ContainerCreationExecContext) createPod() error {
 		for _, v := range c.volumes {
 			volumes = append(volumes, corev1.Volume{Name: v.Name, VolumeSource: v.VolumeSource})
 			pod.Spec.Volumes = volumes
+
 			volumeMounts = append(volumeMounts, corev1.VolumeMount{Name: v.Name, MountPath: v.MountPath})
 			pod.Spec.Containers[0].VolumeMounts = volumeMounts
 		}
@@ -235,9 +252,11 @@ func (c *ContainerCreationExecContext) createPod() error {
 		metav1.CreateOptions{},
 	)
 	c.pod = pod
+
 	if err != nil {
 		return fmt.Errorf("failed to create pod: %w", err)
 	}
+
 	return nil
 }
 
@@ -249,6 +268,7 @@ func (c *ContainerCreationExecContext) listPods(options *metav1.ListOptions) (*c
 	if err != nil {
 		return pods, fmt.Errorf("failed to find pods: %s", err.Error())
 	}
+
 	return pods, nil
 }
 
@@ -259,15 +279,19 @@ func (c *ContainerCreationExecContext) checkForLeftOverPod() error {
 	if err != nil {
 		return err
 	}
+
 	if len(pods.Items) > 1 {
 		return fmt.Errorf("expected at most one pod found %d", len(pods.Items))
 	}
+
 	for i := range pods.Items {
 		if pods.Items[i].Spec.Containers[0].Image == c.containerImage {
 			log.Info("Found pod running correct image")
+
 			c.pod = &pods.Items[i]
 		}
 	}
+
 	return nil
 }
 
@@ -279,9 +303,11 @@ func (c *ContainerCreationExecContext) refeshPod() error {
 	if err != nil {
 		return err
 	}
+
 	if len(pods.Items) == 0 {
 		return fmt.Errorf("failed to find pod: %s", c.podName)
 	}
+
 	c.pod = &pods.Items[0]
 
 	return nil
@@ -292,9 +318,11 @@ func (c *ContainerCreationExecContext) isPodRunning() (bool, error) {
 	if err != nil {
 		return false, err
 	}
+
 	if c.pod.Status.Phase == corev1.PodRunning {
 		return true, nil
 	}
+
 	return false, nil
 }
 
@@ -305,16 +333,20 @@ func (c *ContainerCreationExecContext) waitForPodToStart() error {
 		if err != nil {
 			return err
 		}
+
 		if running {
 			return nil
 		}
+
 		time.Sleep(time.Microsecond)
 	}
+
 	return errors.New("timed out waiting for pod to start")
 }
 
 func (c *ContainerCreationExecContext) CreatePodAndWait() error {
 	running := false
+
 	err := c.checkForLeftOverPod()
 	if err != nil {
 		return err
@@ -326,20 +358,24 @@ func (c *ContainerCreationExecContext) CreatePodAndWait() error {
 			return err
 		}
 	}
+
 	if !running {
 		if c.unmanagedDebugPod {
-			return fmt.Errorf("life cylcing disabled however pod not found")
+			return errors.New("life cylcing disabled however pod not found")
 		}
+
 		err := c.createPod()
 		if err != nil {
 			return err
 		}
 	}
+
 	return c.waitForPodToStart()
 }
 
 func (c *ContainerCreationExecContext) deletePod() error {
 	deletePolicy := metav1.DeletePropagationForeground
+
 	err := c.clientset.K8sClient.CoreV1().Pods(c.pod.Namespace).Delete(
 		context.TODO(),
 		c.pod.Name,
@@ -349,6 +385,7 @@ func (c *ContainerCreationExecContext) deletePod() error {
 	if err != nil {
 		return fmt.Errorf("failed to delete pod: %w", err)
 	}
+
 	return nil
 }
 
@@ -359,17 +396,22 @@ func (c *ContainerCreationExecContext) waitForPodToDelete() error {
 		if err != nil {
 			return err
 		}
+
 		found := false
+
 		for _, pod := range pods.Items { //nolint:gocritic // This isn't my object I can't use a pointer
 			if pod.Name == c.podName {
 				found = true
 			}
 		}
+
 		if !found {
 			return nil
 		}
+
 		time.Sleep(time.Microsecond)
 	}
+
 	return errors.New("pod has not terminated within the timeout")
 }
 
@@ -380,16 +422,19 @@ func (c *ContainerCreationExecContext) DeletePodAndWait() error {
 
 	// check for running pod
 	running := false
+
 	err := c.checkForLeftOverPod()
 	if err != nil {
 		return err
 	}
+
 	if c.pod != nil {
 		running, err = c.isPodRunning()
 		if err != nil {
 			return err
 		}
 	}
+
 	if !running {
 		return nil
 	}
@@ -398,6 +443,7 @@ func (c *ContainerCreationExecContext) DeletePodAndWait() error {
 	if err != nil {
 		return err
 	}
+
 	return c.waitForPodToDelete()
 }
 
@@ -408,8 +454,10 @@ func fetchDurationEnv(key string, defaultValue time.Duration) (time.Duration, er
 		if err != nil {
 			return defaultValue, fmt.Errorf("failed to parse %s as a duration: %w", key, err)
 		}
+
 		return timeout, nil
 	}
+
 	return defaultValue, nil
 }
 
@@ -455,5 +503,6 @@ func NewContainerCreationExecContext(
 		deletionTimeout:          deletionTimeout,
 		unmanagedDebugPod:        unmanagedDebugPod,
 	}
+
 	return &containerCTX, nil
 }

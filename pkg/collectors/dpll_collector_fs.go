@@ -13,6 +13,7 @@ import (
 
 type DPLLFilesystemCollector struct {
 	*baseCollector
+
 	ctx           clients.ExecContext
 	interfaceName string
 }
@@ -35,6 +36,7 @@ func NewDPLLFilesystemCollector(constructor *CollectionConstructor) (Collector, 
 	if err != nil {
 		return &DPLLFilesystemCollector{}, fmt.Errorf("failed to create DPLLFilesystemCollector: %w", err)
 	}
+
 	err = devices.BuildFilesystemDPLLInfoFetcher(constructor.PTPInterface)
 	if err != nil {
 		return &DPLLFilesystemCollector{}, fmt.Errorf("failed to build fetcher for DPLLInfo %w", err)
@@ -52,5 +54,6 @@ func NewDPLLFilesystemCollector(constructor *CollectionConstructor) (Collector, 
 		ctx:           ctx,
 	}
 	collector.poller = dpllFSPoller(collector)
+
 	return collector, nil
 }

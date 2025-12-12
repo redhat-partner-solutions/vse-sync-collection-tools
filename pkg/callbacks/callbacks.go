@@ -44,25 +44,30 @@ func getFormattedOutput(c Callback, output OutputType, tag string) ([]byte, erro
 		if err != nil {
 			return []byte{}, fmt.Errorf("failed to marshal %T %w", output, err)
 		}
-		return []byte(fmt.Sprintf("%T:%s, %s", output, tag, line)), nil
+
+		return fmt.Appendf(nil, "%T:%s, %s", output, tag, line), nil
 	case AnalyserJSON:
 		outputs, err := output.GetAnalyserFormat()
 		if err != nil {
 			return []byte{}, fmt.Errorf("failed to get AnalyserFormat %w", err)
 		}
+
 		newline := []byte("\n")
 		lines := make([]byte, 0)
+
 		for count, obj := range outputs {
 			line, err := json.Marshal(obj)
 			if err != nil {
 				return []byte{}, fmt.Errorf("failed to marshal AnalyserFormat for %s %w", tag, err)
 			}
+
 			lines = append(lines, line...)
 			// Append a new line between the entries but not a trailing one
 			if count < len(outputs)-1 {
 				lines = append(lines, newline...)
 			}
 		}
+
 		return lines, nil
 	default:
 		return []byte{}, errors.New("unknown format")
@@ -85,6 +90,7 @@ func GetFileHandle(filename string) (io.WriteCloser, error) {
 			return fileHandle, fmt.Errorf("failed to open file: %w", err)
 		}
 	}
+
 	return fileHandle, nil
 }
 
@@ -100,6 +106,7 @@ func SetupCallback(filename string, format OutputFormat) (FileCallBack, error) {
 	if err != nil {
 		return FileCallBack{}, err
 	}
+
 	return NewFileCallback(fileHandle, format), nil
 }
 
@@ -113,11 +120,14 @@ func (c FileCallBack) Call(output OutputType, tag string) error {
 	if err != nil {
 		return err
 	}
+
 	formattedOutput = append(formattedOutput, []byte("\n")...)
+
 	_, err = c.fileHandle.Write(formattedOutput)
 	if err != nil {
 		return fmt.Errorf("failed to write to file in callback: %w", err)
 	}
+
 	return nil
 }
 
@@ -130,5 +140,6 @@ func (c FileCallBack) CleanUp() error {
 	if err != nil {
 		return fmt.Errorf("failed to close file handle in callback: %w", err)
 	}
+
 	return nil
 }

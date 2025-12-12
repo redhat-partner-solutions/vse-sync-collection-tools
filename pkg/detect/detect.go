@@ -86,7 +86,9 @@ func output(outWriter io.Writer, interfaces []DetectedInterface, outputAsJSON bo
 
 func parseConfig(contents string) (map[string][]string, error) {
 	scanner := bufio.NewScanner(strings.NewReader(contents))
+
 	var currentSection string
+
 	result := make(map[string][]string)
 
 	for scanner.Scan() {
@@ -95,6 +97,7 @@ func parseConfig(contents string) (map[string][]string, error) {
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue
 		}
+
 		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
 			currentSection = line[1 : len(line)-1]
 			continue
@@ -103,9 +106,11 @@ func parseConfig(contents string) (map[string][]string, error) {
 		}
 	}
 
-	if err := scanner.Err(); err != nil {
+	err := scanner.Err()
+	if err != nil {
 		return result, fmt.Errorf("failed when parsing config: %w", err)
 	}
+
 	return result, nil
 }
 
@@ -118,23 +123,27 @@ func getPTPClockDevice(ctx clients.ExecContext, interfaceName string) (string, e
 	if err != nil {
 		return "", fmt.Errorf("failed to get ptp clock number: %w", err)
 	}
-	for _, line := range strings.Split(out, "\n") {
+
+	for line := range strings.SplitSeq(out, "\n") {
 		if strings.Contains(line, "PTP Hardware Clock:") {
 			clockNumber := strings.TrimSpace(strings.Split(line, ":")[1])
-			return fmt.Sprintf("/dev/ptp%s", clockNumber), nil
+			return "/dev/ptp" + clockNumber, nil
 		}
 	}
+
 	return "", errors.New("no PTP clock device found")
 }
 
 func getDetectedInterfaces(ctx clients.ExecContext, config map[string][]string) []DetectedInterface {
 	detected := []DetectedInterface{}
+
 	for section, lines := range config {
 		if section == "global" || section == "nmea" { //nolint:goconst // only one time so const would obfuscate
 			continue
 		}
 
 		isPrimary := true
+
 		for _, l := range lines {
 			if ts2phcNotMaster.MatchString(l) {
 				isPrimary = false
@@ -150,6 +159,7 @@ func getDetectedInterfaces(ctx clients.ExecContext, config map[string][]string) 
 			PTPClockDevicePath: ptpDev,
 		})
 	}
+
 	return detected
 }
 
@@ -161,6 +171,7 @@ func checkPTPConfig(ctx clients.ExecContext, clockType string) ([]DetectedInterf
 			log.Info("ptp4l config not found, falling back to ts2phc config for BC clock")
 			return checkTs2PhcConfig(ctx)
 		}
+
 		return interfaces, nil
 	} else {
 		// For GM clocks, try ts2phc config first
@@ -169,6 +180,7 @@ func checkPTPConfig(ctx clients.ExecContext, clockType string) ([]DetectedInterf
 			log.Info("ts2phc config not found, falling back to ptp4l config for GM clock")
 			return checkPtp4lConfig(ctx)
 		}
+
 		return interfaces, nil
 	}
 }
@@ -176,17 +188,20 @@ func checkPTPConfig(ctx clients.ExecContext, clockType string) ([]DetectedInterf
 func checkPtp4lConfig(ctx clients.ExecContext) ([]DetectedInterface, error) {
 	errs := []error{}
 	detected := []DetectedInterface{}
+
 	files, _, err := ctx.ExecCommand([]string{"ls", "/var/run/"})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list /var/run/ directory: %w", err)
 	}
 
 	ptp4lConfigFiles := make([]string, 0)
-	for _, f := range strings.Fields(files) {
+
+	for f := range strings.FieldsSeq(files) {
 		if strings.HasPrefix(f, "ptp4l.") && strings.HasSuffix(f, ".config") {
 			ptp4lConfigFiles = append(ptp4lConfigFiles, f)
 		}
 	}
+
 	if len(ptp4lConfigFiles) == 0 {
 		return nil, errors.New("failed to find ptp4l config file")
 	} else if len(ptp4lConfigFiles) > 1 {
@@ -199,6 +214,7 @@ func checkPtp4lConfig(ctx clients.ExecContext) ([]DetectedInterface, error) {
 			errs = append(errs, fmt.Errorf("failed to read ptp4l config file: %w", err))
 			continue
 		}
+
 		config, err := parseConfig(ptp4lConfig)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("failed to parse ptp4l config file: %w", err))
@@ -207,11 +223,13 @@ func checkPtp4lConfig(ctx clients.ExecContext) ([]DetectedInterface, error) {
 
 		detected = append(detected, getDetectedInterfacesFromPtp4l(ctx, config)...)
 	}
+
 	return detected, utils.MakeCompositeError("", errs) //nolint:wrapcheck //this just combines errors.
 }
 
 func getDetectedInterfacesFromPtp4l(ctx clients.ExecContext, config map[string][]string) []DetectedInterface {
 	detected := []DetectedInterface{}
+
 	for section, lines := range config {
 		if section == "global" || section == "nmea" { //nolint:goconst // only one time so const would obfuscate
 			continue
@@ -219,6 +237,7 @@ func getDetectedInterfacesFromPtp4l(ctx clients.ExecContext, config map[string][
 
 		// For BC clocks, all interfaces are primary (they participate in PTP sync)
 		isPrimary := true
+
 		for _, l := range lines {
 			if ptp4lMasterOnly.MatchString(l) || ptp4lServerOnly.MatchString(l) {
 				isPrimary = false
@@ -237,23 +256,27 @@ func getDetectedInterfacesFromPtp4l(ctx clients.ExecContext, config map[string][
 			PTPClockDevicePath: ptpDev,
 		})
 	}
+
 	return sortAndDeduplicateInterfaces(detected)
 }
 
 func checkTs2PhcConfig(ctx clients.ExecContext) ([]DetectedInterface, error) { //nolint:staticcheck //Suggestion looks bad
 	errs := []error{}
 	detected := []DetectedInterface{}
+
 	files, _, err := ctx.ExecCommand([]string{"ls", "/var/run/"})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list /var/run/ directory: %w", err)
 	}
 
 	ts2phcConfigFiles := make([]string, 0)
-	for _, f := range strings.Fields(files) {
+
+	for f := range strings.FieldsSeq(files) {
 		if strings.HasPrefix(f, "ts2phc.") && strings.HasSuffix(f, ".config") {
 			ts2phcConfigFiles = append(ts2phcConfigFiles, f)
 		}
 	}
+
 	if len(ts2phcConfigFiles) == 0 {
 		return nil, errors.New("failed to find ts2phc config file")
 	} else if len(ts2phcConfigFiles) > 1 {
@@ -265,6 +288,7 @@ func checkTs2PhcConfig(ctx clients.ExecContext) ([]DetectedInterface, error) { /
 		if err != nil {
 			errs = append(errs, fmt.Errorf("failed to read ts2 config file: %w", err))
 		}
+
 		config, err := parseConfig(ts2phcConfig)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("failed to parse ts2 config file: %w", err))
@@ -272,5 +296,6 @@ func checkTs2PhcConfig(ctx clients.ExecContext) ([]DetectedInterface, error) { /
 
 		detected = append(detected, getDetectedInterfaces(ctx, config)...)
 	}
+
 	return detected, utils.MakeCompositeError("", errs) //nolint:wrapcheck //this just combines errors.
 }

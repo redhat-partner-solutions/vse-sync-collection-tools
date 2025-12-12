@@ -27,6 +27,7 @@ type ValidationResult struct {
 
 func (res *ValidationResult) GetAnalyserFormat() ([]*callbacks.AnalyserFormatType, error) {
 	var result any
+
 	msg := ""
 
 	switch res.resType {
@@ -49,6 +50,7 @@ func (res *ValidationResult) GetAnalyserFormat() ([]*callbacks.AnalyserFormatTyp
 			"analysis": res.validation.GetData(),
 		},
 	}
+
 	return []*callbacks.AnalyserFormatType{&formatted}, nil
 }
 
@@ -59,6 +61,7 @@ func isInvalidEnv(err error) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -68,6 +71,7 @@ func (res *ValidationResult) GetPrefixedError() error {
 
 func NewValidationResult(validation validations.Validation) *ValidationResult {
 	result := resTypeUnknown
+
 	err := validation.Verify()
 	if err != nil {
 		if isInvalidEnv(err) {

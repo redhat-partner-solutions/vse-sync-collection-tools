@@ -27,11 +27,13 @@ var _ = Describe("GetPMC", func() {
 			reader := bufio.NewReader(options.Stdin)
 			cmd := ""
 			keepReading := true
+			var cmdSb30 strings.Builder
 			for keepReading {
 				line, prefix, _ := reader.ReadLine()
 				keepReading = prefix
-				cmd += string(line)
+				cmdSb30.WriteString(string(line))
 			}
+			cmd += cmdSb30.String()
 			return response[cmd], []byte(""), nil
 		}
 		clients.NewSPDYExecutor = testutils.NewFakeNewSPDYExecutor(responder, nil)

@@ -4,6 +4,7 @@ package devices
 
 import (
 	"fmt"
+	"maps"
 	"regexp"
 	"strconv"
 	"time"
@@ -60,6 +61,7 @@ func (gpsNav *GPSDetails) GetAnalyserFormat() ([]*callbacks.AnalyserFormatType, 
 			Data: ant,
 		})
 	}
+
 	return messages, nil
 }
 
@@ -115,6 +117,7 @@ var (
 func init() {
 	gpsFetcher = fetcher.NewFetcher()
 	gpsFetcher.SetPostProcessor(processUBX)
+
 	err := gpsFetcher.AddNewCommand(
 		"GPS",
 		"ubxtool -t -p NAV-STATUS -p NAV-CLOCK -p MON-RF -P 29.20",
@@ -128,6 +131,7 @@ func init() {
 // processUBXNavStatus parses the output of the ubxtool extracting the required values for GPSNav
 func processUBXNavStatus(result map[string]string) (map[string]any, error) {
 	processedResult := make(map[string]any)
+
 	match := ubxNavStatusRegex.FindStringSubmatch(result["GPS"])
 	if len(match) == 0 {
 		return processedResult, fmt.Errorf(
@@ -135,6 +139,7 @@ func processUBXNavStatus(result map[string]string) (map[string]any, error) {
 			result["GPS"],
 		)
 	}
+
 	timestampSatus, err := utils.ParseTimestamp(match[1])
 	if err != nil {
 		return processedResult, fmt.Errorf("failed to parse navStatusTimestamp %w", err)
@@ -150,12 +155,14 @@ func processUBXNavStatus(result map[string]string) (map[string]any, error) {
 		GPSFix:    gpsFix,
 		Flags:     match[4],
 	}
+
 	return processedResult, nil
 }
 
 // processUBXNavClock parses the output of the ubxtool extracting the required values for GPSNav
 func processUBXNavClock(result map[string]string) (map[string]any, error) {
 	processedResult := make(map[string]any)
+
 	matchNav := ubxNavClockRegex.FindStringSubmatch(result["GPS"])
 	if len(matchNav) == 0 {
 		return processedResult, fmt.Errorf(
@@ -163,23 +170,28 @@ func processUBXNavClock(result map[string]string) (map[string]any, error) {
 			result["GPS"],
 		)
 	}
+
 	timestampClock, err := utils.ParseTimestamp(matchNav[1])
 	if err != nil {
 		return processedResult, fmt.Errorf("failed to parse navClockTimestamp %w", err)
 	}
+
 	timeAcc, err := strconv.Atoi(matchNav[5])
 	if err != nil {
 		return processedResult, fmt.Errorf("failed to convert %s into and int", matchNav[13])
 	}
+
 	freqAcc, err := strconv.Atoi(matchNav[6])
 	if err != nil {
 		return processedResult, fmt.Errorf("failed to convert %s into and int", matchNav[14])
 	}
+
 	processedResult["navClock"] = GPSNavClock{
 		Timestamp: timestampClock.Format(time.RFC3339Nano),
 		TimeAcc:   timeAcc,
 		FreqAcc:   freqAcc,
 	}
+
 	return processedResult, nil
 }
 
@@ -195,6 +207,7 @@ func processUBXMonRF(result map[string]string) (map[string]any, error) { //nolin
 	if err != nil {
 		return processedResult, fmt.Errorf("failed to parse monTimestamp %w", err)
 	}
+
 	timestamp := timestampMon.Format(time.RFC3339Nano)
 
 	nBlocks, err := strconv.Atoi(antFullMatch[2])
@@ -205,15 +218,18 @@ func processUBXMonRF(result map[string]string) (map[string]any, error) { //nolin
 	antBlockMatches := ubxAntInternalBlockRegex.FindAllStringSubmatch(antFullMatch[3], nBlocks)
 
 	antennaDetails := make([]*GPSAntennaDetails, 0)
+
 	for _, antBlock := range antBlockMatches {
 		antBlockIDValue, err := strconv.Atoi(antBlock[1])
 		if err != nil {
 			return processedResult, fmt.Errorf("failed to convert %s to an int for antBlockIDValue %w", antBlock[1], err)
 		}
+
 		antStatusValue, err := strconv.Atoi(antBlock[2])
 		if err != nil {
 			return processedResult, fmt.Errorf("failed to convert %s to an int for antStatusValue %w", antBlock[2], err)
 		}
+
 		antPowerValue, err := strconv.Atoi(antBlock[3])
 		if err != nil {
 			return processedResult, fmt.Errorf("failed to convert %s to an int for antPowerValue %w", antBlock[3], err)
@@ -228,6 +244,7 @@ func processUBXMonRF(result map[string]string) (map[string]any, error) { //nolin
 	}
 
 	processedResult["antennaDetails"] = antennaDetails
+
 	return processedResult, nil
 }
 
@@ -240,26 +257,24 @@ func processUBX(result map[string]string) (map[string]any, error) { //nolint:fun
 		log.Debugf("processUBXNav Failed: %s", err.Error())
 		errors = append(errors, err)
 	}
-	for key, value := range processedUBXNavStatus {
-		processedResult[key] = value
-	}
+
+	maps.Copy(processedResult, processedUBXNavStatus)
+
 	processedUBXNavClock, err := processUBXNavClock(result)
 	if err != nil {
 		log.Debugf("processUBXNav Failed: %s", err.Error())
 		errors = append(errors, err)
 	}
-	for key, value := range processedUBXNavClock {
-		processedResult[key] = value
-	}
+
+	maps.Copy(processedResult, processedUBXNavClock)
 
 	processedUBXMonRF, err := processUBXMonRF(result)
 	if err != nil {
 		log.Debugf("processUBXMon Failed: %s", err.Error())
 		errors = append(errors, err)
 	}
-	for key, value := range processedUBXMonRF {
-		processedResult[key] = value
-	}
+
+	maps.Copy(processedResult, processedUBXMonRF)
 
 	if len(errors) > 0 {
 		return processedResult,
@@ -268,16 +283,19 @@ func processUBX(result map[string]string) (map[string]any, error) { //nolint:fun
 				utils.MakeCompositeError("", errors),
 			)
 	}
+
 	return processedResult, nil
 }
 
 // GetGPSNav returns GPSNav of the host
 func GetGPSNav(ctx clients.ExecContext) (*GPSDetails, error) {
 	gpsNav := &GPSDetails{}
+
 	err := gpsFetcher.Fetch(ctx, gpsNav)
 	if err != nil {
 		log.Debugf("failed to fetch gpsNav %s", err.Error())
 		return gpsNav, fmt.Errorf("failed to fetch gpsNav %w", err)
 	}
+
 	return gpsNav, nil
 }

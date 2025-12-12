@@ -25,6 +25,7 @@ func (gnssModule *GNSSModule) Verify() error {
 			fmt.Errorf("reported gnss module is not %s", expectedModuleName),
 		)
 	}
+
 	return nil
 }
 

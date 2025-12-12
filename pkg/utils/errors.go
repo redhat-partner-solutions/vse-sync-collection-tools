@@ -81,15 +81,18 @@ func MakeCompositeError(prefix string, errSlice []error) error {
 	if len(errSlice) == 0 {
 		return nil
 	}
+
 	pattern := strings.Repeat("\t%s\n", len(errSlice))
 
 	values := make([]any, 0)
 	for _, err := range errSlice {
 		values = append(values, err.Error())
 	}
+
 	if prefix != "" {
 		return fmt.Errorf(prefix+":\n"+pattern, values...) //nolint:wrapcheck //no
 	}
+
 	return fmt.Errorf(pattern, values...) //nolint:wrapcheck //no
 }
 

@@ -16,7 +16,9 @@ func setValueOnField(fieldVal reflect.Value, value any) error {
 			fieldVal.Type().String(),
 		)
 	}
+
 	fieldVal.Set(reflect.ValueOf(value))
+
 	return nil
 }
 
@@ -28,6 +30,7 @@ func unmarshal(result map[string]any, target any) error {
 
 	for i := 0; i < val.Elem().NumField(); i++ {
 		field := typ.Elem().Field(i)
+
 		resultName := field.Tag.Get("fetcherKey")
 		if resultName != "" {
 			fieldVal := val.Elem().FieldByIndex(field.Index)
@@ -39,5 +42,6 @@ func unmarshal(result map[string]any, target any) error {
 			}
 		}
 	}
+
 	return nil
 }

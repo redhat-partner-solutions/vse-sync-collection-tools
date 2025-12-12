@@ -19,6 +19,7 @@ var (
 
 func NewGNSS(gnss *devices.GPSVersions) *VersionCheck {
 	parts := strings.Split(gnss.FirmwareVersion, " ")
+
 	return &VersionCheck{
 		id:           gnssID,
 		Version:      gnss.FirmwareVersion,

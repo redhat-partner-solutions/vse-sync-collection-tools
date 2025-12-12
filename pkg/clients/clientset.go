@@ -44,12 +44,14 @@ func GetClientset(kubeconfigPaths ...string) (*Clientset, error) {
 			errors.New("must have at least one kubeconfig to initialise a new Clientset"),
 		)
 	}
+
 	clientset, err := newClientset(kubeconfigPaths...)
 	if err != nil {
 		return nil, utils.NewMissingInputError(
 			fmt.Errorf("failed to create k8s clients holder: %w", err),
 		)
 	}
+
 	return clientset, nil
 }
 
@@ -68,6 +70,7 @@ func newClientset(kubeconfigPaths ...string) (*Clientset, error) {
 	// Get a rest.Config from the kubeconfig file.  This will be passed into all
 	// the client objects we create.
 	var err error
+
 	clientset.RestConfig, err = kubeconfig.ClientConfig()
 	if err != nil {
 		return nil, fmt.Errorf("cannot instantiate rest config: %w", err)
@@ -80,6 +83,7 @@ func newClientset(kubeconfigPaths ...string) (*Clientset, error) {
 	if err != nil {
 		return nil, fmt.Errorf("cannot instantiate dynamic client (unstructured/dynamic): %w", err)
 	}
+
 	clientset.K8sClient, err = kubernetes.NewForConfig(clientset.RestConfig)
 	if err != nil {
 		return nil, fmt.Errorf("cannot instantiate k8sclient: %w", err)
@@ -92,6 +96,7 @@ func newClientset(kubeconfigPaths ...string) (*Clientset, error) {
 
 	clientset.K8sRestClient = clientset.K8sClient.CoreV1().RESTClient()
 	clientset.ready = true
+
 	return &clientset, nil
 }
 
@@ -104,15 +109,17 @@ func (clientsholder *Clientset) FindPodNameFromPrefix(namespace, prefix, nodeNam
 	if len(nodeName) > 0 {
 		listOpts = metav1.ListOptions{FieldSelector: "spec.nodeName=" + nodeName}
 	}
-	podList, err := clientsholder.K8sClient.CoreV1().Pods(namespace).List(context.TODO(), listOpts)
 
+	podList, err := clientsholder.K8sClient.CoreV1().Pods(namespace).List(context.TODO(), listOpts)
 	if err != nil {
 		return "", fmt.Errorf("failed to getting pod list: %w", err)
 	}
+
 	podNames := make([]string, 0)
 
 	for i := range podList.Items {
 		hasPrefix := strings.HasPrefix(podList.Items[i].Name, prefix)
+
 		isDebug := strings.HasSuffix(podList.Items[i].Name, "-debug")
 		if hasPrefix && !isDebug {
 			podNames = append(podNames, podList.Items[i].Name)

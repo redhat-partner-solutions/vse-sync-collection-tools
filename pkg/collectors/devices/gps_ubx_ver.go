@@ -33,6 +33,7 @@ func (gpsVer *GPSVersions) GetAnalyserFormat() ([]*callbacks.AnalyserFormatType,
 			Data: gpsVer,
 		},
 	}
+
 	return messages, nil
 }
 
@@ -92,10 +93,10 @@ func init() {
 			},
 		},
 	)
-
 	if err != nil {
 		panic(fmt.Errorf("failed to setup GPSD Version fetcher %w", err))
 	}
+
 	gpsVerFetcherInst.SetPostProcessor(processGPSVer)
 	gpsVerFetcher = gpsVerFetcherInst
 }
@@ -109,11 +110,13 @@ func findFirstCaptureGroup(input string, regex *regexp.Regexp, name string) (str
 			name, input,
 		)
 	}
+
 	return version[1], nil
 }
 
 func processExtentions(result map[string]string) (map[string]any, error) {
 	processedResult := make(map[string]any)
+
 	match := ubxFirmwareVersion.FindStringSubmatch(result["UBXMonVer"])
 	if len(match) == 0 {
 		return processedResult, fmt.Errorf(
@@ -126,25 +129,30 @@ func processExtentions(result map[string]string) (map[string]any, error) {
 	if err != nil {
 		return processedResult, fmt.Errorf("failed to parse versionTimestamp %w", err)
 	}
+
 	processedResult["timestamp"] = timestamp.Format(time.RFC3339Nano)
 
 	fwVer, err := findFirstCaptureGroup(match[4], fwVersionExtension, "extension")
 	if err != nil {
 		return processedResult, err
 	}
+
 	processedResult["firmwareVersion"] = fwVer
 
 	protoVer, err := findFirstCaptureGroup(match[4], protoVersionExtension, "extension")
 	if err != nil {
 		return processedResult, err
 	}
+
 	processedResult["protocolVersion"] = protoVer
 
 	module, err := findFirstCaptureGroup(match[4], moduleExtension, "extension")
 	if err != nil {
 		return processedResult, err
 	}
+
 	processedResult["module"] = module
+
 	return processedResult, nil
 }
 
@@ -158,32 +166,39 @@ func processGPSVer(result map[string]string) (map[string]any, error) {
 	if err != nil {
 		return processedResult, err
 	}
+
 	processedResult["UBXVersion"] = ubxVer
 
 	gpsdVer, err := findFirstCaptureGroup(result["GPSDVersion"], gpsdVersion, "gpsd version")
 	if err != nil {
 		return processedResult, err
 	}
+
 	processedResult["GPSDVersion"] = gpsdVer
 
 	gnssDevices := make([]string, 0)
-	for _, dev := range strings.Split(result["GNSSDevices"], "\n") {
+
+	for dev := range strings.SplitSeq(result["GNSSDevices"], "\n") {
 		dev = strings.TrimSpace(dev)
 		if len(dev) > 0 {
 			gnssDevices = append(gnssDevices, "/dev/"+dev)
 		}
 	}
+
 	processedResult["GNSSDevices"] = gnssDevices
+
 	return processedResult, nil
 }
 
 // GetGPSVersions returns GPSVersions of the host
 func GetGPSVersions(ctx clients.ExecContext) (*GPSVersions, error) {
 	gpsVer := &GPSVersions{}
+
 	err := gpsVerFetcher.Fetch(ctx, gpsVer)
 	if err != nil {
 		log.Debugf("failed to fetch gpsVer %s", err.Error())
 		return gpsVer, fmt.Errorf("failed to fetch gpsVer %w", err)
 	}
+
 	return gpsVer, nil
 }

@@ -45,15 +45,17 @@ type VersionCheck struct {
 }
 
 func (verCheck *VersionCheck) Verify() error {
-	ver := fmt.Sprintf("v%s", strings.ReplaceAll(verCheck.checkVersion, "_", "-"))
+	ver := "v" + strings.ReplaceAll(verCheck.checkVersion, "_", "-")
 	if !semver.IsValid(ver) {
 		return fmt.Errorf("could not parse version %s", ver)
 	}
-	if semver.Compare(ver, fmt.Sprintf("v%s", verCheck.MinVersion)) < 0 {
+
+	if semver.Compare(ver, "v"+verCheck.MinVersion) < 0 {
 		return utils.NewInvalidEnvError(
 			fmt.Errorf("unexpected version: %s < %s", verCheck.checkVersion, verCheck.MinVersion),
 		)
 	}
+
 	return nil
 }
 
@@ -83,6 +85,7 @@ func MarshalVersionAndError(ver *VersionWithError) ([]byte, error) {
 	if ver.Error != nil {
 		err = ver.Error.Error()
 	}
+
 	marsh, marshalErr := json.Marshal(&struct {
 		Error   any    `json:"fetchError"`
 		Version string `json:"version"`
@@ -90,6 +93,7 @@ func MarshalVersionAndError(ver *VersionWithError) ([]byte, error) {
 		Version: ver.Version,
 		Error:   err,
 	})
+
 	return marsh, fmt.Errorf("failed to marshal VersionWithError %w", marshalErr)
 }
 
@@ -109,5 +113,6 @@ func (verCheck *VersionWithErrorCheck) Verify() error {
 	if verCheck.Error != nil {
 		return verCheck.Error
 	}
+
 	return verCheck.VersionCheck.Verify()
 }

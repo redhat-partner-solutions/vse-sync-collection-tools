@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"fmt"
 	"net/url"
+	"strings"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -27,11 +28,13 @@ var _ = Describe("NewContainerContext", func() {
 			reader := bufio.NewReader(options.Stdin)
 			cmd := ""
 			keepReading := true
+			var cmdSb30 strings.Builder
 			for keepReading {
 				line, prefix, _ := reader.ReadLine()
 				keepReading = prefix
-				cmd += string(line)
+				cmdSb30.WriteString(string(line))
 			}
+			cmd += cmdSb30.String()
 			return response[cmd], []byte(""), nil
 		}
 		clients.NewSPDYExecutor = testutils.NewFakeNewSPDYExecutor(responder, nil)

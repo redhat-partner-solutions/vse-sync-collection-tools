@@ -27,14 +27,14 @@ var _ = Describe("setValueOnField", func() {
 		It("should populate the field", func() {
 			target := &testStruct{}
 			testStrValue := "I am a test string"
-			strField := reflect.TypeOf(target).Elem().Field(0)
+			strField := reflect.TypeFor[testStruct]().Field(0)
 			strFieldVal := reflect.ValueOf(target).Elem().FieldByIndex(strField.Index)
 			err := setValueOnField(strFieldVal, testStrValue)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(target.TestString).To(Equal(testStrValue))
 
 			testSliceValue := []int{12, 15, 18}
-			sliceField := reflect.TypeOf(target).Elem().Field(1)
+			sliceField := reflect.TypeFor[testStruct]().Field(1)
 			sliceFieldVal := reflect.ValueOf(target).Elem().FieldByIndex(sliceField.Index)
 			err = setValueOnField(sliceFieldVal, testSliceValue)
 			Expect(err).NotTo(HaveOccurred())
@@ -46,7 +46,7 @@ var _ = Describe("setValueOnField", func() {
 		It("should populate the field", func() {
 			target := &testStruct{}
 			testDuration := 10 * time.Second
-			sliceField := reflect.TypeOf(target).Elem().Field(2)
+			sliceField := reflect.TypeFor[testStruct]().Field(2)
 			sliceFieldVal := reflect.ValueOf(target).Elem().FieldByIndex(sliceField.Index)
 			err := setValueOnField(sliceFieldVal, testDuration)
 			Expect(err).NotTo(HaveOccurred())
@@ -58,7 +58,7 @@ var _ = Describe("setValueOnField", func() {
 		It("should populate the field", func() {
 			target := &testStruct{}
 			toNest := nestedStuct{Value: "I am nested"}
-			sliceField := reflect.TypeOf(target).Elem().Field(3)
+			sliceField := reflect.TypeFor[testStruct]().Field(3)
 			sliceFieldVal := reflect.ValueOf(target).Elem().FieldByIndex(sliceField.Index)
 			err := setValueOnField(sliceFieldVal, toNest)
 			Expect(err).NotTo(HaveOccurred())
@@ -69,13 +69,13 @@ var _ = Describe("setValueOnField", func() {
 		It("should return an error", func() {
 			target := &testStruct{}
 			testNonStrValue := 12
-			strField := reflect.TypeOf(target).Elem().Field(0)
+			strField := reflect.TypeFor[testStruct]().Field(0)
 			strFieldVal := reflect.ValueOf(target).Elem().FieldByIndex(strField.Index)
 			err := setValueOnField(strFieldVal, testNonStrValue)
 			Expect(err).To(HaveOccurred())
 
 			testBadSliceValue := []string{"12", "15", "18"}
-			sliceField := reflect.TypeOf(target).Elem().Field(1)
+			sliceField := reflect.TypeFor[testStruct]().Field(1)
 			sliceFieldVal := reflect.ValueOf(target).Elem().FieldByIndex(sliceField.Index)
 			err = setValueOnField(sliceFieldVal, testBadSliceValue)
 			Expect(err).To(HaveOccurred())

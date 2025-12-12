@@ -16,6 +16,7 @@ const (
 
 func NewGPSDVersion(gpsdVer *devices.GPSVersions) *VersionCheck {
 	parts := strings.Split(gpsdVer.GPSDVersion, " ")
+
 	return &VersionCheck{
 		id:           gpsdID,
 		Version:      gpsdVer.GPSDVersion,

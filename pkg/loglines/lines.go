@@ -33,18 +33,22 @@ func ProcessLine(line string) (*ProcessedLine, error) {
 	if len(splitLine) < 2 {                   //nolint:mnd // moving this to a var would make the code less clear
 		return nil, fmt.Errorf("failed to split line %s", line)
 	}
+
 	timestampPart := splitLine[0]
 	lineContent := splitLine[1]
+
 	timestamp, err := time.Parse(time.RFC3339, timestampPart)
 	if err != nil {
 		// This is not a value line something went wrong
 		return nil, fmt.Errorf("failed to process timestamp from line: '%s'", line)
 	}
+
 	processed := &ProcessedLine{
 		Timestamp: timestamp,
 		Content:   strings.TrimRightFunc(lineContent, unicode.IsSpace),
 		Full:      strings.TrimRightFunc(line, unicode.IsSpace),
 	}
+
 	return processed, nil
 }
 
@@ -61,18 +65,21 @@ type GenerationalLockedTime struct {
 func (lt *GenerationalLockedTime) Time() time.Time {
 	lt.lock.RLock()
 	defer lt.lock.RUnlock()
+
 	return lt.time
 }
 
 func (lt *GenerationalLockedTime) Generation() uint32 {
 	lt.lock.RLock()
 	defer lt.lock.RUnlock()
+
 	return lt.generation
 }
 
 func (lt *GenerationalLockedTime) Update(update time.Time) {
 	lt.lock.Lock()
 	defer lt.lock.Unlock()
+
 	if update.After(lt.time) {
 		lt.time = update
 		lt.generation += 1
@@ -119,6 +126,7 @@ type GenerationDumper struct {
 
 func (dump *GenerationDumper) Start() {
 	dump.wg.Add(1)
+
 	go dump.dumpProcessor()
 }
 
@@ -132,6 +140,7 @@ func (dump *GenerationDumper) writeToFile(toDump *Dump) {
 		fmt.Sprintf("generation-%d-%d.log", toDump.slice.Generation, toDump.numberInGen),
 	)
 	dump.filenames = append(dump.filenames, fname)
+
 	err := WriteOverlap(toDump.slice.Lines, fname)
 	if err != nil {
 		log.Errorf("failed to write generation dump file: %s", err.Error())
@@ -140,14 +149,17 @@ func (dump *GenerationDumper) writeToFile(toDump *Dump) {
 
 func (dump *GenerationDumper) dumpProcessor() {
 	defer dump.wg.Done()
+
 	for {
 		select {
 		case <-dump.quit:
 			log.Info("Dumping slices")
+
 			for len(dump.toDump) > 0 {
 				toDump := <-dump.toDump
 				dump.writeToFile(toDump)
 			}
+
 			return
 		case toDump := <-dump.toDump:
 			dump.writeToFile(toDump)
@@ -159,6 +171,7 @@ func (dump *GenerationDumper) dumpProcessor() {
 
 func (dump *GenerationDumper) Stop() {
 	dump.quit <- &os.Kill
+
 	log.Debug("waiting for generation dumping to complete")
 	dump.wg.Wait()
 
@@ -173,6 +186,7 @@ func (gens *Generations) Add(lineSlice *LineSlice) {
 	if !ok {
 		genSlice = make([]*LineSlice, 0)
 	}
+
 	numberInGen := len(genSlice)
 	gens.Store[lineSlice.Generation] = append(genSlice, lineSlice)
 	gens.Dumper.DumpLines(lineSlice, numberInGen)
@@ -188,11 +202,13 @@ func (gens *Generations) Add(lineSlice *LineSlice) {
 
 func (gens *Generations) removeOlderThan(keepGen uint32) {
 	log.Debug("Removing geners <", keepGen)
+
 	for g := range gens.Store {
 		if g < keepGen {
 			delete(gens.Store, g)
 		}
 	}
+
 	gens.Oldest = keepGen
 }
 
@@ -206,27 +222,34 @@ func (gens *Generations) Flush() *LineSlice {
 	log.Debug("Flushing generations <=", lastGen)
 
 	gensToFlush := make([][]*LineSlice, 0)
+
 	for index, value := range gens.Store {
 		if index <= lastGen {
 			gensToFlush = append(gensToFlush, value)
 		}
 	}
+
 	result, lastSlice := gens.flush(gensToFlush)
 	gens.removeOlderThan(lastSlice.Generation)
 	gens.Store[lastSlice.Generation] = []*LineSlice{lastSlice}
+
 	return result
 }
 
 func (gens *Generations) FlushAll() *LineSlice {
 	log.Debug("Flushing all generations")
+
 	gensToFlush := make([][]*LineSlice, 0)
 	for _, value := range gens.Store {
 		gensToFlush = append(gensToFlush, value)
 	}
+
 	if len(gensToFlush) == 0 {
 		return &LineSlice{}
 	}
+
 	result, lastSlice := gens.flush(gensToFlush)
+
 	return MakeSliceFromLines(MakeNewCombinedSlice(result.Lines, lastSlice.Lines), lastSlice.Generation)
 }
 
@@ -236,10 +259,12 @@ func (gens *Generations) flush(generations [][]*LineSlice) (*LineSlice, *LineSli
 	sort.Slice(generations, func(i, j int) bool {
 		return generations[i][0].Generation < generations[j][0].Generation
 	})
+
 	dedupGen := make([]*LineSlice, len(generations))
 	for index, gen := range generations {
 		dedupGen[index] = dedupGeneration(gen)
 	}
+
 	return DedupLineSlices(dedupGen)
 }
 
@@ -247,6 +272,7 @@ func MakeSliceFromLines(lines []*ProcessedLine, generation uint32) *LineSlice {
 	if len(lines) == 0 {
 		return &LineSlice{Generation: generation}
 	}
+
 	return &LineSlice{
 		Lines:      lines,
 		start:      lines[0].Timestamp,

@@ -19,6 +19,7 @@ const (
 
 type PMCCollector struct {
 	*baseCollector
+
 	ctx clients.ExecContext
 }
 
@@ -32,11 +33,14 @@ func pmcPoller(pmc *PMCCollector) func() (callbacks.OutputType, error) {
 // calls the callback.Call to allow that to persist it
 func (pmc *PMCCollector) Poll(resultsChan chan PollResult, wg *utils.WaitGroupCount) {
 	defer wg.Done()
+
 	errorsToReturn := make([]error, 0)
+
 	err := pmc.poll()
 	if err != nil {
 		errorsToReturn = append(errorsToReturn, err)
 	}
+
 	resultsChan <- PollResult{
 		CollectorName: PMCCollectorName,
 		Errors:        errorsToReturn,
@@ -61,6 +65,7 @@ func NewPMCCollector(constructor *CollectionConstructor) (Collector, error) {
 		ctx: ctx,
 	}
 	collector.poller = pmcPoller(collector)
+
 	return collector, nil
 }
 

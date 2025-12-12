@@ -19,6 +19,7 @@ var (
 
 func NewDeviceFirmware(ptpDevInfo *devices.PTPDeviceInfo) *VersionCheck {
 	parts := strings.Split(ptpDevInfo.FirmwareVersion, " ")
+
 	return &VersionCheck{
 		id:           deviceFirmwareID,
 		Version:      ptpDevInfo.FirmwareVersion,
