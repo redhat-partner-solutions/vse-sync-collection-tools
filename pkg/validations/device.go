@@ -11,7 +11,7 @@ import (
 
 const (
 	deviceDetailsID          = TGMEnvModelPath + "/nic/"
-	deviceDetailsDescription = "Card is valid NIC"
+	deviceDetailsDescription = "Verify NIC device model"
 )
 
 var (

@@ -13,7 +13,7 @@ import (
 
 const (
 	deviceDriverVersionID          = TGMEnvVerPath + "/ice-driver/"
-	deviceDriverVersionDescription = "Card driver is valid"
+	deviceDriverVersionDescription = "Verify NIC device driver version"
 )
 
 var (

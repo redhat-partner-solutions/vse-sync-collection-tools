@@ -11,7 +11,7 @@ import (
 
 const (
 	gnssStatusID          = TGMSyncEnvPath + "/gnss/gpsfix-valid/wpc/"
-	gnssStatusDescription = "GNSS Module receiving data"
+	gnssStatusDescription = "Verify GNSS module is receiving data"
 )
 
 type GNSSNavStatus struct {

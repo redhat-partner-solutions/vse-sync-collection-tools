@@ -10,7 +10,7 @@ import (
 
 const (
 	gpsdID          = TGMEnvVerPath + "/gpsd/"
-	gpsdDescription = "GPSD Version is valid"
+	gpsdDescription = "Verify GPSD version"
 	MinGSPDVersion  = "3.25"
 )
 

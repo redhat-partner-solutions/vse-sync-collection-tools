@@ -10,7 +10,7 @@ import (
 
 const (
 	deviceFirmwareID          = TGMEnvVerPath + "/nic-firmware/"
-	deviceFirmwareDescription = "Card firmware is valid"
+	deviceFirmwareDescription = "Verify NIC firmware version"
 )
 
 var (

@@ -12,7 +12,7 @@ import (
 const (
 	expectedModuleName             = "ZED-F9T"
 	gnssModuleIsCorrect            = TGMEnvModelPath + "/gnss/"
-	gnssModuleIsCorrectDescription = "GNSS module is valid"
+	gnssModuleIsCorrectDescription = "Verify GNSS module model"
 )
 
 type GNSSModule struct {

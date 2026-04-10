@@ -11,7 +11,7 @@ import (
 
 const (
 	hadGNSSDevices            = TGMSyncEnvPath + "/gnss/device-detected/wpc/"
-	hadGNSSDevicesDescription = "Has GNSS Devices"
+	hadGNSSDevicesDescription = "Verify GNSS device detection"
 )
 
 type GNSDevices struct {
