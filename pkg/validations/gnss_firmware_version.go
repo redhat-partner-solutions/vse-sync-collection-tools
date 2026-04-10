@@ -10,7 +10,7 @@ import (
 
 const (
 	gnssID          = TGMEnvVerPath + "/gnss-firmware/"
-	gnssDescription = "GNSS Version is valid"
+	gnssDescription = "Verify GNSS firmware version"
 )
 
 var (

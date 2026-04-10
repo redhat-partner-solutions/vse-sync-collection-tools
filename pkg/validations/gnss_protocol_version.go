@@ -8,7 +8,7 @@ import (
 
 const (
 	gnssProtID           = TGMEnvVerPath + "/gnss-protocol/"
-	gnssProtIDescription = "GNSS protocol version is valid"
+	gnssProtIDescription = "Verify GNSS protocol version"
 	MinProtoVersion      = "29.20"
 )
 

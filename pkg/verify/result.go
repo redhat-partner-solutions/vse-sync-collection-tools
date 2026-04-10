@@ -44,10 +44,11 @@ func (res *ValidationResult) GetAnalyserFormat() ([]*callbacks.AnalyserFormatTyp
 	formatted := callbacks.AnalyserFormatType{
 		ID: "environment-check",
 		Data: map[string]any{
-			"id":       res.validation.GetID(),
-			"result":   result,
-			"reason":   msg,
-			"analysis": res.validation.GetData(),
+			"id":               res.validation.GetID(),
+			"result":           result,
+			"reason":           msg,
+			"analysis":         res.validation.GetData(),
+			"pdf_display_name": res.validation.GetDescription(),
 		},
 	}
 

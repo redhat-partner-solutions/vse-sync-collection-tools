@@ -15,7 +15,7 @@ import (
 
 const (
 	configuredForGrandMaster            = TGMSyncEnvPath + "/ptp-operator/"
-	configuredForGrandMasterDescription = "Configured for grand master"
+	configuredForGrandMasterDescription = "Verify PTP grand master configuration"
 	gmFlag                              = "ts2phc.master 1"
 )
 

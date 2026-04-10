@@ -17,8 +17,9 @@ import (
 )
 
 const (
-	clusterVersionID  = TGMEnvVerPath + "/RHOCP/"
-	MinClusterVersion = "4.14.0-0" // trailing -0 is required to allow preGA version
+	clusterVersionID          = TGMEnvVerPath + "/RHOCP/"
+	clusterVersionDescription = "Verify RHOCP cluster version"
+	MinClusterVersion         = "4.14.0-0" // trailing -0 is required to allow preGA version
 )
 
 type Status struct {
@@ -85,6 +86,7 @@ func NewClusterVersion(client *clients.Clientset) *VersionWithErrorCheck {
 			Version:      version,
 			checkVersion: version,
 			MinVersion:   MinClusterVersion,
+			description:  clusterVersionDescription,
 			order:        clusterVersionOrdering,
 		},
 		Error: err,
