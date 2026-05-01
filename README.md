@@ -1,3 +1,10 @@
+> [!IMPORTANT]
+> **This repository has been consolidated into the
+> [vse-sync-tests](https://github.com/openshift-kni/vse-sync-tests) monorepo.**
+> All future development will happen there (under `collection_tools/`).
+> Please open issues and pull requests against
+> [openshift-kni/vse-sync-tests](https://github.com/openshift-kni/vse-sync-tests).
+
 # synchronization-testsuites
 
 The main purpose of this repo is build the necessary tooling to collect necessary synchronization-related data logs from a running OpenShift cluster. This data will then be leveraged by different analysis tools to determine if the cluster is running within acceptable bounds synchronization-wise.```
